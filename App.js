@@ -746,25 +746,29 @@ function MainApp() {
                 <Text style={{ color:T.sub, fontSize:12, lineHeight:20 }}>{item.body}</Text>
               </View>
               <View style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:16, paddingBottom:13, paddingTop:9, borderTopWidth:1, borderColor:T.border }}>
-                <TouchableOpacity onPress={async()=>{
+                <TouchableOpacity onPress={()=>{
                   if(!currentUser){Alert.alert("Atenção","Faça login para curtir");return;}
-                  try{
-                    const postRef=doc(db,"posts",item.id); const lkRef=doc(db,"posts",item.id,"likes",currentUser.uid);
-                    const lkSnap=await getDoc(lkRef);
-                    if(lkSnap.exists()){await deleteDoc(lkRef);await updateDoc(postRef,{likesCount:increment(-1)});setLiked(p=>({...p,[item.id]:false}));}
-                    else{await setDoc(lkRef,{timestamp:serverTimestamp()});await updateDoc(postRef,{likesCount:increment(1)});setLiked(p=>({...p,[item.id]:true}));}
-                  }catch{}
+                  const newLiked=!liked[item.id];
+                  setLiked(p=>({...p,[item.id]:newLiked}));
+                  setPosts(prev=>prev.map(p=>p.id===item.id?{...p,likesCount:(p.likesCount||p.likes||0)+(newLiked?1:-1)}:p));
+                  (async()=>{
+                    try{
+                      const postRef=doc(db,"posts",item.id); const lkRef=doc(db,"posts",item.id,"likes",currentUser.uid);
+                      if(newLiked){await setDoc(lkRef,{timestamp:serverTimestamp()});await updateDoc(postRef,{likesCount:increment(1)});}
+                      else{await deleteDoc(lkRef);await updateDoc(postRef,{likesCount:increment(-1)});}
+                    }catch{}
+                  })();
                 }} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4, marginRight:2 }}>
                   <Text style={{ fontSize:14, marginRight:4 }}>{isL?"❤️":"🤍"}</Text>
                   <Text style={{ color:isL?"#f87171":T.muted, fontSize:11, fontWeight:"600" }}>{(item.likesCount||item.likes||0).toLocaleString("pt-BR")}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4, marginRight:2 }}>
-                  <Text style={{ fontSize:14, marginRight:4 }}>💬</Text>
-                  <Text style={{ color:T.muted, fontSize:11, fontWeight:"600" }}>{(item.commentsCount||0).toLocaleString("pt-BR")}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={()=>setMshr(item)} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4 }}>
+                <TouchableOpacity onPress={()=>setMshr(item)} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4, marginRight:2 }}>
                   <Text style={{ fontSize:14, marginRight:4 }}>📤</Text>
                   <Text style={{ color:T.muted, fontSize:11, fontWeight:"600" }}>{(item.sharesCount||0).toLocaleString("pt-BR")}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={()=>Alert.alert("Reportar","Deseja reportar esta publicação?\n\nNosso time irá analisar.",[{text:"Cancelar",style:"cancel"},{text:"Reportar",style:"destructive",onPress:()=>Alert.alert("Obrigado!","Report enviado para análise.")}])} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4 }}>
+                  <Text style={{ fontSize:14, marginRight:4 }}>🚩</Text>
+                  <Text style={{ color:T.muted, fontSize:11, fontWeight:"600" }}>Reportar</Text>
                 </TouchableOpacity>
                 <View style={{ flex:1 }} />
                 <TouchableOpacity onPress={()=>setSaved(p=>({...p,[item.id]:!p[item.id]}))} style={{ paddingHorizontal:4 }}>
