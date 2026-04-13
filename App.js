@@ -300,11 +300,22 @@ function MainApp() {
     setRefreshing(false);
   }, []);
 
+  const getAuthError = (err, mode) => {
+    const code = err.code || "";
+    if (code.includes("user-not-found") || code.includes("wrong-password")) return "E-mail ou senha incorretos";
+    if (code.includes("email-already-in-use")) return "E-mail já cadastrado";
+    if (code.includes("invalid-email")) return "E-mail inválido";
+    if (code.includes("weak-password")) return "Senha muito fraca";
+    if (code.includes("network")) return "Erro de conexão. Verifique sua internet.";
+    if (code.includes("too-many-requests")) return "Muitas tentativas. Tente novamente mais tarde.";
+    return mode === "login" ? "Erro ao fazer login. Verifique sua conexão." : "Erro ao criar conta. Verifique sua conexão.";
+  };
+
   const handleLogin = async () => {
     if (!authEmail||!authPassword){setAuthError("Preencha e-mail e senha");return;}
     setAuthSubmitting(true); setAuthError("");
     try { await signInWithEmailAndPassword(auth,authEmail,authPassword); setShowLogin(false); setAuthEmail(""); setAuthPassword(""); }
-    catch(err){ setAuthError(err.code==="auth/user-not-found"||err.code==="auth/wrong-password"?"E-mail ou senha incorretos":"Erro ao fazer login."); }
+    catch(err){ setAuthError(getAuthError(err, "login")); }
     setAuthSubmitting(false);
   };
 
@@ -317,7 +328,7 @@ function MainApp() {
       await setDoc(doc(db,"usuarios",cred.user.uid),{email:cred.user.email,tipo:"usuario",followedUnis:[],updatedAt:new Date().toISOString()});
       await sendEmailVerification(cred.user);
       setAuthEmail(""); setAuthPassword("");
-    } catch(err){ setAuthError(err.code==="auth/email-already-in-use"?"E-mail já cadastrado":"Erro ao criar conta."); }
+    } catch(err){ setAuthError(getAuthError(err, "signup")); }
     setAuthSubmitting(false);
   };
 
