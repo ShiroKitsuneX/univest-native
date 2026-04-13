@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.univest-native"
+      "bundleIdentifier": "com.univest.app"
     },
     "android": {
       "adaptiveIcon": {
