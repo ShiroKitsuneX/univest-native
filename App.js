@@ -6,6 +6,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { BarChart, RadarChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db, auth } from "./src/firebase/config";
 import {
@@ -377,6 +378,30 @@ function MainApp() {
   const last = gs[gs.length-1];
   const avg = g => Math.round((g.s.l+g.s.h+g.s.n+g.s.m)/4);
   const tgt = NOTAS_CORTE.filter(n=>n.curso===c1).reduce((a,b)=>Math.max(a,b.nota),70);
+  const radar = last ? [
+    {subject:"Ling.", v:last.s.l, fullMark:100},
+    {subject:"Humanas", v:last.s.h, fullMark:100},
+    {subject:"Nat.", v:last.s.n, fullMark:100},
+    {subject:"Mat.", v:last.s.m, fullMark:100},
+    {subject:"Redação", v:Math.round(last.s.r/10), fullMark:100},
+  ] : [];
+  const weak = radar.length ? radar.reduce((a,b)=>a.v<b.v?a:b) : null;
+  const bars = gs.map(g=>({
+    name: g.ex.length>12 ? g.ex.slice(0,12)+"…" : g.ex,
+    Linguagens: g.s.l,
+    Matemática: g.s.m,
+    Natureza: g.s.n,
+    Humanas: g.s.h,
+  }));
+  const chartConfig = {
+    backgroundGradientFrom: T.card,
+    backgroundGradientTo: T.card,
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(0, 229, 160, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(139, 148, 158, ${opacity})`,
+    style: { borderRadius: 16 },
+    propsForDots: { r: "4", strokeWidth: "1", stroke: T.accent },
+  };
   const uCourses = [c1,c2].filter(Boolean);
   const filtN = NOTAS_CORTE.filter(n=>{ if(nSrch) return n.curso.toLowerCase().includes(nSrch.toLowerCase())||n.uni.toLowerCase().includes(nSrch.toLowerCase()); return uCourses.length===0||uCourses.some(c=>c&&n.curso===c); });
   const filtU = unis.filter(u=>{ const q=query.toLowerCase(); return (u.name.toLowerCase().includes(q)||u.fullName.toLowerCase().includes(q))&&(fSt==="Todos"||u.state===fSt||(fSt==="Técnico"&&u.type==="Técnico")); });
@@ -844,25 +869,80 @@ function MainApp() {
         <View style={{ ...cd(), padding:24, alignItems:"center" }}>
           <Text style={{ fontSize:32, marginBottom:10 }}>📝</Text>
           <Text style={{ color:T.text, fontSize:14, fontWeight:"700", marginBottom:4 }}>Nenhuma nota ainda</Text>
-          <Text style={{ color:T.sub, fontSize:12, textAlign:"center" }}>Adicione notas de simulados para ver análises.</Text>
+          <Text style={{ color:T.sub, fontSize:12, textAlign:"center" }}>Adicione notas de simulados para ver gráficos e análises.</Text>
         </View>
       ) : (
-        <View style={cd({ padding:14 })}>
-          <Text style={{ color:T.sub, fontSize:11, fontWeight:"700", marginBottom:10 }}>Histórico</Text>
-          {gs.map((g,i)=>(
-            <View key={g.id} style={{ flexDirection:"row", alignItems:"center", gap:10, paddingVertical:9, borderBottomWidth:i<gs.length-1?1:0, borderColor:T.border }}>
-              <View style={{ flex:1 }}>
-                <Text style={{ color:T.text, fontSize:13, fontWeight:"700" }}>{g.ex}</Text>
-                <Text style={{ color:T.muted, fontSize:10 }}>{g.dt} · L{g.s.l} H{g.s.h} N{g.s.n} M{g.s.m} R{g.s.r}</Text>
+        <>
+          {weak && (
+            <View style={{ backgroundColor:isDark?"#2a1800":"#fff7ed", borderRadius:14, padding:12, borderWidth:1, borderColor:isDark?"#78350f":"#fed7aa", marginBottom:12, flexDirection:"row", alignItems:"center", gap:10 }}>
+              <Text style={{ fontSize:18 }}>⚠️</Text>
+              <View>
+                <Text style={{ color:"#f59e0b", fontSize:11, fontWeight:"800" }}>Área para melhorar</Text>
+                <Text style={{ color:isDark?"#fbbf24":"#c2410c", fontSize:13, fontWeight:"700" }}>{weak.subject} — {weak.v} pts</Text>
               </View>
-              <View style={{ alignItems:"flex-end", marginRight:6 }}>
-                <Text style={{ color:T.accent, fontSize:15, fontWeight:"800" }}>{avg(g)}</Text>
-                <Text style={{ color:T.muted, fontSize:9 }}>média</Text>
-              </View>
-              <TouchableOpacity onPress={()=>setGs(gs.filter(x=>x.id!==g.id))}><Text style={{ color:"#f87171", fontSize:14 }}>✕</Text></TouchableOpacity>
             </View>
-          ))}
-        </View>
+          )}
+          <View style={cd({ padding:16, marginBottom:12 })}>
+            <Text style={{ color:T.sub, fontSize:11, fontWeight:"700", marginBottom:10 }}>Evolução por área</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <BarChart
+                data={{ labels: bars.map(b=>b.name), datasets: [{ data: bars.length > 0 ? [1] : [0] }] }}
+                width={Dimensions.get("window").width - 64}
+                height={148}
+                chartConfig={{
+                  ...chartConfig,
+                  barColors: ["#60a5fa", "#f87171", "#4ade80", "#fbbf24"],
+                }}
+                verticalLabelRotation={0}
+                xAxisLabel=""
+                yAxisSuffix=""
+                style={{ marginLeft: -16 }}
+                fromZero
+                showValuesOnTopOfBars
+              />
+            </ScrollView>
+          </View>
+          <View style={cd({ padding:16, marginBottom:12 })}>
+            <Text style={{ color:T.sub, fontSize:11, fontWeight:"700", marginBottom:6 }}>Perfil da última prova</Text>
+            <View style={{ flexDirection:"row", gap:14, marginBottom:6 }}>
+              <Text style={{ fontSize:10, color:"#22c55e", fontWeight:"700" }}>🟢 Meta {c1} ({tgt} pts)</Text>
+              <Text style={{ fontSize:10, color:"#60a5fa", fontWeight:"700" }}>🔵 Você</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <RadarChart
+                data={{
+                  labels: radar.map(r=>r.subject),
+                  datasets: [
+                    { data: radar.map(r=>r.v), color: (opacity = 1) => `rgba(96, 165, 250, ${opacity})`, strokeWidth: 2 },
+                    { data: radar.map(()=>tgt), color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`, strokeWidth: 2 },
+                  ],
+                }}
+                width={Dimensions.get("window").width - 64}
+                height={185}
+                chartConfig={{
+                  ...chartConfig,
+                  color: (opacity = 1) => `rgba(96, 165, 250, ${opacity})`,
+                }}
+              />
+            </ScrollView>
+          </View>
+          <View style={cd({ padding:14 })}>
+            <Text style={{ color:T.sub, fontSize:11, fontWeight:"700", marginBottom:10 }}>Histórico</Text>
+            {gs.map((g,i)=>(
+              <View key={g.id} style={{ flexDirection:"row", alignItems:"center", gap:10, paddingVertical:9, borderBottomWidth:i<gs.length-1?1:0, borderColor:T.border }}>
+                <View style={{ flex:1 }}>
+                  <Text style={{ color:T.text, fontSize:13, fontWeight:"700" }}>{g.ex}</Text>
+                  <Text style={{ color:T.muted, fontSize:10 }}>{g.dt} · L{g.s.l} H{g.s.h} N{g.s.n} M{g.s.m} R{g.s.r}</Text>
+                </View>
+                <View style={{ alignItems:"flex-end", marginRight:6 }}>
+                  <Text style={{ color:T.accent, fontSize:15, fontWeight:"800" }}>{avg(g)}</Text>
+                  <Text style={{ color:T.muted, fontSize:9 }}>média</Text>
+                </View>
+                <TouchableOpacity onPress={()=>setGs(gs.filter(x=>x.id!==g.id))}><Text style={{ color:"#f87171", fontSize:14 }}>✕</Text></TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        </>
       )}
     </ScrollView>
   );
