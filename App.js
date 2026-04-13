@@ -1065,7 +1065,12 @@ function MainApp() {
           <Text style={[lbl,{marginBottom:10}]}>Tema</Text>
           <View style={{ flexDirection:"row", gap:8, marginBottom:24 }}>
             {[["dark","🌙 Escuro"],["light","☀️ Claro"],["auto","🔄 Auto"]].map(([v,l])=>(
-              <TouchableOpacity key={v} onPress={()=>setTheme(v)} style={{ flex:1, padding:12, borderRadius:12, backgroundColor:theme===v?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:theme===v?T.accent:T.border }}>
+              <TouchableOpacity key={v} onPress={()=>{
+                setTheme(v);
+                if (currentUser) {
+                  setDoc(doc(db,"usuarios",currentUser.uid),{theme:v,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                }
+              }} style={{ flex:1, padding:12, borderRadius:12, backgroundColor:theme===v?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:theme===v?T.accent:T.border }}>
                 <Text style={{ color:theme===v?AT:T.sub, fontSize:12, fontWeight:"700" }}>{l}</Text>
               </TouchableOpacity>
             ))}
@@ -1115,7 +1120,14 @@ function MainApp() {
               <TouchableOpacity key={idx} onPress={()=>setTmpBgIdx(idx)} style={{ width:52, height:52, borderRadius:26, backgroundColor:c1c, borderWidth:tmpBgIdx===idx?3:1, borderColor:tmpBgIdx===idx?"#fff":c1c+"40" }} />
             ))}
           </View>
-          <TouchableOpacity onPress={()=>{setAv(tmpAv);setAvBgIdx(tmpBgIdx);setMpho(false);}} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
+          <TouchableOpacity onPress={()=>{
+            setAv(tmpAv);
+            setAvBgIdx(tmpBgIdx);
+            setMpho(false);
+            if (currentUser) {
+              setDoc(doc(db,"usuarios",currentUser.uid),{av:tmpAv,avBgIdx:tmpBgIdx,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+            }
+          }} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
             <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar</Text>
           </TouchableOpacity>
         </View>
