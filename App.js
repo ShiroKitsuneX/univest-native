@@ -6,7 +6,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
-import { BarChart, RadarChart } from "react-native-chart-kit";
+import { BarChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db, auth } from "./src/firebase/config";
 import {
@@ -908,23 +908,19 @@ function MainApp() {
               <Text style={{ fontSize:10, color:"#22c55e", fontWeight:"700" }}>🟢 Meta {c1} ({tgt} pts)</Text>
               <Text style={{ fontSize:10, color:"#60a5fa", fontWeight:"700" }}>🔵 Você</Text>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <RadarChart
-                data={{
-                  labels: radar.map(r=>r.subject),
-                  datasets: [
-                    { data: radar.map(r=>r.v), color: (opacity = 1) => `rgba(96, 165, 250, ${opacity})`, strokeWidth: 2 },
-                    { data: radar.map(()=>tgt), color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`, strokeWidth: 2 },
-                  ],
-                }}
-                width={Dimensions.get("window").width - 64}
-                height={185}
-                chartConfig={{
-                  ...chartConfig,
-                  color: (opacity = 1) => `rgba(96, 165, 250, ${opacity})`,
-                }}
-              />
-            </ScrollView>
+            <View style={{ flexDirection:"row", flexWrap:"wrap", justifyContent:"space-between", marginTop:8 }}>
+              {radar.map((r,i)=>(
+                <View key={i} style={{ width:"48%", marginBottom:12, alignItems:"center" }}>
+                  <View style={{ width:60, height:60, borderRadius:30, borderWidth:3, borderColor:T.border, alignItems:"center", justifyContent:"center", position:"relative" }}>
+                    <View style={{ position:"absolute", width:60, height:60, borderRadius:30, borderWidth:1, borderColor:"#60a5fa40" }} />
+                    <View style={{ position:"absolute", width:40, height:40, borderRadius:20, borderWidth:1, borderColor:"#60a5fa40" }} />
+                    <Text style={{ color:T.text, fontSize:11, fontWeight:"800" }}>{r.v}</Text>
+                  </View>
+                  <Text style={{ color:T.muted, fontSize:10, marginTop:4 }}>{r.subject}</Text>
+                  <Text style={{ color:"#60a5fa", fontSize:10 }}>Você</Text>
+                </View>
+              ))}
+            </View>
           </View>
           <View style={cd({ padding:14 })}>
             <Text style={{ color:T.sub, fontSize:11, fontWeight:"700", marginBottom:10 }}>Histórico</Text>
