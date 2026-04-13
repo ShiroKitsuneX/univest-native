@@ -2,7 +2,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, FlatList,
   Modal, Alert, Appearance, Linking, Platform, StatusBar,
-  KeyboardAvoidingView, Keyboard, Dimensions,
+  KeyboardAvoidingView, Keyboard, Dimensions, ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -166,6 +167,7 @@ function MainApp() {
   const [c1, setC1] = useState("");
   const [c2, setC2] = useState("");
   const [cSrch, setCsrch] = useState("");
+  const [uSrch, setUsrch] = useState("");
   const [picking, setPick] = useState(1);
   const [onboardingLoaded, setOnboardingLoaded] = useState(false);
 
@@ -183,6 +185,7 @@ function MainApp() {
   const [liked, setLiked] = useState({});
   const [uniSort, setUniSort] = useState("date");
   const [uniPrefs, setUniPrefs] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
 
   const [gs, setGs] = useState([
     { id:1, ex:"FUVEST Simulado 1", dt:"Mar/2025", s:{l:62,h:70,n:58,m:55,r:680} },
@@ -241,6 +244,11 @@ function MainApp() {
               if (data.c2) hC2(data.c2);
               hDone(true);
             } else { hStep(1); hDone(false); }
+            if (data.theme) setTheme(data.theme);
+            if (data.av) setAv(data.av);
+            if (data.avBgIdx!==undefined) setAvBgIdx(data.avBgIdx);
+            if (data.grades) setGs(data.grades);
+            if (data.saved) setSaved(data.saved);
           } else { hStep(1); hDone(false); }
         } catch {}
       } else { setCurrentUser(null); setUserData(null); }
@@ -279,6 +287,19 @@ function MainApp() {
     fetchPosts();
   }, [currentUser]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const [unisSnap, postsSnap] = await Promise.all([
+        getDocs(collection(db,"universidades")),
+        getDocs(collection(db,"posts")),
+      ]);
+      if (!unisSnap.empty) { const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); const u=[...new Map(f.map(u=>[u.name,u])).values()]; setFbUnis(u); setUnis(u); }
+      if (!postsSnap.empty) { const f=postsSnap.docs.map(d=>({id:d.id,...d.data()})); f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0)); setPosts(f); }
+    } catch {}
+    setRefreshing(false);
+  }, []);
+
   const handleLogin = async () => {
     if (!authEmail||!authPassword){setAuthError("Preencha e-mail e senha");return;}
     setAuthSubmitting(true); setAuthError("");
@@ -311,6 +332,16 @@ function MainApp() {
   const handleLogout = () => {
     Alert.alert("Sair","Deseja sair da sua conta?",[{text:"Cancelar",style:"cancel"},{text:"Sair",style:"destructive",onPress:async()=>{await signOut(auth); hDone(false); hStep(0);}}]);
   };
+
+  const saveUserPrefs = useCallback(async (data) => {
+    if (!currentUser) return;
+    try { await setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true}); } catch {}
+  }, [currentUser]);
+
+  useEffect(() => { if (currentUser) saveUserPrefs({ theme }); }, [theme, currentUser]);
+  useEffect(() => { if (currentUser) saveUserPrefs({ av, avBgIdx }); }, [av, avBgIdx, currentUser]);
+  useEffect(() => { if (currentUser) saveUserPrefs({ grades:gs }); }, [gs, currentUser]);
+  useEffect(() => { if (currentUser) saveUserPrefs({ saved }); }, [saved, currentUser]);
 
   const toggleFollow = async (uni, isFollowing) => {
     if (!currentUser){Alert.alert("Atenção","Faça login para seguir universidades");return;}
@@ -346,9 +377,13 @@ function MainApp() {
 
   if (!onboardingLoaded || authLoading) {
     return (
-      <View style={{ flex:1, backgroundColor:T.bg, justifyContent:"center", alignItems:"center" }}>
+      <View style={{ flex:1, backgroundColor:isDark?"#0d1117":"#f0f4fb", justifyContent:"center", alignItems:"center" }}>
         <StatusBar barStyle={isDark?"light-content":"dark-content"} />
-        <Text style={{ fontSize:40 }}>🎓</Text>
+        <Text style={{ fontSize:64, marginBottom:16 }}>🎓</Text>
+        <Text style={{ fontSize:32, fontWeight:"800", color:isDark?"#e6edf3":"#1a1f2e", marginBottom:4 }}>
+          Uni<Text style={{ color:"#00E5A0" }}>Vest</Text>
+        </Text>
+        <ActivityIndicator size="large" color="#00E5A0" style={{ marginTop:24 }} />
       </View>
     );
   }
@@ -461,7 +496,7 @@ function MainApp() {
             </View>
             <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:20, paddingBottom:100 }}>
               {USER_TYPES.map(ut=>(
-                <TouchableOpacity key={ut.id} onPress={()=>hUType(ut)} style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:16, backgroundColor:uType?.id===ut.id?T.acBg:T.card2, borderWidth:1.5, borderColor:uType?.id===ut.id?T.accent:T.border, marginBottom:8 }}>
+                <TouchableOpacity key={ut.id} onPress={()=>hUType(uType?.id===ut.id?null:ut)} style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:16, backgroundColor:uType?.id===ut.id?T.acBg:T.card2, borderWidth:1.5, borderColor:uType?.id===ut.id?T.accent:T.border, marginBottom:8 }}>
                   <Text style={{ fontSize:24, marginRight:14 }}>{getIcon("user_type_"+ut.id,ut.emoji)}</Text>
                   <View style={{ flex:1 }}>
                     <Text style={{ fontSize:14, fontWeight:"700", color:T.text }}>{ut.label}</Text>
@@ -491,7 +526,14 @@ function MainApp() {
             </View>
             <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:100 }} keyboardShouldPersistTaps="handled">
               {fC.map(cc=>{ const s1=c1===cc,s2=c2===cc; return (
-                <TouchableOpacity key={cc} onPress={()=>{ if(picking===1){hC1(cc);setPick(2);}else{hC2(cc);} }} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:12, borderRadius:14, backgroundColor:(s1||s2)?T.acBg:T.card2, marginBottom:6 }}>
+                <TouchableOpacity key={cc} onPress={()=>{
+                  if(picking===1){
+                    if(s1){hC1("");}else{hC1(cc);hC2(s2?"":c2);}
+                    setPick(2);
+                  }else{
+                    if(s2){hC2("");}else if(!s1){hC2(cc);}
+                  }
+                }} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:12, borderRadius:14, backgroundColor:(s1||s2)?T.acBg:T.card2, marginBottom:6 }}>
                   <Text style={{ color:(s1||s2)?T.accent:T.text, fontSize:13, fontWeight:(s1||s2)?"700":"500" }}>{cc}</Text>
                   <Text style={{ fontSize:11, fontWeight:"800", color:T.accent }}>{s1&&"1ª ✓"}{s2&&"2ª ✓"}</Text>
                 </TouchableOpacity>
@@ -504,10 +546,11 @@ function MainApp() {
             <View style={{ paddingHorizontal:20, paddingTop:16, paddingBottom:10, borderBottomWidth:1, borderColor:T.border }}>
               <Text style={{ color:T.muted, fontSize:11, marginBottom:4 }}>Passo 3 de 3</Text>
               <Text style={{ color:T.text, fontSize:20, fontWeight:"800" }}>Quais universidades seguir?</Text>
-              <Text style={{ color:T.sub, fontSize:12, marginTop:3 }}>Escolha para personalizar seu feed</Text>
+              <Text style={{ color:T.sub, fontSize:12, marginTop:3, marginBottom:10 }}>Escolha para personalizar seu feed</Text>
+              <SBox val={uSrch} set={setUsrch} ph="Buscar universidade…" T={T} />
             </View>
-            <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:100 }}>
-              {unis.map(u=>(
+            <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:100 }} keyboardShouldPersistTaps="handled">
+              {unis.filter(u=>!uSrch||u.name.toLowerCase().includes(uSrch.toLowerCase())||u.fullName.toLowerCase().includes(uSrch.toLowerCase())).map(u=>(
                 <View key={u.id} style={{ ...cd(), flexDirection:"row", alignItems:"center", padding:15, marginBottom:8 }}>
                   <View style={{ width:46, height:46, borderRadius:23, backgroundColor:u.color, alignItems:"center", justifyContent:"center", marginRight:12 }}>
                     <Text style={{ color:"#fff", fontSize:14, fontWeight:"800" }}>{u.name.slice(0,2)}</Text>
@@ -521,6 +564,9 @@ function MainApp() {
                   </TouchableOpacity>
                 </View>
               ))}
+              {unis.filter(u=>!uSrch||u.name.toLowerCase().includes(uSrch.toLowerCase())||u.fullName.toLowerCase().includes(uSrch.toLowerCase())).length===0 && (
+                <Text style={{ color:T.muted, textAlign:"center", padding:30, fontSize:13 }}>Nenhuma universidade encontrada.</Text>
+              )}
             </ScrollView>
           </>
         )}
@@ -623,7 +669,7 @@ function MainApp() {
   );
 
   const renderFeed = () => (
-    <ScrollView style={{ flex:1 }}>
+    <ScrollView style={{ flex:1 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={T.accent} colors={[T.accent]} />}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal:20, paddingVertical:8 }}>
         {fol.map(u=>(
           <TouchableOpacity key={u.id} onPress={()=>setSU(u)} style={{ alignItems:"center", marginRight:12 }}>
@@ -697,7 +743,7 @@ function MainApp() {
   );
 
   const renderExplorar = () => (
-    <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:16 }} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:16 }} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={T.accent} colors={[T.accent]} />}>
       <TouchableOpacity onPress={()=>setMdisc(true)} style={{ backgroundColor:isDark?"#0c1f3a":"#dbeafe", borderRadius:16, padding:14, flexDirection:"row", alignItems:"center", gap:12, marginBottom:12, borderWidth:1, borderColor:isDark?"#1e40af40":"#bfdbfe" }}>
         <Text style={{ fontSize:28 }}>🧭</Text>
         <View style={{ flex:1 }}>
