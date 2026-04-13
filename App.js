@@ -271,7 +271,7 @@ function MainApp() {
       try {
         const snap = await getDocs(collection(db,"posts"));
         const f = snap.docs.map(d=>({id:d.id,...d.data()}));
-        f.sort((a,b)=>(b.createdAt?.toMillis?..()||0)-(a.createdAt?.toMillis?..()||0));
+        f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
         setPosts(f);
         if (currentUser) { const lk={}; for(const p of f){ const ls=await getDoc(doc(db,"posts",p.id,"likes",currentUser.uid)); if(ls.exists())lk[p.id]=true; } setLiked(lk); }
       } catch { setPosts(FEED); }
