@@ -347,7 +347,9 @@ function MainApp() {
 
   const saveUserPrefs = useCallback(async (data) => {
     if (!currentUser) return;
-    try { await setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true}); } catch {}
+    try { 
+      await setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true});
+    } catch (e) { console.log("Save error:", e.message); }
   }, [currentUser]);
 
   useEffect(() => { if (currentUser) saveUserPrefs({ theme }); }, [theme, currentUser]);
@@ -631,12 +633,11 @@ function MainApp() {
   const SBar = () => (
     <View style={{ backgroundColor:T.bg, paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:8, flexDirection:"row", justifyContent:"space-between", alignItems:"center" }}>
       <Text style={{ fontSize:22, fontWeight:"800", color:T.text }}>Uni<Text style={{ color:T.accent }}>Vest</Text></Text>
-      <View style={{ flexDirection:"row", gap:8, alignItems:"center" }}>
-        {tab==="perfil" && <TouchableOpacity onPress={()=>setMcfg(true)} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:13, fontWeight:"800" }}>···</Text></TouchableOpacity>}
-        <TouchableOpacity onPress={()=>setTab("perfil")} style={{ width:36, height:36, borderRadius:18, backgroundColor:AVATAR_COLORS[avBgIdx][0], borderWidth:1.5, borderColor:T.accent+"40", alignItems:"center", justifyContent:"center" }}>
-          <Text style={{ fontSize:18 }}>{av}</Text>
+      {tab==="perfil" && (
+        <TouchableOpacity onPress={()=>setMcfg(true)} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignItems:"center", justifyContent:"center" }}>
+          <Text style={{ color:T.sub, fontSize:13, fontWeight:"800" }}>⚙️</Text>
         </TouchableOpacity>
-      </View>
+      )}
     </View>
   );
 
