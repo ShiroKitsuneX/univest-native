@@ -10,7 +10,7 @@ const firebaseConfig = {
   projectId: "univest-6b10d",
   storageBucket: "univest-6b10d.firebasestorage.app",
   messagingSenderId: "651202207735",
-  appId: "1:651202207735:ios:xxxxxxxxxxxxxx",
+  appId: "1:651202207735:ios:com.univest.app",
 };
 
 const app = initializeApp(firebaseConfig);
