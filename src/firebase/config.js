@@ -5,12 +5,12 @@ import { initializeAuth, getReactNativePersistence, getAuth } from "firebase/aut
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAEl55svAj-rZok_IceDnqKKIWkGb4LPbM",
+  apiKey: "AIzaSyAzNGqLgXxT0NkNYXP3YJ0hS8BldLm5_gE",
   authDomain: "univest-6b10d.firebaseapp.com",
   projectId: "univest-6b10d",
   storageBucket: "univest-6b10d.firebasestorage.app",
   messagingSenderId: "651202207735",
-  appId: "1:651202207735:ios:com.univest.app",
+  appId: "1:651202207735:ios:fc9bc24087a1a8b803d8f2",
 };
 
 const app = initializeApp(firebaseConfig);
