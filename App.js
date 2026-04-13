@@ -1085,9 +1085,8 @@ function MainApp() {
             </TouchableOpacity>
           ))}
           <View style={{ height:1, backgroundColor:T.border, marginVertical:16 }} />
-          <TouchableOpacity onPress={()=>{setMcfg(false);handleLogout();}} style={{ flexDirection:"row", alignItems:"center", justifyContent:"center", gap:10, backgroundColor:isDark?"#2d0a0a":"#fff1f2", borderRadius:14, padding:15, borderWidth:1, borderColor:"#fecdd3", marginBottom:12 }}>
-            <Text style={{ fontSize:20 }}>🚪</Text>
-            <Text style={{ color:"#f87171", fontSize:15, fontWeight:"700" }}>Sair</Text>
+          <TouchableOpacity onPress={()=>{setMcfg(false);handleLogout();}} style={{ backgroundColor:"#dc2626", borderRadius:14, padding:15, alignItems:"center", marginBottom:12 }}>
+            <Text style={{ color:"#fff", fontSize:15, fontWeight:"700" }}>Sair</Text>
           </TouchableOpacity>
           <Text style={{ color:T.muted, fontSize:12, textAlign:"center" }}>UniVest v4.0 · Feito com 💚</Text>
         </View>
