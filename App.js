@@ -102,19 +102,16 @@ const TAG_L = { alert:{bg:"#fff7ed",tx:"#c2410c",b:"#fed7aa"}, lista:{bg:"#f0fdf
 const DK = { bg:"#0d1117",card:"#161b27",card2:"#1c2333",border:"#21293d",text:"#e6edf3",sub:"#8b949e",muted:"#484f58",accent:"#00E5A0",acBg:"rgba(0,229,160,.1)",nav:"#0d1117",inp:"#1c2333",inpB:"#21293d" };
 const LT = { bg:"#f0f4fb",card:"#ffffff",card2:"#f0f4ff",border:"#dde3ef",text:"#1a1f2e",sub:"#5a6478",muted:"#9aa0ad",accent:"#0077cc",acBg:"rgba(0,119,204,.08)",nav:"#ffffff",inp:"#ffffff",inpB:"#dde3ef" };
 
-const STORAGE_KEY = "univest_onboarding";
-const loadOnboardingData = async () => {
+const STORAGE_KEY = "univest_user";
+const loadLocalUserData = async () => {
   try {
     const saved = await AsyncStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const data = JSON.parse(saved);
-      return { step:data.step||0, done:data.done||false, uTypeId:data.uTypeId||null, c1:data.c1||"", c2:data.c2||"", uType:data.uTypeId?USER_TYPES.find(t=>t.id===data.uTypeId)||null:null };
-    }
+    if (saved) return JSON.parse(saved);
   } catch {}
-  return { step:0, done:false, uTypeId:null, c1:"", c2:"", uType:null };
+  return null;
 };
-const saveOnboardingData = async (step, done, uType, c1, c2) => {
-  try { await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ step, done, uTypeId:uType?.id||null, c1, c2 })); } catch {}
+const saveLocalUserData = async (data) => {
+  try { await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 };
 
 function SBox({ val, set, ph, T }) {
@@ -217,19 +214,41 @@ function MainApp() {
 
   const getIcon = (id, fallback) => fbIcons[id] || fallback;
 
+  const currentData = () => ({
+    step, done, uTypeId:uType?.id, c1, c2,
+    theme, av, avBgIdx, grades:gs, saved
+  });
+
   useEffect(() => {
-    loadOnboardingData().then(data => {
-      setStep(data.step); setDone(data.done); setUType(data.uType); setC1(data.c1); setC2(data.c2);
+    loadLocalUserData().then(localData => {
+      if (localData) {
+        setStep(localData.step||0); 
+        setDone(localData.done||false); 
+        setUType(localData.uTypeId?USER_TYPES.find(t=>t.id===localData.uTypeId)||null:null); 
+        setC1(localData.c1||""); 
+        setC2(localData.c2||"");
+        if (localData.theme) setTheme(localData.theme);
+        if (localData.av) setAv(localData.av);
+        if (localData.avBgIdx!==undefined) setAvBgIdx(localData.avBgIdx);
+        if (localData.grades) setGs(localData.grades);
+        if (localData.saved) setSaved(localData.saved);
+      }
       setOnboardingLoaded(true);
     });
   }, []);
 
-  const persist = useCallback((st, dn, ut, cc1, cc2) => saveOnboardingData(st, dn, ut, cc1, cc2), []);
-  const hStep = (v) => { const n = typeof v==="function"?v(step):v; setStep(n); persist(n,done,uType,c1,c2); };
-  const hDone = (v) => { setDone(v); persist(step,v,uType,c1,c2); };
-  const hUType = (v) => { setUType(v); persist(step,done,v,c1,c2); };
-  const hC1 = (v) => { setC1(v); persist(step,done,uType,v,c2); };
-  const hC2 = (v) => { setC2(v); persist(step,done,uType,c1,v); };
+  const syncUserData = async (data) => {
+    await saveLocalUserData(data);
+    if (currentUser) {
+      try { await setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true}); } catch {}
+    }
+  };
+
+  const hStep = (v) => { const n = typeof v==="function"?v(step):v; setStep(n); syncUserData({...currentData(), step:n}); };
+  const hDone = (v) => { setDone(v); syncUserData({...currentData(), done:v}); };
+  const hUType = (v) => { setUType(v); syncUserData({...currentData(), uTypeId:v?.id}); };
+  const hC1 = (v) => { setC1(v); syncUserData({...currentData(), c1:v}); };
+  const hC2 = (v) => { setC2(v); syncUserData({...currentData(), c2:v}); };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -238,20 +257,26 @@ function MainApp() {
         try {
           const snap = await getDoc(doc(db,"usuarios",user.uid));
           if (snap.exists()) {
-            const data = snap.data(); setUserData(data);
-            if (data.done===true) {
-              if (data.uTypeId) { const ut=USER_TYPES.find(t=>t.id===data.uTypeId); if(ut) hUType(ut); }
-              if (data.c1) hC1(data.c1);
-              if (data.c2) hC2(data.c2);
-              hDone(true);
-            } else { hStep(1); hDone(false); }
-            if (data.theme) setTheme(data.theme);
-            if (data.av) setAv(data.av);
-            if (data.avBgIdx!==undefined) setAvBgIdx(data.avBgIdx);
-            if (data.grades) setGs(data.grades);
-            if (data.saved) setSaved(data.saved);
-          } else { hStep(1); hDone(false); }
-        } catch {}
+            const fbData = snap.data(); 
+            await saveLocalUserData(fbData);
+            setUserData(fbData);
+            if (fbData.done===true) {
+              if (fbData.uTypeId) { const ut=USER_TYPES.find(t=>t.id===fbData.uTypeId); if(ut) setUType(ut); }
+              if (fbData.c1) setC1(fbData.c1);
+              if (fbData.c2) setC2(fbData.c2);
+              setStep(3); setDone(true);
+            } else if (fbData.done===false) {
+              setStep(1); setDone(false);
+            }
+            if (fbData.theme) setTheme(fbData.theme);
+            if (fbData.av) setAv(fbData.av);
+            if (fbData.avBgIdx!==undefined) setAvBgIdx(fbData.avBgIdx);
+            if (fbData.grades) setGs(fbData.grades);
+            if (fbData.saved) setSaved(fbData.saved);
+          } else { 
+            setStep(1); setDone(false);
+          }
+        } catch (e) { console.log("Error loading user data:", e.message); }
       } else { setCurrentUser(null); setUserData(null); }
       setAuthLoading(false);
     });
@@ -326,7 +351,7 @@ function MainApp() {
     setAuthSubmitting(true); setAuthError("");
     try {
       const cred = await createUserWithEmailAndPassword(auth,authEmail,authPassword);
-      await setDoc(doc(db,"usuarios",cred.user.uid),{email:cred.user.email,tipo:"usuario",followedUnis:[],updatedAt:new Date().toISOString()});
+      await setDoc(doc(db,"usuarios",cred.user.uid),{email:cred.user.email,tipo:"usuario",done:false,followedUnis:[],updatedAt:new Date().toISOString()});
       await sendEmailVerification(cred.user);
       setAuthEmail(""); setAuthPassword("");
     } catch(err){ setAuthError(getAuthError(err, "signup")); }
@@ -364,11 +389,9 @@ function MainApp() {
       const snap=await getDoc(userRef); const cur=snap.data()?.followedUnis||[];
       const next=isFollowing?[...cur,uni.name]:cur.filter(n=>n!==uni.name);
       await updateDoc(userRef,{followedUnis:next});
-      setUserData(p=>p?{...p,followedUnis:next}:null);
-      await updateDoc(doc(db,"universidades",uni.id),{seguidores:increment(isFollowing?1:-1)});
       setUnis(prev=>prev.map(u=>u.name===uni.name?{...u,followed:isFollowing}:u));
       if(selUni?.name===uni.name) setSU(p=>({...p,followed:isFollowing}));
-    } catch(err){ Alert.alert("Erro","Não foi possível seguir: "+err.message); }
+    } catch(err){ Alert.alert("Erro","Não foi possível seguir."); }
   };
 
   const fol = unis.filter(u=>u.followed).sort((a,b)=>{
@@ -569,6 +592,7 @@ function MainApp() {
                     if(s1){hC1("");}else{hC1(cc);hC2(s2?"":c2);}
                     setPick(2);
                   }else{
+                    if(!c1){Alert.alert("Ops","Selecione a 1ª opção primeiro!");return;}
                     if(s2){hC2("");}else if(!s1){hC2(cc);}
                   }
                 }} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:12, borderRadius:14, backgroundColor:(s1||s2)?T.acBg:T.card2, marginBottom:6 }}>
@@ -618,7 +642,14 @@ function MainApp() {
               if(step<3){hStep(step+1);}
               else{
                 hDone(true);
-                if(currentUser){ try{ await setDoc(doc(db,"usuarios",currentUser.uid),{done:true,uTypeId:uType?.id,c1,c2,followedUnis:unis.filter(u=>u.followed).map(u=>u.name),updatedAt:new Date().toISOString()},{merge:true}); }catch{} }
+                if(currentUser){ 
+                  try{ 
+                    const dataToSave = {done:true,uTypeId:uType?.id,c1,c2,followedUnis:unis.filter(u=>u.followed).map(u=>u.name),updatedAt:new Date().toISOString()};
+                    console.log("Saving onboarding data:", JSON.stringify(dataToSave));
+                    await setDoc(doc(db,"usuarios",currentUser.uid),dataToSave,{merge:true});
+                    console.log("Onboarding data saved successfully!");
+                  } catch(e){ console.log("Error saving onboarding:", e.message); }
+                }
               }
             }} style={{ flex:2, padding:14, borderRadius:16, backgroundColor:canNext?T.accent:T.border, alignItems:"center" }}>
               <Text style={{ color:canNext?AT:T.muted, fontSize:15, fontWeight:"800" }}>{step===3?"Entrar no app 🚀":"Continuar →"}</Text>
@@ -1068,7 +1099,9 @@ function MainApp() {
               <TouchableOpacity key={v} onPress={()=>{
                 setTheme(v);
                 if (currentUser) {
-                  setDoc(doc(db,"usuarios",currentUser.uid),{theme:v,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                  const data = {theme:v,updatedAt:new Date().toISOString()};
+                  saveLocalUserData({...currentData(), ...data});
+                  setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
                 }
               }} style={{ flex:1, padding:12, borderRadius:12, backgroundColor:theme===v?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:theme===v?T.accent:T.border }}>
                 <Text style={{ color:theme===v?AT:T.sub, fontSize:12, fontWeight:"700" }}>{l}</Text>
@@ -1125,7 +1158,9 @@ function MainApp() {
             setAvBgIdx(tmpBgIdx);
             setMpho(false);
             if (currentUser) {
-              setDoc(doc(db,"usuarios",currentUser.uid),{av:tmpAv,avBgIdx:tmpBgIdx,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+              const data = {av:tmpAv,avBgIdx:tmpBgIdx,updatedAt:new Date().toISOString()};
+              saveLocalUserData({...currentData(), ...data});
+              setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
             }
           }} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
             <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar</Text>
