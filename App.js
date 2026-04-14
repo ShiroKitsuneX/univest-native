@@ -1,24 +1,22 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView, FlatList,
+  View, Text, TextInput, TouchableOpacity, ScrollView,
   Modal, Alert, Appearance, Linking, Platform, StatusBar,
-  KeyboardAvoidingView, Keyboard, Dimensions, ActivityIndicator,
+  KeyboardAvoidingView, Dimensions, ActivityIndicator,
   RefreshControl,
 } from "react-native";
-import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { BarChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db, auth } from "./src/firebase/config";
 import {
   collection, getDocs, doc, setDoc, getDoc, deleteDoc,
-  updateDoc, increment, addDoc, serverTimestamp,
+  updateDoc, increment, addDoc, serverTimestamp, arrayUnion, arrayRemove,
 } from "firebase/firestore";
 import {
   onAuthStateChanged, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signOut,
   sendEmailVerification, sendPasswordResetEmail,
-  updatePassword, deleteUser, EmailAuthProvider,
-  reauthenticateWithCredential,
 } from "firebase/auth";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
@@ -101,6 +99,33 @@ const TAG_D = { alert:{bg:"#2a1800",tx:"#fbbf24",b:"#78350f"}, lista:{bg:"#052e1
 const TAG_L = { alert:{bg:"#fff7ed",tx:"#c2410c",b:"#fed7aa"}, lista:{bg:"#f0fdf4",tx:"#15803d",b:"#bbf7d0"}, nota:{bg:"#eff6ff",tx:"#1d4ed8",b:"#bfdbfe"}, simulado:{bg:"#faf5ff",tx:"#7c3aed",b:"#e9d5ff"}, news:{bg:"#fff1f2",tx:"#be123c",b:"#fecdd3"} };
 const DK = { bg:"#0d1117",card:"#161b27",card2:"#1c2333",border:"#21293d",text:"#e6edf3",sub:"#8b949e",muted:"#484f58",accent:"#00E5A0",acBg:"rgba(0,229,160,.1)",nav:"#0d1117",inp:"#1c2333",inpB:"#21293d" };
 const LT = { bg:"#f0f4fb",card:"#ffffff",card2:"#f0f4ff",border:"#dde3ef",text:"#1a1f2e",sub:"#5a6478",muted:"#9aa0ad",accent:"#0077cc",acBg:"rgba(0,119,204,.08)",nav:"#ffffff",inp:"#ffffff",inpB:"#dde3ef" };
+
+const timeAgo = (timestamp) => {
+  if (!timestamp) return "";
+  const now = Date.now();
+  const ms = typeof timestamp === "number" ? timestamp : timestamp?.toMillis?.() || timestamp?.seconds ? timestamp.seconds*1000 : new Date(timestamp).getTime();
+  if (!ms || isNaN(ms)) return "";
+  const diff = now - ms;
+  const mins = Math.floor(diff/60000);
+  if (mins < 1) return "agora";
+  if (mins < 60) return `${mins}min atrás`;
+  const hrs = Math.floor(mins/60);
+  if (hrs < 24) return `${hrs}h atrás`;
+  const days = Math.floor(hrs/24);
+  if (days < 7) return `${days}d atrás`;
+  const weeks = Math.floor(days/7);
+  if (weeks < 5) return `${weeks} sem atrás`;
+  const months = Math.floor(days/30);
+  return `${months}m atrás`;
+};
+
+const fmtCount = (n) => {
+  if (typeof n === "string") return n;
+  if (!n || isNaN(n)) return "0";
+  if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"")+"M";
+  if (n >= 1000) return (n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,"")+"k";
+  return n.toString();
+};
 
 const STORAGE_KEY = "univest_user";
 const loadLocalUserData = async () => {
@@ -206,7 +231,6 @@ function MainApp() {
   const [mDisc, setMdisc] = useState(false);
   const [mUni,  setMUni]  = useState(false);
   const [dArea, setDarea] = useState(null);
-  const [dMax,  setDmax]  = useState(100);
   const [eC1,   setEC1]   = useState("");
   const [eC2,   setEC2]   = useState("");
   const [ePick, setEpick] = useState(1);
@@ -215,40 +239,42 @@ function MainApp() {
   const getIcon = (id, fallback) => fbIcons[id] || fallback;
 
   const currentData = () => ({
-    step, done, uTypeId:uType?.id, c1, c2,
-    theme, av, avBgIdx, grades:gs, saved
+    step, done, uTypeId:uType?.id, c1, c2, theme, av, avBgIdx, 
+    grades:gs, saved, liked, followedUnis: unis.filter(u=>u.followed).map(u=>u.name)
   });
 
   useEffect(() => {
     loadLocalUserData().then(localData => {
       if (localData) {
-        setStep(localData.step||0); 
-        setDone(localData.done||false); 
-        setUType(localData.uTypeId?USER_TYPES.find(t=>t.id===localData.uTypeId)||null:null); 
-        setC1(localData.c1||""); 
+        setStep(localData.step||0);
+        setDone(localData.done||false);
+        setUType(localData.uTypeId?USER_TYPES.find(t=>t.id===localData.uTypeId)||null:null);
+        setC1(localData.c1||"");
         setC2(localData.c2||"");
         if (localData.theme) setTheme(localData.theme);
         if (localData.av) setAv(localData.av);
         if (localData.avBgIdx!==undefined) setAvBgIdx(localData.avBgIdx);
         if (localData.grades) setGs(localData.grades);
         if (localData.saved) setSaved(localData.saved);
+        if (localData.liked) setLiked(localData.liked);
       }
       setOnboardingLoaded(true);
     });
   }, []);
 
-  const syncUserData = async (data) => {
+  const syncUserData = async (overrides) => {
+    const data = { ...currentData(), ...overrides };
     await saveLocalUserData(data);
     if (currentUser) {
       try { await setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true}); } catch {}
     }
   };
 
-  const hStep = (v) => { const n = typeof v==="function"?v(step):v; setStep(n); syncUserData({...currentData(), step:n}); };
-  const hDone = (v) => { setDone(v); syncUserData({...currentData(), done:v}); };
-  const hUType = (v) => { setUType(v); syncUserData({...currentData(), uTypeId:v?.id}); };
-  const hC1 = (v) => { setC1(v); syncUserData({...currentData(), c1:v}); };
-  const hC2 = (v) => { setC2(v); syncUserData({...currentData(), c2:v}); };
+  const hStep = (v) => { const n = typeof v==="function"?v(step):v; setStep(n); syncUserData({ step:n }); };
+  const hDone = (v) => { setDone(v); syncUserData({ done:v }); };
+  const hUType = (v) => { setUType(v); syncUserData({ uTypeId:v?.id }); };
+  const hC1 = (v) => { setC1(v); syncUserData({ c1:v }); };
+  const hC2 = (v) => { setC2(v); syncUserData({ c2:v }); };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -307,7 +333,15 @@ function MainApp() {
         const f = snap.docs.map(d=>({id:d.id,...d.data()}));
         f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
         setPosts(f);
-        if (currentUser) { const lk={}; for(const p of f){ const ls=await getDoc(doc(db,"posts",p.id,"likes",currentUser.uid)); if(ls.exists())lk[p.id]=true; } setLiked(lk); }
+        // Batch all like checks in parallel instead of sequential N+1
+        if (currentUser && f.length) {
+          const likeChecks = await Promise.all(
+            f.map(p => getDoc(doc(db,"posts",p.id,"likes",currentUser.uid)))
+          );
+          const lk={};
+          likeChecks.forEach((snap,i) => { if(snap.exists()) lk[f[i].id]=true; });
+          setLiked(lk);
+        }
       } catch { setPosts(FEED); }
     };
     fetchPosts();
@@ -320,11 +354,24 @@ function MainApp() {
         getDocs(collection(db,"universidades")),
         getDocs(collection(db,"posts")),
       ]);
-      if (!unisSnap.empty) { const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); const u=[...new Map(f.map(u=>[u.name,u])).values()]; setFbUnis(u); setUnis(u); }
-      if (!postsSnap.empty) { const f=postsSnap.docs.map(d=>({id:d.id,...d.data()})); f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0)); setPosts(f); }
+      if (!unisSnap.empty) { const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); const u=[...new Map(f.map(u=>[u.name,u])).values()]; setFbUnis(u); }
+      if (!postsSnap.empty) {
+        const f=postsSnap.docs.map(d=>({id:d.id,...d.data()}));
+        f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
+        setPosts(f);
+        // Refresh like state
+        if (currentUser && f.length) {
+          const likeChecks = await Promise.all(
+            f.map(p => getDoc(doc(db,"posts",p.id,"likes",currentUser.uid)))
+          );
+          const lk={};
+          likeChecks.forEach((snap,i) => { if(snap.exists()) lk[f[i].id]=true; });
+          setLiked(lk);
+        }
+      }
     } catch {}
     setRefreshing(false);
-  }, []);
+  }, [currentUser]);
 
   const getAuthError = (err, mode) => {
     const code = err.code || "";
@@ -370,28 +417,42 @@ function MainApp() {
     Alert.alert("Sair","Deseja sair da sua conta?",[{text:"Cancelar",style:"cancel"},{text:"Sair",style:"destructive",onPress:async()=>{await signOut(auth); hDone(false); hStep(0);}}]);
   };
 
-  const saveUserPrefs = useCallback(async (data) => {
-    if (!currentUser) return;
-    try { 
-      await setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true});
-    } catch (e) { console.log("Save error:", e.message); }
-  }, [currentUser]);
-
-  useEffect(() => { if (currentUser) saveUserPrefs({ theme }); }, [theme, currentUser]);
-  useEffect(() => { if (currentUser) saveUserPrefs({ av, avBgIdx }); }, [av, avBgIdx, currentUser]);
-  useEffect(() => { if (currentUser) saveUserPrefs({ grades:gs }); }, [gs, currentUser]);
-  useEffect(() => { if (currentUser) saveUserPrefs({ saved }); }, [saved, currentUser]);
+  // Single debounced sync — prevents 4 separate writes on login
+  const saveTimerRef = useRef(null);
+  const prefsInitRef = useRef(false);
+  useEffect(() => {
+    // Skip the initial mount to avoid overwriting Firebase data on login
+    if (!currentUser) { prefsInitRef.current = false; return; }
+    if (!prefsInitRef.current) { prefsInitRef.current = true; return; }
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        const data = { theme, av, avBgIdx, grades:gs, saved, updatedAt:new Date().toISOString() };
+        await saveLocalUserData({ ...data, step, done, uTypeId:uType?.id, c1, c2 });
+        await setDoc(doc(db,"usuarios",currentUser.uid), data, {merge:true});
+      } catch (e) { console.log("Save error:", e.message); }
+    }, 500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [theme, av, avBgIdx, gs, saved, currentUser]);
 
   const toggleFollow = async (uni, isFollowing) => {
     if (!currentUser){Alert.alert("Atenção","Faça login para seguir universidades");return;}
+    setUnis(prev=>prev.map(u=>u.name===uni.name?{...u,followed:isFollowing,followersCount:(u.followersCount||0)+(isFollowing?1:-1)}:u));
+    if(selUni?.name===uni.name) setSU(p=>({...p,followed:isFollowing,followersCount:(p.followersCount||0)+(isFollowing?1:-1)}));
+    saveLocalUserData(currentData());
     try {
       const userRef=doc(db,"usuarios",currentUser.uid);
-      const snap=await getDoc(userRef); const cur=snap.data()?.followedUnis||[];
-      const next=isFollowing?[...cur,uni.name]:cur.filter(n=>n!==uni.name);
-      await updateDoc(userRef,{followedUnis:next});
-      setUnis(prev=>prev.map(u=>u.name===uni.name?{...u,followed:isFollowing}:u));
-      if(selUni?.name===uni.name) setSU(p=>({...p,followed:isFollowing}));
-    } catch(err){ Alert.alert("Erro","Não foi possível seguir."); }
+      await updateDoc(userRef,{
+        followedUnis: isFollowing ? arrayUnion(uni.name) : arrayRemove(uni.name),
+        updatedAt: new Date().toISOString(),
+      });
+      const uniRef=doc(db,"universidades",uni.id);
+      await updateDoc(uniRef,{followersCount:increment(isFollowing?1:-1)}).catch(()=>{});
+    } catch(err){
+      setUnis(prev=>prev.map(u=>u.name===uni.name?{...u,followed:!isFollowing,followersCount:(u.followersCount||0)+(isFollowing?-1:1)}:u));
+      if(selUni?.name===uni.name) setSU(p=>({...p,followed:!isFollowing}));
+      Alert.alert("Erro","Não foi possível seguir.");
+    }
   };
 
   const fol = unis.filter(u=>u.followed).sort((a,b)=>{
@@ -438,13 +499,16 @@ function MainApp() {
 
   if (!onboardingLoaded || authLoading) {
     return (
-      <View style={{ flex:1, backgroundColor:isDark?"#0d1117":"#f0f4fb", justifyContent:"center", alignItems:"center" }}>
+      <View style={{ flex:1, backgroundColor:isDark?"#0d1117":"#f0f4fb", justifyContent:"center", alignItems:"center", padding:32 }}>
         <StatusBar barStyle={isDark?"light-content":"dark-content"} />
-        <Text style={{ fontSize:64, marginBottom:16 }}>🎓</Text>
-        <Text style={{ fontSize:32, fontWeight:"800", color:isDark?"#e6edf3":"#1a1f2e", marginBottom:4 }}>
+        <View style={{ width:96, height:96, borderRadius:48, backgroundColor:isDark?"#161b27":"#ffffff", alignItems:"center", justifyContent:"center", marginBottom:22, borderWidth:1, borderColor:isDark?"#21293d":"#dde3ef", shadowColor:"#00E5A0", shadowOpacity:0.18, shadowRadius:18, shadowOffset:{width:0,height:4} }}>
+          <Text style={{ fontSize:52 }}>🎓</Text>
+        </View>
+        <Text style={{ fontSize:34, fontWeight:"800", color:isDark?"#e6edf3":"#1a1f2e", marginBottom:8 }}>
           Uni<Text style={{ color:"#00E5A0" }}>Vest</Text>
         </Text>
-        <ActivityIndicator size="large" color="#00E5A0" style={{ marginTop:24 }} />
+        <Text style={{ fontSize:13, color:isDark?"#8b949e":"#5a6478", marginBottom:36, textAlign:"center" }}>Sua jornada acadêmica começa aqui</Text>
+        <ActivityIndicator size="large" color="#00E5A0" />
       </View>
     );
   }
@@ -458,11 +522,14 @@ function MainApp() {
           <Text style={{ fontSize:64, textAlign:"center", marginBottom:14 }}>🎓</Text>
           <Text style={{ fontSize:34, fontWeight:"800", color:T.text, textAlign:"center", marginBottom:8 }}>Uni<Text style={{ color:T.accent }}>Vest</Text></Text>
           <Text style={{ color:T.sub, fontSize:14, textAlign:"center", lineHeight:24, marginBottom:32 }}>Seu portal inteligente para toda a jornada acadêmica</Text>
-          <View style={{ gap:9, marginBottom:32 }}>
-            {[["vestibular","🎯","Vestibulares & ENEM"],["graduacao","🎓","Graduação & Pós-graduação"],["mestrado","🔬","Mestrado & Doutorado"],["tecnico","📚","Ensino Médio & Técnico"]].map(([id,ic,l])=>(
-              <View key={id} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card2, borderRadius:14, padding:13, borderWidth:1, borderColor:T.border }}>
-                <Text style={{ fontSize:20, marginRight:14 }}>{getIcon(id,ic)}</Text>
-                <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{l}</Text>
+          <View style={{ gap:10, marginBottom:32 }}>
+            {[["vestibular","🎯","Vestibulares & ENEM","#e11d48"],["graduacao","🎓","Graduação & Pós-graduação","#7c3aed"],["mestrado","🔬","Mestrado & Doutorado","#2563eb"],["tecnico","📚","Ensino Médio & Técnico","#059669"]].map(([id,ic,l,cor])=>(
+              <View key={id} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card, borderRadius:16, padding:14, borderWidth:1, borderColor:T.border, gap:14 }}>
+                <View style={{ width:44, height:44, borderRadius:22, backgroundColor:cor+"22", alignItems:"center", justifyContent:"center" }}>
+                  <Text style={{ fontSize:22 }}>{getIcon(id,ic)}</Text>
+                </View>
+                <Text style={{ color:T.text, fontSize:14, fontWeight:"600", flex:1 }}>{l}</Text>
+                <Text style={{ color:T.muted, fontSize:18 }}>›</Text>
               </View>
             ))}
           </View>
@@ -633,8 +700,8 @@ function MainApp() {
           </>
         )}
         <View style={{ paddingHorizontal:20, paddingBottom:insets.bottom+10, paddingTop:10, backgroundColor:T.bg }}>
-          <View style={{ flexDirection:"row", justifyContent:"center", gap:6, marginBottom:12 }}>
-            {[1,2,3].map(s=><View key={s} style={{ width:s===step?22:6, height:6, borderRadius:3, backgroundColor:s===step?T.accent:T.border }} />)}
+          <View style={{ height:3, backgroundColor:T.border, borderRadius:2, marginBottom:14, overflow:"hidden" }}>
+            <View style={{ width:((step/3)*100)+"%", height:"100%", backgroundColor:T.accent, borderRadius:2 }} />
           </View>
           <View style={{ flexDirection:"row", gap:10 }}>
             {step>1 && <TouchableOpacity onPress={()=>hStep(s=>s-1)} style={{ flex:1, padding:14, borderRadius:16, backgroundColor:T.card2, alignItems:"center", borderWidth:1, borderColor:T.border }}><Text style={{ color:T.sub, fontSize:14, fontWeight:"700" }}>← Voltar</Text></TouchableOpacity>}
@@ -661,25 +728,39 @@ function MainApp() {
   }
 
   // ── MAIN APP ──
+  const greeting = (() => { const h=new Date().getHours(); if(h<12) return "Bom dia"; if(h<18) return "Boa tarde"; return "Boa noite"; })();
+  const firstName = currentUser?.email?.split("@")[0]?.split(".")[0] || "você";
   const SBar = () => (
-    <View style={{ backgroundColor:T.bg, paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:8, flexDirection:"row", justifyContent:"space-between", alignItems:"center" }}>
-      <Text style={{ fontSize:22, fontWeight:"800", color:T.text }}>Uni<Text style={{ color:T.accent }}>Vest</Text></Text>
-      {tab==="perfil" && (
-        <TouchableOpacity onPress={()=>setMcfg(true)} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignItems:"center", justifyContent:"center" }}>
-          <Text style={{ color:T.sub, fontSize:13, fontWeight:"800" }}>⚙️</Text>
+    <View style={{ backgroundColor:T.bg, paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, flexDirection:"row", justifyContent:"space-between", alignItems:"center" }}>
+      <View>
+        <Text style={{ fontSize:22, fontWeight:"800", color:T.text }}>Uni<Text style={{ color:T.accent }}>Vest</Text></Text>
+        {tab==="feed" && <Text style={{ fontSize:11, color:T.sub, marginTop:1 }}>{greeting}, {firstName} 👋</Text>}
+      </View>
+      {tab==="perfil" ? (
+        <TouchableOpacity onPress={()=>setMcfg(true)} style={{ width:36, height:36, borderRadius:18, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignItems:"center", justifyContent:"center" }}>
+          <Text style={{ fontSize:14 }}>⚙️</Text>
         </TouchableOpacity>
-      )}
+      ) : tab==="feed" ? (
+        <View style={{ width:36, height:36, borderRadius:18, backgroundColor:AVATAR_COLORS[avBgIdx][0], alignItems:"center", justifyContent:"center" }}>
+          <Text style={{ fontSize:18 }}>{av}</Text>
+        </View>
+      ) : null}
     </View>
   );
 
   const BNav = () => (
-    <View style={{ backgroundColor:T.nav, borderTopWidth:1, borderColor:T.border, paddingBottom:insets.bottom, flexDirection:"row" }}>
-      {[{id:"feed",ic:"🏠",l:"Feed"},{id:"explorar",ic:"🔍",l:"Explorar"},{id:"notas",ic:"📊",l:"Notas"},{id:"perfil",ic:"👤",l:"Perfil"}].map(t=>(
-        <TouchableOpacity key={t.id} onPress={()=>{setTab(t.id);setSU(null);}} style={{ flex:1, alignItems:"center", paddingVertical:8, backgroundColor:tab===t.id?T.acBg:"transparent" }}>
-          <Text style={{ fontSize:20 }}>{getIcon("tab_"+t.id,t.ic)}</Text>
-          <Text style={{ fontSize:10, fontWeight:tab===t.id?"800":"500", color:tab===t.id?T.accent:T.muted }}>{t.l}</Text>
-        </TouchableOpacity>
-      ))}
+    <View style={{ backgroundColor:T.nav, borderTopWidth:1, borderColor:T.border, paddingBottom:insets.bottom, flexDirection:"row", paddingHorizontal:8, paddingTop:6 }}>
+      {[{id:"feed",ic:"🏠",l:"Feed"},{id:"explorar",ic:"🔍",l:"Explorar"},{id:"notas",ic:"📊",l:"Notas"},{id:"perfil",ic:"👤",l:"Perfil"}].map(t=>{
+        const active = tab===t.id;
+        return (
+          <TouchableOpacity key={t.id} onPress={()=>{setTab(t.id);setSU(null);}} style={{ flex:1, alignItems:"center", paddingVertical:6 }}>
+            <View style={{ paddingHorizontal:16, paddingVertical:5, borderRadius:20, backgroundColor:active?T.acBg:"transparent", alignItems:"center", marginBottom:2 }}>
+              <Text style={{ fontSize:20 }}>{getIcon("tab_"+t.id,t.ic)}</Text>
+            </View>
+            <Text style={{ fontSize:10, fontWeight:active?"800":"500", color:active?T.accent:T.muted }}>{t.l}</Text>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 
@@ -697,7 +778,7 @@ function MainApp() {
           <TouchableOpacity onPress={()=>toggleFollow(selUni,!selUni.followed)} style={{ paddingHorizontal:18, paddingVertical:9, borderRadius:13, backgroundColor:selUni.followed?"#dc2626":T.accent }}>
             <Text style={{ color:selUni.followed?"#fff":AT, fontSize:13, fontWeight:"800" }}>{selUni.followed?"🚫 Deixar de seguir":"+ Seguir"}</Text>
           </TouchableOpacity>
-          <Text style={{ color:"rgba(255,255,255,.65)", fontSize:11 }}>👥 <Text style={{ color:"#fff", fontWeight:"800" }}>{selUni.followers}</Text> seguidores</Text>
+          <Text style={{ color:"rgba(255,255,255,.65)", fontSize:11 }}>👥 <Text style={{ color:"#fff", fontWeight:"800" }}>{fmtCount(selUni.followersCount??selUni.followers)}</Text> seguidores</Text>
         </View>
       </View>
       <View style={{ padding:16, gap:10 }}>
@@ -755,19 +836,29 @@ function MainApp() {
         </TouchableOpacity>
       </ScrollView>
       <View style={{ height:1, backgroundColor:T.border, marginBottom:8 }} />
+      {feedItems.length===0 && fol.length===0 && (
+        <View style={{ flex:1, alignItems:"center", justifyContent:"center", padding:40 }}>
+          <Text style={{ fontSize:48, marginBottom:16 }}>📰</Text>
+          <Text style={{ color:T.text, fontSize:16, fontWeight:"800", marginBottom:8, textAlign:"center" }}>Seu feed está vazio</Text>
+          <Text style={{ color:T.sub, fontSize:13, textAlign:"center", lineHeight:20, marginBottom:20 }}>Siga universidades para ver novidades, datas e notas de corte.</Text>
+          <TouchableOpacity onPress={()=>setTab("explorar")} style={{ paddingHorizontal:24, paddingVertical:12, borderRadius:20, backgroundColor:T.accent }}>
+            <Text style={{ color:AT, fontWeight:"800", fontSize:14 }}>Explorar universidades</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={{ paddingHorizontal:16, paddingBottom:16, gap:12 }}>
         {feedItems.map(item=>{
           const tc=TG[item.type]||TG.news; const isL=liked[item.id]; const isS=saved[item.id];
           const ui=unis.find(u=>u.id===item.uniId);
           return (
-            <View key={item.id} style={cd({ overflow:"hidden" })}>
+            <View key={item.id} style={{ ...cd({ overflow:"hidden" }), borderLeftWidth:3, borderLeftColor:ui?.color||T.accent }}>
               <View style={{ flexDirection:"row", alignItems:"center", gap:10, padding:14, paddingBottom:10 }}>
                 <View style={{ width:36, height:36, borderRadius:18, backgroundColor:ui?.color||T.card2, alignItems:"center", justifyContent:"center" }}>
                   <Text style={{ color:"#fff", fontSize:11, fontWeight:"800" }}>{ui?.name?.slice(0,2)||""}</Text>
                 </View>
                 <View style={{ flex:1 }}>
                   <Text style={{ color:T.text, fontSize:13, fontWeight:"700" }}>{item.uni}</Text>
-                  <Text style={{ color:T.muted, fontSize:11 }}>{item.time}</Text>
+                  <Text style={{ color:T.muted, fontSize:11 }}>{item.time || timeAgo(item.createdAt)}</Text>
                 </View>
                 <View style={{ backgroundColor:tc.bg, paddingHorizontal:9, paddingVertical:3, borderRadius:20, borderWidth:1, borderColor:tc.b }}>
                   <Text style={{ color:tc.tx, fontSize:10, fontWeight:"700" }}>{item.icon} {item.tag}</Text>
@@ -782,7 +873,8 @@ function MainApp() {
                   if(!currentUser){Alert.alert("Atenção","Faça login para curtir");return;}
                   const newLiked=!liked[item.id];
                   setLiked(p=>({...p,[item.id]:newLiked}));
-                  setPosts(prev=>prev.map(p=>p.id===item.id?{...p,likesCount:(p.likesCount||p.likes||0)+(newLiked?1:-1)}:p));
+                  setPosts(prev=>prev.map(p=>p.id===item.id?{...p,likesCount:(p.likesCount??p.likes??0)+(newLiked?1:-1)}:p));
+                  saveLocalUserData(currentData());
                   (async()=>{
                     try{
                       const postRef=doc(db,"posts",item.id); const lkRef=doc(db,"posts",item.id,"likes",currentUser.uid);
@@ -792,13 +884,26 @@ function MainApp() {
                   })();
                 }} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4, marginRight:2 }}>
                   <Text style={{ fontSize:14, marginRight:4 }}>{isL?"❤️":"🤍"}</Text>
-                  <Text style={{ color:isL?"#f87171":T.muted, fontSize:11, fontWeight:"600" }}>{(item.likesCount||item.likes||0).toLocaleString("pt-BR")}</Text>
+                  <Text style={{ color:isL?"#f87171":T.muted, fontSize:11, fontWeight:"600" }}>{fmtCount(Math.max(0, item.likesCount??item.likes??0))}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={()=>setMshr(item)} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4, marginRight:2 }}>
+                <TouchableOpacity onPress={()=>{
+                  setMshr(item);
+                  // Increment share count optimistically + in Firebase
+                  setPosts(prev=>prev.map(p=>p.id===item.id?{...p,sharesCount:(p.sharesCount||0)+1}:p));
+                  updateDoc(doc(db,"posts",item.id),{sharesCount:increment(1)}).catch(()=>{});
+                }} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4, marginRight:2 }}>
                   <Text style={{ fontSize:14, marginRight:4 }}>📤</Text>
-                  <Text style={{ color:T.muted, fontSize:11, fontWeight:"600" }}>{(item.sharesCount||0).toLocaleString("pt-BR")}</Text>
+                  <Text style={{ color:T.muted, fontSize:11, fontWeight:"600" }}>{fmtCount(item.sharesCount||0)}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={()=>Alert.alert("Reportar","Deseja reportar esta publicação?\n\nNosso time irá analisar.",[{text:"Cancelar",style:"cancel"},{text:"Reportar",style:"destructive",onPress:()=>Alert.alert("Obrigado!","Report enviado para análise.")}])} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4 }}>
+                <TouchableOpacity onPress={()=>Alert.alert("Reportar","Deseja reportar esta publicação?\n\nNosso time irá analisar.",[{text:"Cancelar",style:"cancel"},{text:"Reportar",style:"destructive",onPress:async()=>{
+                  try {
+                    await addDoc(collection(db,"reports"),{
+                      postId:item.id, postTitle:item.title, reportedBy:currentUser?.uid||"anon",
+                      reason:"user_report", createdAt:serverTimestamp(),
+                    });
+                  } catch {}
+                  Alert.alert("Obrigado!","Report enviado para análise.");
+                }}])} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4 }}>
                   <Text style={{ fontSize:14, marginRight:4 }}>🚩</Text>
                   <Text style={{ color:T.muted, fontSize:11, fontWeight:"600" }}>Reportar</Text>
                 </TouchableOpacity>
@@ -816,13 +921,17 @@ function MainApp() {
 
   const renderExplorar = () => (
     <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:16 }} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={T.accent} colors={[T.accent]} />}>
-      <TouchableOpacity onPress={()=>setMdisc(true)} style={{ backgroundColor:isDark?"#0c1f3a":"#dbeafe", borderRadius:16, padding:14, flexDirection:"row", alignItems:"center", gap:12, marginBottom:12, borderWidth:1, borderColor:isDark?"#1e40af40":"#bfdbfe" }}>
-        <Text style={{ fontSize:28 }}>🧭</Text>
-        <View style={{ flex:1 }}>
-          <Text style={{ color:T.text, fontSize:13, fontWeight:"800" }}>Ainda não sabe qual curso?</Text>
-          <Text style={{ color:T.sub, fontSize:11 }}>Explore por área, nota de corte e mercado</Text>
+      <TouchableOpacity onPress={()=>setMdisc(true)} style={{ backgroundColor:isDark?"#0c1f3a":"#dbeafe", borderRadius:18, padding:16, flexDirection:"row", alignItems:"center", gap:14, marginBottom:14, borderWidth:1, borderColor:isDark?"#1e40af40":"#bfdbfe" }}>
+        <View style={{ width:52, height:52, borderRadius:26, backgroundColor:isDark?"#1e3a6a":"#bfdbfe", alignItems:"center", justifyContent:"center" }}>
+          <Text style={{ fontSize:28 }}>🧭</Text>
         </View>
-        <Text style={{ color:T.accent, fontWeight:"800", fontSize:18 }}>›</Text>
+        <View style={{ flex:1 }}>
+          <Text style={{ color:T.text, fontSize:14, fontWeight:"800" }}>Ainda não sabe qual curso?</Text>
+          <Text style={{ color:T.sub, fontSize:11, marginTop:2, lineHeight:15 }}>Explore por área, nota de corte e mercado de trabalho</Text>
+        </View>
+        <View style={{ backgroundColor:T.accent, borderRadius:12, width:32, height:32, alignItems:"center", justifyContent:"center" }}>
+          <Text style={{ color:AT, fontWeight:"800", fontSize:16 }}>›</Text>
+        </View>
       </TouchableOpacity>
       <SBox val={query} set={setQuery} ph="Buscar universidade…" T={T} />
       <View style={{ height:10 }} />
@@ -835,7 +944,7 @@ function MainApp() {
       </ScrollView>
       <View style={{ gap:9 }}>
         {filtU.map(u=>(
-          <TouchableOpacity key={u.id} onPress={()=>setSU(u)} style={{ ...cd(), flexDirection:"row", alignItems:"center", gap:12, padding:15 }}>
+          <TouchableOpacity key={u.id} onPress={()=>setSU(u)} style={{ ...cd(), flexDirection:"row", alignItems:"center", gap:12, padding:15, borderLeftWidth:u.followed?3:0, borderLeftColor:u.color }}>
             <View style={{ width:50, height:50, borderRadius:25, backgroundColor:u.color, alignItems:"center", justifyContent:"center" }}>
               <Text style={{ color:"#fff", fontSize:14, fontWeight:"800" }}>{u.name.slice(0,2)}</Text>
             </View>
@@ -844,11 +953,11 @@ function MainApp() {
               <Text style={{ color:T.sub, fontSize:11 }} numberOfLines={1}>{u.fullName}</Text>
               <View style={{ flexDirection:"row", gap:5, marginTop:5 }}>
                 {[u.state,u.type].map(x=><View key={x} style={{ backgroundColor:T.card2, borderRadius:8, paddingHorizontal:7, paddingVertical:2 }}><Text style={{ color:T.muted, fontSize:9, fontWeight:"600" }}>{x}</Text></View>)}
-                <Text style={{ color:T.sub, fontSize:10 }}>👥 {u.followers}</Text>
+                <Text style={{ color:T.sub, fontSize:10 }}>👥 {fmtCount(u.followersCount??u.followers)}</Text>
               </View>
             </View>
-            <TouchableOpacity onPress={()=>toggleFollow(u,!u.followed)} style={{ paddingHorizontal:12, paddingVertical:7, borderRadius:11, backgroundColor:u.followed?"#C62828":T.accent }}>
-              <Text style={{ color:u.followed?"#fff":AT, fontSize:11, fontWeight:"800" }}>{u.followed?"Deixar de seguir":"+ Seguir"}</Text>
+            <TouchableOpacity onPress={()=>toggleFollow(u,!u.followed)} style={{ paddingHorizontal:12, paddingVertical:7, borderRadius:11, backgroundColor:u.followed?"transparent":T.accent, borderWidth:u.followed?1.5:0, borderColor:"#C62828" }}>
+              <Text style={{ color:u.followed?"#C62828":AT, fontSize:11, fontWeight:"800" }}>{u.followed?"✓ Seguindo":"+ Seguir"}</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         ))}
@@ -868,31 +977,39 @@ function MainApp() {
       </View>
       <SBox val={nSrch} set={setNsrch} ph="Buscar outro curso ou universidade…" T={T} />
       <View style={{ height:10 }} />
-      <View style={{ gap:8, marginBottom:20 }}>
-        {filtN.map((n,i)=>(
-          <View key={i} style={cd({ padding:14 })}>
-            <View style={{ flexDirection:"row", alignItems:"center", gap:10 }}>
-              <View style={{ width:42, height:42, borderRadius:21, backgroundColor:n.cor, alignItems:"center", justifyContent:"center" }}>
-                <Text style={{ color:"#fff", fontSize:9, fontWeight:"800" }}>{n.uni.split(" ")[0]}</Text>
-              </View>
-              <View style={{ flex:1 }}>
-                <Text style={{ color:T.text, fontSize:13, fontWeight:"800" }}>{n.curso}</Text>
-                <Text style={{ color:T.sub, fontSize:11 }}>{n.uni}</Text>
-              </View>
-              <View style={{ alignItems:"flex-end" }}>
-                <Text style={{ color:T.accent, fontSize:20, fontWeight:"800" }}>{n.nota}</Text>
-                <Text style={{ color:T.muted, fontSize:9 }}>nota corte</Text>
+      <View style={{ gap:10, marginBottom:20 }}>
+        {filtN.map((n,i)=>{
+          const pct = Math.round((n.nota/100)*100);
+          const diff = last ? (avg(last) - n.nota) : null;
+          const diffColor = diff===null ? T.muted : diff>=0 ? "#22c55e" : "#f87171";
+          return (
+            <View key={i} style={{ ...cd(), overflow:"hidden", borderLeftWidth:4, borderLeftColor:n.cor }}>
+              <View style={{ padding:14 }}>
+                <View style={{ flexDirection:"row", alignItems:"center", gap:10 }}>
+                  <View style={{ width:44, height:44, borderRadius:22, backgroundColor:n.cor+"22", alignItems:"center", justifyContent:"center", borderWidth:1, borderColor:n.cor+"44" }}>
+                    <Text style={{ color:n.cor, fontSize:10, fontWeight:"800" }}>{n.uni.split(" ")[0]}</Text>
+                  </View>
+                  <View style={{ flex:1 }}>
+                    <Text style={{ color:T.text, fontSize:13, fontWeight:"800" }}>{n.curso}</Text>
+                    <Text style={{ color:T.sub, fontSize:11 }}>{n.uni} · {n.vagas} vagas</Text>
+                  </View>
+                  <View style={{ alignItems:"flex-end", gap:2 }}>
+                    <View style={{ backgroundColor:n.cor+"18", borderRadius:10, paddingHorizontal:10, paddingVertical:4, borderWidth:1, borderColor:n.cor+"44" }}>
+                      <Text style={{ color:n.cor, fontSize:18, fontWeight:"800" }}>{n.nota}</Text>
+                    </View>
+                    {diff!==null && <Text style={{ color:diffColor, fontSize:9, fontWeight:"700", textAlign:"right" }}>{diff>=0?"+"+(diff.toFixed(1)):diff.toFixed(1)} pts</Text>}
+                  </View>
+                </View>
+                <View style={{ marginTop:10, backgroundColor:T.card2, borderRadius:6, height:4 }}>
+                  <View style={{ width:pct+"%", height:"100%", backgroundColor:n.cor, borderRadius:6, opacity:0.8 }} />
+                </View>
+                <TouchableOpacity onPress={()=>Linking.openURL(n.site)} style={{ marginTop:8, alignSelf:"flex-start" }}>
+                  <Text style={{ color:T.accent, fontSize:10, fontWeight:"700" }}>Site oficial ↗</Text>
+                </TouchableOpacity>
               </View>
             </View>
-            <View style={{ marginTop:10, backgroundColor:T.card2, borderRadius:6, height:5 }}>
-              <View style={{ width:n.nota+"%", height:"100%", backgroundColor:T.accent, borderRadius:6 }} />
-            </View>
-            <View style={{ flexDirection:"row", justifyContent:"space-between", marginTop:4 }}>
-              <Text style={{ color:T.muted, fontSize:9 }}>{n.vagas} vagas</Text>
-              <TouchableOpacity onPress={()=>Linking.openURL(n.site)}><Text style={{ color:T.accent, fontSize:10, fontWeight:"700" }}>Site oficial ↗</Text></TouchableOpacity>
-            </View>
-          </View>
-        ))}
+          );
+        })}
         {filtN.length===0 && <Text style={{ color:T.muted, textAlign:"center", padding:20, fontSize:13 }}>Nenhum resultado.</Text>}
       </View>
       <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
@@ -910,11 +1027,17 @@ function MainApp() {
       ) : (
         <>
           {weak && (
-            <View style={{ backgroundColor:isDark?"#2a1800":"#fff7ed", borderRadius:14, padding:12, borderWidth:1, borderColor:isDark?"#78350f":"#fed7aa", marginBottom:12, flexDirection:"row", alignItems:"center", gap:10 }}>
-              <Text style={{ fontSize:18 }}>⚠️</Text>
-              <View>
-                <Text style={{ color:"#f59e0b", fontSize:11, fontWeight:"800" }}>Área para melhorar</Text>
-                <Text style={{ color:isDark?"#fbbf24":"#c2410c", fontSize:13, fontWeight:"700" }}>{weak.subject} — {weak.v} pts</Text>
+            <View style={{ backgroundColor:isDark?"#2a1800":"#fff7ed", borderRadius:16, padding:14, borderWidth:1, borderColor:isDark?"#78350f":"#fed7aa", marginBottom:14, flexDirection:"row", alignItems:"center", gap:12 }}>
+              <View style={{ width:44, height:44, borderRadius:22, backgroundColor:isDark?"#78350f":"#fed7aa", alignItems:"center", justifyContent:"center" }}>
+                <Text style={{ fontSize:22 }}>⚠️</Text>
+              </View>
+              <View style={{ flex:1 }}>
+                <Text style={{ color:"#f59e0b", fontSize:10, fontWeight:"800", textTransform:"uppercase", letterSpacing:0.5 }}>Área para melhorar</Text>
+                <Text style={{ color:isDark?"#fbbf24":"#c2410c", fontSize:14, fontWeight:"800", marginTop:2 }}>{weak.subject}</Text>
+                <Text style={{ color:isDark?"#fbbf24":"#c2410c", fontSize:11, opacity:0.8 }}>{weak.v} pts na última prova</Text>
+              </View>
+              <View style={{ backgroundColor:isDark?"#78350f":"#fed7aa", borderRadius:10, paddingHorizontal:10, paddingVertical:6 }}>
+                <Text style={{ color:isDark?"#fbbf24":"#92400e", fontSize:13, fontWeight:"800" }}>{weak.v}</Text>
               </View>
             </View>
           )}
@@ -981,27 +1104,31 @@ function MainApp() {
 
   const renderPerfil = () => (
     <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:24 }}>
-      <View style={{ ...cd(), padding:22, alignItems:"center", marginBottom:12 }}>
-        <TouchableOpacity onPress={()=>{setTmpAv(av);setTmpBgIdx(avBgIdx);setMpho(true);}} style={{ width:72, height:72, borderRadius:36, backgroundColor:AVATAR_COLORS[avBgIdx][0], alignItems:"center", justifyContent:"center", marginBottom:4, borderWidth:3, borderColor:T.accent+"40" }}>
-          <Text style={{ fontSize:30 }}>{av}</Text>
-        </TouchableOpacity>
-        <Text style={{ color:T.muted, fontSize:10, marginBottom:10 }}>Toque para alterar foto</Text>
-        <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>{currentUser?.email?.split("@")[0]||"Usuário"}</Text>
-        <View style={{ flexDirection:"row", alignItems:"center", gap:6, marginTop:4, marginBottom:10 }}>
-          <Text>{uType?.emoji}</Text>
-          <Text style={{ color:T.sub, fontSize:12 }}>{uType?.label}</Text>
-        </View>
-        <View style={{ flexDirection:"row", gap:8, marginBottom:14, flexWrap:"wrap", justifyContent:"center" }}>
-          {!!c1 && <View style={{ backgroundColor:T.acBg, paddingHorizontal:12, paddingVertical:4, borderRadius:20, borderWidth:1, borderColor:T.accent+"40" }}><Text style={{ color:T.accent, fontSize:11, fontWeight:"700" }}>1ª {c1}</Text></View>}
-          {!!c2 && <View style={{ backgroundColor:T.card2, paddingHorizontal:12, paddingVertical:4, borderRadius:20, borderWidth:1, borderColor:T.border }}><Text style={{ color:T.sub, fontSize:11, fontWeight:"700" }}>2ª {c2}</Text></View>}
-        </View>
-        <View style={{ flexDirection:"row", justifyContent:"center", gap:28 }}>
-          {[{v:fol.length,l:"seguindo"},{v:gs.length,l:"provas"},{v:Object.values(saved).filter(Boolean).length,l:"salvos"}].map(({v,l})=>(
-            <View key={l} style={{ alignItems:"center" }}>
-              <Text style={{ color:T.accent, fontSize:19, fontWeight:"800" }}>{v}</Text>
-              <Text style={{ color:T.muted, fontSize:10 }}>{l}</Text>
-            </View>
-          ))}
+      <View style={{ ...cd(), overflow:"hidden", marginBottom:12 }}>
+        {/* Banner */}
+        <View style={{ height:80, backgroundColor:AVATAR_COLORS[avBgIdx][0]+"44", borderBottomWidth:1, borderColor:T.border }} />
+        <View style={{ alignItems:"center", marginTop:-40, paddingBottom:20, paddingHorizontal:22 }}>
+          <TouchableOpacity onPress={()=>{setTmpAv(av);setTmpBgIdx(avBgIdx);setMpho(true);}} style={{ width:80, height:80, borderRadius:40, backgroundColor:AVATAR_COLORS[avBgIdx][0], alignItems:"center", justifyContent:"center", borderWidth:4, borderColor:T.card }}>
+            <Text style={{ fontSize:36 }}>{av}</Text>
+          </TouchableOpacity>
+          <Text style={{ color:T.muted, fontSize:10, marginTop:4, marginBottom:8 }}>Toque para alterar foto</Text>
+          <Text style={{ color:T.text, fontSize:18, fontWeight:"800" }}>{currentUser?.email?.split("@")[0]||"Usuário"}</Text>
+          <View style={{ flexDirection:"row", alignItems:"center", gap:6, marginTop:4, marginBottom:12 }}>
+            <Text>{uType?.emoji}</Text>
+            <Text style={{ color:T.sub, fontSize:12 }}>{uType?.label}</Text>
+          </View>
+          <View style={{ flexDirection:"row", gap:8, marginBottom:16, flexWrap:"wrap", justifyContent:"center" }}>
+            {!!c1 && <View style={{ backgroundColor:T.acBg, paddingHorizontal:12, paddingVertical:4, borderRadius:20, borderWidth:1, borderColor:T.accent+"40" }}><Text style={{ color:T.accent, fontSize:11, fontWeight:"700" }}>1ª {c1}</Text></View>}
+            {!!c2 && <View style={{ backgroundColor:T.card2, paddingHorizontal:12, paddingVertical:4, borderRadius:20, borderWidth:1, borderColor:T.border }}><Text style={{ color:T.sub, fontSize:11, fontWeight:"700" }}>2ª {c2}</Text></View>}
+          </View>
+          <View style={{ flexDirection:"row", justifyContent:"center", gap:0, width:"100%", borderTopWidth:1, borderColor:T.border, paddingTop:14 }}>
+            {[{v:fol.length,l:"seguindo"},{v:gs.length,l:"provas"},{v:Object.values(saved).filter(Boolean).length,l:"salvos"}].map(({v,l},i,arr)=>(
+              <View key={l} style={{ flex:1, alignItems:"center", borderRightWidth:i<arr.length-1?1:0, borderColor:T.border }}>
+                <Text style={{ color:T.accent, fontSize:20, fontWeight:"800" }}>{v}</Text>
+                <Text style={{ color:T.muted, fontSize:10 }}>{l}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
 
@@ -1073,9 +1200,11 @@ function MainApp() {
     <View style={{ flex:1, backgroundColor:T.bg }}>
       <StatusBar barStyle={isDark?"light-content":"dark-content"} />
       <SBar />
-      <View style={{ paddingHorizontal:20, paddingTop:2, paddingBottom:4 }}>
-        {!selUni && <Text style={{ color:T.sub, fontSize:11 }}>{tab==="feed"?"Novidades para você":tab==="explorar"?"Encontre sua universidade":tab==="notas"?"Notas de corte & suas provas":`${uType?.emoji||"👤"} ${uType?.label||"Meu Perfil"}`}</Text>}
-      </View>
+      {!selUni && (
+        <View style={{ paddingHorizontal:20, paddingTop:0, paddingBottom:6 }}>
+          <Text style={{ color:T.sub, fontSize:11 }}>{tab==="feed"?"Novidades para você":tab==="explorar"?"Encontre sua universidade":tab==="notas"?"Notas de corte & suas provas":`${uType?.emoji||"👤"} ${uType?.label||"Meu Perfil"}`}</Text>
+        </View>
+      )}
       {selUni ? renderUniDetail() : (
         <>
           {tab==="feed"     && renderFeed()}
@@ -1149,7 +1278,7 @@ function MainApp() {
           </View>
           <Text style={[lbl,{marginBottom:10}]}>Cor de fundo</Text>
           <View style={{ flexDirection:"row", flexWrap:"wrap", gap:8, marginBottom:18 }}>
-            {AVATAR_COLORS.map(([c1c,c2c],idx)=>(
+            {AVATAR_COLORS.map(([c1c],idx)=>(
               <TouchableOpacity key={idx} onPress={()=>setTmpBgIdx(idx)} style={{ width:52, height:52, borderRadius:26, backgroundColor:c1c, borderWidth:tmpBgIdx===idx?3:1, borderColor:tmpBgIdx===idx?"#fff":c1c+"40" }} />
             ))}
           </View>

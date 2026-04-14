@@ -1,0 +1,2 @@
+#!/bin/bash
+cd /Users/App/repos/univest-native && npx expo export --platform ios --output-dir dist && cp dist/_expo/static/js/ios/*.hbc ios/main.jsbundle && cd ios && xcodebuild -workspace univestnative.xcworkspace -scheme univestnative -configuration Release -destination "platform=iOS Simulator,name=iPhone 17" -derivedDataPath build_release build && xcrun simctl install booted "/Users/App/repos/univest-native/ios/build_release/Build/Products/Release-iphonesimulator/univestnative.app" && xcrun simctl launch booted "com.univest.app"
