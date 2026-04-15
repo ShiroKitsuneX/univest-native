@@ -47,14 +47,31 @@ const AREAS = [
 const ALL_COURSES = [...new Set(AREAS.flatMap(a=>a.courses))].sort();
 
 const UNIVERSITIES = [
-  { id:"1",  name:"USP",     fullName:"Universidade de São Paulo",             city:"São Paulo",       state:"SP", color:"#003366", followers:"142k", type:"Estadual", description:"A maior universidade da América Latina, referência em pesquisa e inovação.",  courses:["Medicina","Direito","Engenharia Civil","Arquitetura","Psicologia"],     vestibular:"FUVEST 2026",        inscricao:"Ago–Set/2025", prova:"Jan/2026", site:"https://fuvest.br",          followed:false },
-  { id:"2",  name:"UNICAMP", fullName:"Universidade Estadual de Campinas",     city:"Campinas",        state:"SP", color:"#004d2c", followers:"98k",  type:"Estadual", description:"Excelência em ciência, tecnologia e inovação no interior Paulista.",       courses:["Medicina","Engenharia de Computação","Ciências da Computação","Física"], vestibular:"COMVEST 2026",       inscricao:"Ago/2025",     prova:"Dez/2025", site:"https://comvest.unicamp.br", followed:false },
-  { id:"3",  name:"UNESP",   fullName:"Universidade Estadual Paulista",        city:"São Paulo",       state:"SP", color:"#8B0000", followers:"76k",  type:"Estadual", description:"Presente em todo SP com campi em 24 cidades.",                            courses:["Medicina","Odontologia","Veterinária","Agronomia","Direito"],          vestibular:"VUNESP 2026",        inscricao:"Set/2025",     prova:"Jan/2026", site:"https://vunesp.com.br",       followed:false },
-  { id:"4",  name:"UNIFESP", fullName:"Universidade Federal de São Paulo",     city:"São Paulo",       state:"SP", color:"#4B0082", followers:"54k",  type:"Federal",  description:"Referência nacional em saúde, com cursos de medicina de alto nível.",     courses:["Medicina","Enfermagem","Farmácia","Biomedicina"],                      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://unifesp.br",          followed:false },
-  { id:"5",  name:"UFMG",    fullName:"Universidade Federal de Minas Gerais",  city:"Belo Horizonte",  state:"MG", color:"#1a3a5c", followers:"89k",  type:"Federal",  description:"Uma das melhores federais do Brasil, destaque em diversas áreas.",        courses:["Medicina","Direito","Arquitetura","Engenharia Civil","Letras"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufmg.br",             followed:false },
-  { id:"6",  name:"UFRJ",    fullName:"Universidade Federal do Rio de Janeiro", city:"Rio de Janeiro", state:"RJ", color:"#003580", followers:"110k", type:"Federal",  description:"A maior universidade federal do Brasil, com tradição centenária.",        courses:["Medicina","Engenharia Civil","Arquitetura","Economia"],                vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufrj.br",             followed:false },
-  { id:"7",  name:"COTUCA",  fullName:"Colégio Técnico da UNICAMP",            city:"Campinas",        state:"SP", color:"#1a4a3a", followers:"18k",  type:"Técnico",  description:"Escola técnica de nível médio vinculada à UNICAMP.",                      courses:["Mecânica","Eletrônica","Informática","Edificações"],                   vestibular:"Proc. Seletivo 2026",inscricao:"Out/2025",    prova:"Dez/2025", site:"https://cotuca.unicamp.br",   followed:false },
-  { id:"8",  name:"ETEC",    fullName:"Escola Técnica Estadual de SP",         city:"São Paulo",       state:"SP", color:"#2d4a7a", followers:"32k",  type:"Técnico",  description:"Rede de escolas técnicas estaduais com cursos gratuitos.",               courses:["Administração","Informática","Enfermagem","Logística"],                vestibular:"Vestibulinho 2026",  inscricao:"Set/2025",     prova:"Nov/2025", site:"https://etec.sp.gov.br",      followed:false },
+  { id:"1",  name:"USP",     fullName:"Universidade de São Paulo",             city:"São Paulo",       state:"SP", color:"#003366", followers:"142k", type:"Estadual", description:"A maior universidade da América Latina, referência em pesquisa e inovação.",  courses:["Medicina","Direito","Engenharia Civil","Arquitetura","Psicologia"],     vestibular:"FUVEST 2026",        inscricao:"Ago–Set/2025", prova:"Jan/2026", site:"https://fuvest.br",          followed:false, books:["Dom Casmurro - Machado de Assis","Vidas Secas - Graciliano Ramos","Memórias Póstulas de Brás Cubas - Machado de Assis","O Cortiço - Aluísio Azevedo","Quarto de Despejo - Carolina Maria de Jesus","A Hora da Estrela - Clarice Lispector","O Mundo de Sofia - Jostein Gaarden","Auto da Compadecida - Ariano Suassuna"],
+    exams:[
+      {id:"e1",year:2026,phase:"1ª fase",subject:"Prova Comum",date:"2026-01-12",status:"upcoming",pdfUrl:"",sourceUrl:"https://fuvest.br",description:"Primeira fase - 90 questões de múltipla escolha",duration:"5h",questions:90},
+      {id:"e2",year:2026,phase:"2ª fase",subject:"Prova de Português",date:"2026-01-19",status:"upcoming",pdfUrl:"",sourceUrl:"https://fuvest.br",description:"Redação + Questões de Português",duration:"4h",questions:60},
+      {id:"e3",year:2025,phase:"1ª fase",subject:"Prova Comum",date:"2025-01-12",status:"past",pdfUrl:"https://fuvest.br/2025/fase1.pdf",sourceUrl:"https://fuvest.br/provas/2025",description:"Primeira fase - 90 questões",duration:"5h",questions:90},
+      {id:"e4",year:2025,phase:"2ª fase",subject:"Prova de Português",date:"2025-01-19",status:"past",pdfUrl:"https://fuvest.br/2025/fase2.pdf",sourceUrl:"https://fuvest.br/provas/2025",description:"Redação + Português",duration:"4h",questions:60},
+      {id:"e5",year:2025,phase:"3ª fase",subject:"Provas Específicas",date:"2025-01-22",status:"past",pdfUrl:"https://fuvest.br/2025/fase3.pdf",sourceUrl:"https://fuvest.br/provas/2025",description:"Provas por curso",duration:"4h",questions:30},
+      {id:"e6",year:2024,phase:"1ª fase",subject:"Prova Comum",date:"2024-01-14",status:"past",pdfUrl:"https://fuvest.br/2024/fase1.pdf",sourceUrl:"https://fuvest.br/provas/2024",description:"Primeira fase - 90 questões",duration:"5h",questions:90},
+    ]},
+  { id:"2",  name:"UNICAMP", fullName:"Universidade Estadual de Campinas",     city:"Campinas",        state:"SP", color:"#004d2c", followers:"98k",  type:"Estadual", description:"Excelência em ciência, tecnologia e inovação no interior Paulista.",       courses:["Medicina","Engenharia de Computação","Ciências da Computação","Física"], vestibular:"COMVEST 2026",       inscricao:"Ago/2025",     prova:"Dez/2025", site:"https://comvest.unicamp.br", followed:false, books:["Mrs. Dalloway - Virginia Woolf","A Metamorfose - Franz Kafka","A Piada Mortal - Milan Kundera","O Poço - José Saramago","O Inspetor Geral - Nikolai Gogol","Os Lusíadas - Luís de Camões","A Arte da Guerra - Sun Tzu","A República - Platão"],
+    exams:[
+      {id:"e1",year:2026,phase:"1ª fase",subject:"Prova Comum",date:"2026-11-16",status:"upcoming",pdfUrl:"",sourceUrl:"https://comvest.unicamp.br",description:"Primeira fase - 72 questões",duration:"4h",questions:72},
+      {id:"e2",year:2025,phase:"1ª fase",subject:"Prova Comum",date:"2025-11-17",status:"past",pdfUrl:"https://comvest.unicamp.br/2025/fase1.pdf",sourceUrl:"https://comvest.unicamp.br/provas",description:"72 questões de múltipla escolha",duration:"4h",questions:72},
+      {id:"e3",year:2024,phase:"1ª fase",subject:"Prova Comum",date:"2024-11-17",status:"past",pdfUrl:"https://comvest.unicamp.br/2024/fase1.pdf",sourceUrl:"https://comvest.unicamp.br/provas",description:"72 questões",duration:"4h",questions:72},
+    ]},
+  { id:"3",  name:"UNESP",   fullName:"Universidade Estadual Paulista",        city:"São Paulo",       state:"SP", color:"#8B0000", followers:"76k",  type:"Estadual", description:"Presente em todo SP com campi em 24 cidades.",                            courses:["Medicina","Odontologia","Veterinária","Agronomia","Direito"],          vestibular:"VUNESP 2026",        inscricao:"Set/2025",     prova:"Jan/2026", site:"https://vunesp.com.br",       followed:false, books:["O Alienista - Machado de Assis","Sagarana - João Guimarães Rosa","Tereza de Ângelos - Rachel de Queiroz","A Barca dos Am排除dos - Gil Vicente","Os Meninos da Rua Larga - Emilio Salgari","Mayombe - Pepetela","O Seminarista - Bernardo Élis","O Tempo e o Vento - Érico Veríssimo"],
+    exams:[
+      {id:"e1",year:2026,phase:"1ª fase",subject:"Prova Objetiva",date:"2026-10-05",status:"upcoming",pdfUrl:"",sourceUrl:"https://vunesp.com.br",description:"100 questões de múltipla escolha",duration:"5h",questions:100},
+      {id:"e2",year:2025,phase:"1ª fase",subject:"Prova Objetiva",date:"2025-10-05",status:"past",pdfUrl:"https://vunesp.com.br/2025/fase1.pdf",sourceUrl:"https://vunesp.com.br/provas",description:"100 questões",duration:"5h",questions:100},
+    ]},
+  { id:"4",  name:"UNIFESP", fullName:"Universidade Federal de São Paulo",     city:"São Paulo",       state:"SP", color:"#4B0082", followers:"54k",  type:"Federal",  description:"Referência nacional em saúde, com cursos de medicina de alto nível.",     courses:["Medicina","Enfermagem","Farmácia","Biomedicina"],                      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://unifesp.br",          followed:false, books:[], exams:[] },
+  { id:"5",  name:"UFMG",    fullName:"Universidade Federal de Minas Gerais",  city:"Belo Horizonte",  state:"MG", color:"#1a3a5c", followers:"89k",  type:"Federal",  description:"Uma das melhores federais do Brasil, destaque em diversas áreas.",        courses:["Medicina","Direito","Arquitetura","Engenharia Civil","Letras"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufmg.br",             followed:false, books:["Grande Sertão: Veredas - João Guimarães Rosa","Cem Anos de Solidão - Gabriel García Márquez","O Seminarista - Bernardo Élis","Angústia - Graciliano Ramos","Trezentos Réis - Afonso Arinos"], exams:[] },
+  { id:"6",  name:"UFRJ",    fullName:"Universidade Federal do Rio de Janeiro", city:"Rio de Janeiro", state:"RJ", color:"#003580", followers:"110k", type:"Federal",  description:"A maior universidade federal do Brasil, com tradição centenária.",        courses:["Medicina","Engenharia Civil","Arquitetura","Economia"],                vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufrj.br",             followed:false, books:["O Crime do Padre Amaro - Eça de Queirós","Os Bruzundangas - Lima Barreto","Lição de Coisas - Caio Fernando Abreu","A Noite da Espera - Ferreira Gullar"], exams:[] },
+  { id:"7",  name:"COTUCA",  fullName:"Colégio Técnico da UNICAMP",            city:"Campinas",        state:"SP", color:"#1a4a3a", followers:"18k",  type:"Técnico",  description:"Escola técnica de nível médio vinculada à UNICAMP.",                      courses:["Mecânica","Eletrônica","Informática","Edificações"],                   vestibular:"Proc. Seletivo 2026",inscricao:"Out/2025",    prova:"Dez/2025", site:"https://cotuca.unicamp.br",   followed:false, books:[], exams:[] },
+  { id:"8",  name:"ETEC",    fullName:"Escola Técnica Estadual de SP",         city:"São Paulo",       state:"SP", color:"#2d4a7a", followers:"32k",  type:"Técnico",  description:"Rede de escolas técnicas estaduais com cursos gratuitos.",               courses:["Administração","Informática","Enfermagem","Logística"],                vestibular:"Vestibulinho 2026",  inscricao:"Set/2025",     prova:"Nov/2025", site:"https://etec.sp.gov.br",      followed:false, books:[], exams:[] },
 ];
 
 const FEED = [
@@ -112,11 +129,10 @@ const timeAgo = (timestamp) => {
   const hrs = Math.floor(mins/60);
   if (hrs < 24) return `${hrs}h atrás`;
   const days = Math.floor(hrs/24);
-  if (days < 7) return `${days}d atrás`;
-  const weeks = Math.floor(days/7);
-  if (weeks < 5) return `${weeks} sem atrás`;
-  const months = Math.floor(days/30);
-  return `${months}m atrás`;
+  if (days < 2) return `${days}d atrás`;
+  const d = new Date(ms);
+  const pad = n => n.toString().padStart(2,"0");
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 const fmtCount = (n) => {
@@ -226,6 +242,12 @@ function MainApp() {
   const [mPho,  setMpho]  = useState(false);
   const [mEdit, setMedit] = useState(false);
   const [mEv,   setMev]   = useState(null);
+  const [mExam, setMexam] = useState(null);
+  const [examYear, setExamYear] = useState(null);
+  const [showExamsPage, setShowExamsPage] = useState(false);
+  const [expandedYears, setExpandedYears] = useState({});
+  const [examSearch, setExamSearch] = useState("");
+  const [examSort, setExamSort] = useState("newest");
   const [mGr,   setMgr]   = useState(false);
   const [mShr,  setMshr]  = useState(null);
   const [mDisc, setMdisc] = useState(false);
@@ -313,7 +335,15 @@ function MainApp() {
     const fetch = async () => {
       try {
         const [unisSnap, coursesSnap, iconsSnap] = await Promise.all([getDocs(collection(db,"universidades")),getDocs(collection(db,"cursos")),getDocs(collection(db,"icones"))]);
-        if (!unisSnap.empty) { const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); const u=[...new Map(f.map(u=>[u.name,u])).values()]; setFbUnis(u); setUnis(u); }
+        if (!unisSnap.empty) { 
+          const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); 
+          const u=[...new Map(f.map(u=>[u.name,u])).values()];
+          const withBooksAndExams = u.map(fbU => {
+            const localU = UNIVERSITIES.find(lU => lU.name === fbU.name);
+            return localU ? { ...fbU, books: localU.books || [], exams: localU.exams || [] } : fbU;
+          });
+          setFbUnis(withBooksAndExams); setUnis(withBooksAndExams); 
+        }
         if (!coursesSnap.empty) setFbCourses([...new Set(coursesSnap.docs.map(d=>d.data().name))].sort());
         if (!iconsSnap.empty) { const m={}; iconsSnap.docs.forEach(d=>{const x=d.data();m[x.id]=x.emoji;}); setFbIcons(m); }
       } catch {}
@@ -354,7 +384,15 @@ function MainApp() {
         getDocs(collection(db,"universidades")),
         getDocs(collection(db,"posts")),
       ]);
-      if (!unisSnap.empty) { const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); const u=[...new Map(f.map(u=>[u.name,u])).values()]; setFbUnis(u); }
+      if (!unisSnap.empty) { 
+        const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); 
+        const u=[...new Map(f.map(u=>[u.name,u])).values()];
+        const withBooksAndExams = u.map(fbU => {
+          const localU = UNIVERSITIES.find(lU => lU.name === fbU.name);
+          return localU ? { ...fbU, books: localU.books || [], exams: localU.exams || [] } : fbU;
+        });
+        setFbUnis(withBooksAndExams); 
+      }
       if (!postsSnap.empty) {
         const f=postsSnap.docs.map(d=>({id:d.id,...d.data()}));
         f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
@@ -648,20 +686,20 @@ function MainApp() {
                     <Text style={{ color:picking===n?AT:T.sub, fontSize:11, fontWeight:"700" }}>{n}ª: {n===1?(c1||"Escolher"):(c2||"Opcional")}</Text>
                   </TouchableOpacity>
                 ))}
-                {!!c2 && <TouchableOpacity onPress={()=>hC2("")}><Text style={{ color:"#f87171", fontSize:11, fontWeight:"700", paddingVertical:6 }}>✕ remover</Text></TouchableOpacity>}
+                {(!!c1 || !!c2) && <TouchableOpacity onPress={()=>{hC1("");hC2("");setPick(1);}} style={{ paddingHorizontal:12, paddingVertical:6, borderRadius:16, backgroundColor:"#f8717130", borderWidth:1, borderColor:"#f87171" }}>
+                  <Text style={{ color:"#f87171", fontSize:11, fontWeight:"700" }}>Limpar</Text>
+                </TouchableOpacity>}
               </View>
               <SBox val={cSrch} set={setCsrch} ph="Buscar curso…" T={T} />
             </View>
             <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:100 }} keyboardShouldPersistTaps="handled">
               {fC.map(cc=>{ const s1=c1===cc,s2=c2===cc; return (
                 <TouchableOpacity key={cc} onPress={()=>{
-                  if(picking===1){
-                    if(s1){hC1("");}else{hC1(cc);hC2(s2?"":c2);}
-                    setPick(2);
-                  }else{
-                    if(!c1){Alert.alert("Ops","Selecione a 1ª opção primeiro!");return;}
-                    if(s2){hC2("");}else if(!s1){hC2(cc);}
-                  }
+                  if(s1){hC1("");setPick(1);}
+                  else if(s2){hC2("");}
+                  else if(picking===1){hC1(cc);hC2(s2?"":c2);setPick(2);}
+                  else{hC2(cc);}
+                  if(!c1&&!c2){setPick(1);}
                 }} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:12, borderRadius:14, backgroundColor:(s1||s2)?T.acBg:T.card2, marginBottom:6 }}>
                   <Text style={{ color:(s1||s2)?T.accent:T.text, fontSize:13, fontWeight:(s1||s2)?"700":"500" }}>{cc}</Text>
                   <Text style={{ fontSize:11, fontWeight:"800", color:T.accent }}>{s1&&"1ª ✓"}{s2&&"2ª ✓"}</Text>
@@ -764,6 +802,116 @@ function MainApp() {
     </View>
   );
 
+  const renderExamsPage = () => {
+    if (!selUni?.exams) return null;
+    const allExams = selUni.exams;
+    const upcoming = allExams.filter(e => e.status === "upcoming");
+    const past = allExams.filter(e => e.status === "past");
+    const years = [...new Set(past.map(e => e.year))].sort((a, b) => examSort === "newest" ? b - a : a - b);
+    
+    const toggleYear = (year) => {
+      setExpandedYears(prev => ({ ...prev, [year]: !prev[year] }));
+    };
+    
+    const filteredYears = years.map(year => ({
+      year,
+      exams: past.filter(e => e.year === year).filter(e => 
+        !examSearch || 
+        e.subject.toLowerCase().includes(examSearch.toLowerCase()) ||
+        e.phase.toLowerCase().includes(examSearch.toLowerCase())
+      )
+    })).filter(g => !examSearch || g.exams.length > 0);
+
+    return (
+      <View style={{ flex:1, backgroundColor:T.bg }}>
+        <View style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, borderBottomWidth:1, borderColor:T.border }}>
+          <TouchableOpacity onPress={()=>{setShowExamsPage(false);setExamSearch("");}} style={{ marginRight:12 }}>
+            <Text style={{ fontSize:24, color:T.accent }}>←</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize:18, fontWeight:"800", color:T.text, flex:1 }}>📝 Provas Anteriores</Text>
+        </View>
+        
+        <ScrollView style={{ flex:1, paddingHorizontal:16, paddingTop:16 }}>
+          <View style={{ flexDirection:"row", gap:8, marginBottom:16 }}>
+            <TouchableOpacity onPress={()=>setExamSort("newest")} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:examSort==="newest"?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:examSort==="newest"?T.accent:T.border }}>
+              <Text style={{ color:examSort==="newest"?AT:T.sub, fontSize:12, fontWeight:"700" }}>Mais recente</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={()=>setExamSort("oldest")} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:examSort==="oldest"?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:examSort==="oldest"?T.accent:T.border }}>
+              <Text style={{ color:examSort==="oldest"?AT:T.sub, fontSize:12, fontWeight:"700" }}>Mais antigo</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:13, paddingHorizontal:14, paddingVertical:11, borderWidth:1, borderColor:T.inpB, marginBottom:16 }}>
+            <Text style={{ fontSize:14, marginRight:10 }}>🔍</Text>
+            <TextInput value={examSearch} onChangeText={setExamSearch} placeholder="Buscar prova..." placeholderTextColor={T.muted} style={{ flex:1, color:T.text, fontSize:14, padding:0 }} />
+            {examSearch ? <TouchableOpacity onPress={()=>setExamSearch("")}><Text style={{ color:T.muted }}>✕</Text></TouchableOpacity> : null}
+          </View>
+
+          {upcoming.length > 0 && (
+            <View style={{ marginBottom:20 }}>
+              <Text style={[lbl,{marginBottom:10}]}>🔥 {new Date().getFullYear()}</Text>
+              {upcoming.map(exam => (
+                <TouchableOpacity key={exam.id} onPress={() => setMexam(exam)} style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:12, backgroundColor:isDark?"#1a2e1a":"#f0fdf4", borderWidth:1, borderColor:T.accent+"40", marginBottom:8 }}>
+                  <View style={{ width:44, height:44, borderRadius:22, backgroundColor:T.accent+"20", alignItems:"center", justifyContent:"center", marginRight:12 }}>
+                    <Text style={{ fontSize:20 }}>📋</Text>
+                  </View>
+                  <View style={{ flex:1 }}>
+                    <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>{exam.subject}</Text>
+                    <Text style={{ color:T.sub, fontSize:12 }}>{exam.phase} · {exam.questions} questões</Text>
+                  </View>
+                  <View style={{ backgroundColor:"#fbbf24", paddingHorizontal:10, paddingVertical:4, borderRadius:8 }}>
+                    <Text style={{ color:"#000", fontSize:11, fontWeight:"700" }}>Em breve</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {filteredYears.length === 0 ? (
+            <View style={{ alignItems:"center", padding:40 }}>
+              <Text style={{ fontSize:40, marginBottom:12 }}>📭</Text>
+              <Text style={{ color:T.sub, fontSize:14, textAlign:"center" }}>Nenhuma prova encontrada</Text>
+            </View>
+          ) : filteredYears.map(({year, exams}) => (
+            <View key={year} style={{ marginBottom:12 }}>
+              <TouchableOpacity onPress={() => toggleYear(year)} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:14, borderRadius:12, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, marginBottom:expandedYears[year] ? 8 : 0 }}>
+                <View style={{ flexDirection:"row", alignItems:"center" }}>
+                  <Text style={{ fontSize:18, marginRight:10 }}>📅</Text>
+                  <Text style={{ color:T.text, fontSize:15, fontWeight:"700" }}>{year}</Text>
+                  <View style={{ backgroundColor:T.accent+"30", paddingHorizontal:8, paddingVertical:2, borderRadius:10, marginLeft:8 }}>
+                    <Text style={{ color:T.accent, fontSize:11, fontWeight:"700" }}>{exams.length} provas</Text>
+                  </View>
+                </View>
+                <Text style={{ color:T.accent, fontSize:18 }}>{expandedYears[year] ? "∧" : "∨"}</Text>
+              </TouchableOpacity>
+              
+              {expandedYears[year] && exams.map(exam => (
+                <TouchableOpacity key={exam.id} onPress={() => setMexam(exam)} style={{ flexDirection:"row", alignItems:"center", padding:12, paddingLeft:20, borderRadius:10, backgroundColor:T.bg, borderWidth:1, borderColor:T.border, marginBottom:6 }}>
+                  <View style={{ width:36, height:36, borderRadius:18, backgroundColor:selUni.color+"20", alignItems:"center", justifyContent:"center", marginRight:10 }}>
+                    <Text style={{ fontSize:16 }}>📋</Text>
+                  </View>
+                  <View style={{ flex:1 }}>
+                    <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{exam.subject}</Text>
+                    <Text style={{ color:T.sub, fontSize:11 }}>{exam.phase} · {exam.questions} questões · {exam.duration}</Text>
+                  </View>
+                  <View style={{ flexDirection:"row", alignItems:"center", gap:6 }}>
+                    {exam.pdfUrl ? (
+                      <View style={{ backgroundColor:"#22c55e30", paddingHorizontal:6, paddingVertical:2, borderRadius:6 }}>
+                        <Text style={{ color:"#22c55e", fontSize:10, fontWeight:"700" }}>PDF</Text>
+                      </View>
+                    ) : null}
+                    <Text style={{ color:T.accent, fontSize:16 }}>→</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+          <View style={{ height:40 }} />
+        </ScrollView>
+      </View>
+    );
+  };
+
   const renderUniDetail = () => (
     <ScrollView style={{ flex:1 }}>
       <TouchableOpacity onPress={()=>setSU(null)} style={{ paddingHorizontal:14, paddingVertical:8, borderRadius:12, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignSelf:"flex-start", margin:16 }}>
@@ -781,6 +929,20 @@ function MainApp() {
           <Text style={{ color:"rgba(255,255,255,.65)", fontSize:11 }}>👥 <Text style={{ color:"#fff", fontWeight:"800" }}>{fmtCount(selUni.followersCount??selUni.followers)}</Text> seguidores</Text>
         </View>
       </View>
+      {selUni.exams && selUni.exams.length > 0 && (
+        <View style={{ paddingHorizontal:16, paddingTop:16, paddingBottom:8 }}>
+          <TouchableOpacity onPress={() => { setExpandedYears({}); setExamSearch(""); setExamSort("newest"); setShowExamsPage(true); }} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:14, borderRadius:14, backgroundColor:selUni.color }}>
+            <View style={{ flexDirection:"row", alignItems:"center" }}>
+              <Text style={{ fontSize:22, marginRight:12 }}>📝</Text>
+              <View>
+                <Text style={{ color:"#fff", fontSize:15, fontWeight:"800" }}>Provas Anteriores</Text>
+                <Text style={{ color:"rgba(255,255,255,.7)", fontSize:11 }}>Consulte provas e simulados</Text>
+              </View>
+            </View>
+            <Text style={{ color:"#fff", fontSize:22 }}>→</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={{ padding:16, gap:10 }}>
         <View style={cd({ padding:16 })}>
           <Text style={[lbl,{marginBottom:10}]}>📅 Próximo Vestibular</Text>
@@ -804,6 +966,17 @@ function MainApp() {
             ))}
           </View>
         </View>
+        {selUni.books && selUni.books.length > 0 && (
+          <View style={cd({ padding:16 })}>
+            <Text style={[lbl,{marginBottom:10}]}>📚 Livros Obrigatórios {selUni.vestibular?.includes("2026") ? "2026" : ""}</Text>
+            {selUni.books.map((book, i)=>(
+              <View key={i} style={{ flexDirection:"row", alignItems:"flex-start", paddingVertical:8, borderBottomWidth:i<selUni.books.length-1?1:0, borderColor:T.border }}>
+                <Text style={{ fontSize:14, marginRight:10, marginTop:2 }}>📖</Text>
+                <Text style={{ color:T.text, fontSize:12, flex:1, lineHeight:18 }}>{book}</Text>
+              </View>
+            ))}
+          </View>
+        )}
         <TouchableOpacity onPress={()=>Linking.openURL(selUni.site)} style={{ backgroundColor:isDark?"#0a1f15":"#f0fdf4", borderRadius:14, padding:13, borderWidth:1, borderColor:T.accent+"30", flexDirection:"row", alignItems:"center", gap:10 }}>
           <Text style={{ fontSize:18 }}>🌐</Text>
           <View style={{ flex:1 }}>
@@ -1199,13 +1372,13 @@ function MainApp() {
   return (
     <View style={{ flex:1, backgroundColor:T.bg }}>
       <StatusBar barStyle={isDark?"light-content":"dark-content"} />
-      <SBar />
-      {!selUni && (
+      {!showExamsPage && <SBar />}
+      {!selUni && !showExamsPage && (
         <View style={{ paddingHorizontal:20, paddingTop:0, paddingBottom:6 }}>
           <Text style={{ color:T.sub, fontSize:11 }}>{tab==="feed"?"Novidades para você":tab==="explorar"?"Encontre sua universidade":tab==="notas"?"Notas de corte & suas provas":`${uType?.emoji||"👤"} ${uType?.label||"Meu Perfil"}`}</Text>
         </View>
       )}
-      {selUni ? renderUniDetail() : (
+      {showExamsPage && selUni ? renderExamsPage() : selUni ? renderUniDetail() : (
         <>
           {tab==="feed"     && renderFeed()}
           {tab==="explorar" && renderExplorar()}
@@ -1310,14 +1483,22 @@ function MainApp() {
                 <Text style={{ color:ePick===n?AT:T.sub, fontSize:11, fontWeight:"700" }}>{n}ª: {n===1?(eC1||"Escolher"):(eC2||"Opcional")}</Text>
               </TouchableOpacity>
             ))}
-            {!!eC2 && <TouchableOpacity onPress={()=>setEC2("")}><Text style={{ color:"#f87171", fontSize:11, fontWeight:"700", paddingVertical:6 }}>✕ remover</Text></TouchableOpacity>}
+            {(!!eC1 || !!eC2) && <TouchableOpacity onPress={()=>{setEC1("");setEC2("");setEpick(1);}} style={{ paddingHorizontal:12, paddingVertical:6, borderRadius:16, backgroundColor:"#f8717130", borderWidth:1, borderColor:"#f87171" }}>
+              <Text style={{ color:"#f87171", fontSize:11, fontWeight:"700" }}>Limpar</Text>
+            </TouchableOpacity>}
           </View>
           <SBox val={eSrch} set={setEsrch} ph="Buscar curso…" T={T} />
           <ScrollView style={{ maxHeight:280, marginTop:10 }} keyboardShouldPersistTaps="handled">
             {(fbCourses.length?fbCourses:ALL_COURSES).filter(cc=>cc.toLowerCase().includes(eSrch.toLowerCase())).map(cc=>{
               const s1=eC1===cc,s2=eC2===cc;
               return (
-                <TouchableOpacity key={cc} onPress={()=>{ if(ePick===1){setEC1(cc);setEpick(2);}else{setEC2(cc);} }} style={{ flexDirection:"row", justifyContent:"space-between", padding:12, borderRadius:14, backgroundColor:(s1||s2)?T.acBg:T.card2, marginBottom:6 }}>
+                <TouchableOpacity key={cc} onPress={()=>{
+                  if(s1){setEC1("");setEpick(1);}
+                  else if(s2){setEC2("");}
+                  else if(ePick===1){setEC1(cc);setEC2(s2?"":eC2);setEpick(2);}
+                  else{setEC2(cc);}
+                  if(!eC1&&!eC2){setEpick(1);}
+                }} style={{ flexDirection:"row", justifyContent:"space-between", padding:12, borderRadius:14, backgroundColor:(s1||s2)?T.acBg:T.card2, marginBottom:6 }}>
                   <Text style={{ color:(s1||s2)?T.accent:T.text, fontSize:13, fontWeight:(s1||s2)?"700":"500" }}>{cc}</Text>
                   <Text style={{ color:T.accent, fontSize:11, fontWeight:"800" }}>{s1&&"1ª ✓"}{s2&&"2ª ✓"}</Text>
                 </TouchableOpacity>
@@ -1472,6 +1653,77 @@ function MainApp() {
           <TouchableOpacity onPress={()=>setMUni(false)} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center", marginTop:8 }}>
             <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar ✓</Text>
           </TouchableOpacity>
+        </View>
+      </BottomSheet>
+
+      <BottomSheet visible={!!mExam && !mExam?.isList} onClose={()=>{setMexam(null);}} T={T}>
+        <View style={{ padding:20, paddingBottom:24 }}>
+          {mExam?.status === "upcoming" ? (
+            <>
+              <View style={{ flexDirection:"row", alignItems:"center", marginBottom:16 }}>
+                <TouchableOpacity onPress={() => setMexam(null)} style={{ marginRight:12 }}>
+                  <Text style={{ color:T.accent, fontSize:24 }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={{ color:T.text, fontSize:17, fontWeight:"800", marginBottom:4 }}>📋 {mExam.subject}</Text>
+              <Text style={{ color:T.sub, fontSize:13, marginBottom:16 }}>{mExam.year} · {mExam.phase}</Text>
+              <View style={{ backgroundColor:isDark?"#2a2a1a":"#fffbeb", borderRadius:14, padding:16, marginBottom:16, borderWidth:1, borderColor:isDark?"#5c4d1a":"#fcd34d" }}>
+                <Text style={{ color:"#f59e0b", fontSize:14, fontWeight:"800", marginBottom:6 }}>⏳ Prova ainda não realizada</Text>
+                <Text style={{ color:T.sub, fontSize:13, lineHeight:20 }}>Esta prova está prevista para {mExam.date}. Quando estiver disponível, você poderá baixar o PDF e acessar pelo site da instituição.</Text>
+              </View>
+              <View style={{ backgroundColor:T.card2, borderRadius:14, padding:14, marginBottom:14, borderWidth:1, borderColor:T.border }}>
+                <Text style={{ color:T.text, fontSize:13, marginBottom:8 }}>⏱️ Duração: <Text style={{ fontWeight:"700" }}>{mExam.duration}</Text></Text>
+                <Text style={{ color:T.text, fontSize:13 }}>❓ Questões: <Text style={{ fontWeight:"700" }}>{mExam.questions}</Text></Text>
+              </View>
+              <TouchableOpacity onPress={() => Linking.openURL(mExam.sourceUrl)} style={{ flexDirection:"row", alignItems:"center", justifyContent:"center", padding:14, borderRadius:14, backgroundColor:T.accent }}>
+                <Text style={{ fontSize:16, marginRight:8 }}>🌐</Text>
+                <Text style={{ color:AT, fontSize:14, fontWeight:"700" }}>Acompanhar no site</Text>
+              </TouchableOpacity>
+            </>
+          ) : mExam ? (
+            <>
+              <View style={{ flexDirection:"row", alignItems:"center", marginBottom:16 }}>
+                <TouchableOpacity onPress={() => setMexam(null)} style={{ marginRight:12 }}>
+                  <Text style={{ color:T.accent, fontSize:24 }}>✕</Text>
+                </TouchableOpacity>
+                <View style={{ flex:1 }}>
+                  <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>{mExam.subject}</Text>
+                  <Text style={{ color:T.sub, fontSize:12 }}>{mExam.year} · {mExam.phase}</Text>
+                </View>
+              </View>
+              <View style={{ backgroundColor:T.card2, borderRadius:14, padding:14, marginBottom:14, borderWidth:1, borderColor:T.border }}>
+                <View style={{ flexDirection:"row", marginBottom:10 }}>
+                  <Text style={{ color:T.sub, fontSize:13, width:80 }}>📅 Data</Text>
+                  <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{mExam.date}</Text>
+                </View>
+                <View style={{ flexDirection:"row", marginBottom:10 }}>
+                  <Text style={{ color:T.sub, fontSize:13, width:80 }}>⏱️ Duração</Text>
+                  <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{mExam.duration}</Text>
+                </View>
+                <View style={{ flexDirection:"row", marginBottom:10 }}>
+                  <Text style={{ color:T.sub, fontSize:13, width:80 }}>❓ Questões</Text>
+                  <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{mExam.questions}</Text>
+                </View>
+                {mExam.description && <Text style={{ color:T.sub, fontSize:12, marginTop:4, lineHeight:18 }}>{mExam.description}</Text>}
+              </View>
+              <View style={{ flexDirection:"row", gap:10 }}>
+                <TouchableOpacity onPress={() => Linking.openURL(mExam.sourceUrl)} style={{ flex:1, flexDirection:"row", alignItems:"center", justifyContent:"center", padding:14, borderRadius:14, backgroundColor:T.accent }}>
+                  <Text style={{ fontSize:16, marginRight:6 }}>🌐</Text>
+                  <Text style={{ color:AT, fontSize:13, fontWeight:"700" }}>Site</Text>
+                </TouchableOpacity>
+                {mExam.pdfUrl ? (
+                  <TouchableOpacity onPress={() => Linking.openURL(mExam.pdfUrl)} style={{ flex:1, flexDirection:"row", alignItems:"center", justifyContent:"center", padding:14, borderRadius:14, backgroundColor:isDark?"#1a2e4a":"#dbeafe", borderWidth:1, borderColor:isDark?"#3b82f6":"#93c5fd" }}>
+                    <Text style={{ fontSize:16, marginRight:6 }}>📄</Text>
+                    <Text style={{ color:"#60a5fa", fontSize:13, fontWeight:"700" }}>PDF</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={{ flex:1, alignItems:"center", justifyContent:"center", padding:14, borderRadius:14, backgroundColor:isDark?"#1a1a1a":"#f5f5f5" }}>
+                    <Text style={{ color:T.muted, fontSize:12 }}>PDF indisponível</Text>
+                  </View>
+                )}
+              </View>
+            </>
+          ) : null}
         </View>
       </BottomSheet>
     </View>
