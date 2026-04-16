@@ -541,11 +541,11 @@ function MainApp() {
   const [refreshing, setRefreshing] = useState(false);
 
   const [gs, setGs] = useState([
-    { id:1, ex:"FUVEST Simulado 1", dt:"Mar/2025", s:{l:62,h:70,n:58,m:55,r:680} },
-    { id:2, ex:"FUVEST Simulado 2", dt:"Abr/2025", s:{l:68,h:74,n:65,m:60,r:720} },
-    { id:3, ex:"ENEM Simulado",     dt:"Mai/2025", s:{l:72,h:78,n:69,m:64,r:760} },
+    { id:1, ex:"FUVEST Simulado 1", dt:"Mar/2025", type:"simulado", s:{l:62,h:70,n:58,m:55,r:680} },
+    { id:2, ex:"FUVEST Simulado 2", dt:"Abr/2025", type:"simulado", s:{l:68,h:74,n:65,m:60,r:720} },
+    { id:3, ex:"ENEM Prova",         dt:"Mai/2025", type:"prova", s:{l:72,h:78,n:69,m:64,r:760} },
   ]);
-  const [ng, setNg] = useState({ ex:"",dt:"",l:"",h:"",n:"",m:"",r:"" });
+  const [ng, setNg] = useState({ ex:"",dt:"",l:"",h:"",n:"",m:"",r:"",type:"prova" });
 
   const [av, setAv] = useState("🧑‍🎓");
   const [avBgIdx, setAvBgIdx] = useState(0);
@@ -572,6 +572,7 @@ function MainApp() {
   const [ePick, setEpick] = useState(1);
   const [eSrch, setEsrch] = useState("");
   const [mLoc,  setMloc]  = useState(false);
+  const [gradeFilter, setGradeFilter] = useState("all");
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
@@ -1559,12 +1560,19 @@ function MainApp() {
         {filtN.length===0 && <Text style={{ color:T.muted, textAlign:"center", padding:20, fontSize:13 }}>Nenhum resultado.</Text>}
       </View>
       <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-        <Text style={lbl}>📈 Minhas Notas</Text>
-        <TouchableOpacity onPress={()=>setMgr(true)} style={{ paddingHorizontal:14, paddingVertical:6, borderRadius:10, backgroundColor:T.accent }}>
+<Text style={lbl}>📈 Minhas Notas</Text>
+        <View style={{ flexDirection:"row", gap:6, marginTop:8, marginBottom:12 }}>
+          {[["all","Todas"],["prova","Provas"],["simulado","Simulados"]].map(([v,l])=>(
+            <TouchableOpacity key={v} onPress={()=>setGradeFilter(v)} style={{ paddingHorizontal:12, paddingVertical:6, borderRadius:12, backgroundColor:gradeFilter===v?T.accent:T.card2, borderWidth:1, borderColor:gradeFilter===v?T.accent:T.border }}>
+              <Text style={{ color:gradeFilter===v?AT:T.sub, fontSize:11, fontWeight:"700" }}>{l}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TouchableOpacity onPress={()=>setMgr(true)} style={{ position:"absolute", right:16, top:16, paddingHorizontal:14, paddingVertical:6, borderRadius:10, backgroundColor:T.accent }}>
           <Text style={{ color:AT, fontSize:12, fontWeight:"800" }}>+ Adicionar</Text>
         </TouchableOpacity>
       </View>
-      {gs.length===0 ? (
+      {gs.filter(g=>gradeFilter==="all"||g.type===gradeFilter).length===0 ? (
         <View style={{ ...cd(), padding:24, alignItems:"center" }}>
           <Text style={{ fontSize:32, marginBottom:10 }}>📝</Text>
           <Text style={{ color:T.text, fontSize:14, fontWeight:"700", marginBottom:4 }}>Nenhuma nota ainda</Text>
@@ -1629,8 +1637,11 @@ function MainApp() {
           </View>
           <View style={cd({ padding:14 })}>
             <Text style={{ color:T.sub, fontSize:11, fontWeight:"700", marginBottom:10 }}>Histórico</Text>
-            {gs.map((g,i)=>(
-              <View key={g.id} style={{ flexDirection:"row", alignItems:"center", gap:10, paddingVertical:9, borderBottomWidth:i<gs.length-1?1:0, borderColor:T.border }}>
+            {gs.filter(g=>gradeFilter==="all"||g.type===gradeFilter).map((g,i,arr)=>(
+              <View key={g.id} style={{ flexDirection:"row", alignItems:"center", gap:10, paddingVertical:9, borderBottomWidth:i<arr.length-1?1:0, borderColor:T.border }}>
+                <View style={{ width:32, height:32, borderRadius:16, backgroundColor:g.type==="simulado"?T.acBg:T.card2, alignItems:"center", justifyContent:"center" }}>
+                  <Text style={{ fontSize:14 }}>{g.type==="simulado"?"📋":"📝"}</Text>
+                </View>
                 <View style={{ flex:1 }}>
                   <Text style={{ color:T.text, fontSize:13, fontWeight:"700" }}>{g.ex}</Text>
                   <Text style={{ color:T.muted, fontSize:10 }}>{g.dt} · L{g.s.l} H{g.s.h} N{g.s.n} M{g.s.m} R{g.s.r}</Text>
@@ -1674,10 +1685,10 @@ function MainApp() {
             </View>
           )}
           <View style={{ flexDirection:"row", justifyContent:"center", gap:0, width:"100%", borderTopWidth:1, borderColor:T.border, paddingTop:14 }}>
-            {[{v:fol.length,l:"seguindo"},{v:gs.length,l:"provas"},{v:Object.values(saved).filter(Boolean).length,l:"salvos"}].map(({v,l},i,arr)=>(
+            {[{v:fol.length,l:"seguindo"},{v:gs.filter(g=>g.type!=="simulado").length,l:"provas"},{v:gs.filter(g=>g.type==="simulado").length,l:"simulados"},{v:Object.values(saved).filter(Boolean).length,l:"salvos"}].map(({v,l},i,arr)=>(
               <View key={l} style={{ flex:1, alignItems:"center", borderRightWidth:i<arr.length-1?1:0, borderColor:T.border }}>
-                <Text style={{ color:T.accent, fontSize:20, fontWeight:"800" }}>{v}</Text>
-                <Text style={{ color:T.muted, fontSize:10 }}>{l}</Text>
+                <Text style={{ color:T.accent, fontSize:18, fontWeight:"800" }}>{v}</Text>
+                <Text style={{ color:T.muted, fontSize:9 }}>{l}</Text>
               </View>
             ))}
           </View>
@@ -1925,6 +1936,14 @@ function MainApp() {
             <Text style={{ color:T.sub, fontSize:13, marginBottom:16 }}>Simulado, prova ou vestibular</Text>
             <TextInput value={ng.ex} onChangeText={v=>setNg({...ng,ex:v})} placeholder="Nome da prova (ex: FUVEST Simulado 3)" placeholderTextColor={T.muted} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:8 }} />
             <TextInput value={ng.dt} onChangeText={v=>setNg({...ng,dt:v})} placeholder="Mês/Ano (ex: Jun/2025)" placeholderTextColor={T.muted} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:14 }} />
+            <Text style={[lbl,{marginBottom:10}]}>Tipo</Text>
+            <View style={{ flexDirection:"row", gap:8, marginBottom:14 }}>
+              {[["prova","📝 Prova"],["simulado","📋 Simulado"]].map(([v,l])=>(
+                <TouchableOpacity key={v} onPress={()=>setNg({...ng,type:v})} style={{ flex:1, padding:12, borderRadius:12, backgroundColor:ng.type===v?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:ng.type===v?T.accent:T.border }}>
+                  <Text style={{ color:ng.type===v?AT:T.sub, fontSize:13, fontWeight:"700" }}>{l}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             <Text style={[lbl,{marginBottom:10}]}>Notas por área</Text>
             <View style={{ flexDirection:"row", flexWrap:"wrap", gap:8, marginBottom:18 }}>
               {[["l","Linguagens","0–100"],["h","Humanas","0–100"],["n","Natureza","0–100"],["m","Matemática","0–100"],["r","Redação","0–1000"]].map(([k,l,ph])=>(
@@ -1934,7 +1953,7 @@ function MainApp() {
                 </View>
               ))}
             </View>
-            <TouchableOpacity onPress={()=>{ if(!ng.ex.trim())return; setGs([...gs,{id:Date.now(),ex:ng.ex,dt:ng.dt||"2025",s:{l:+ng.l||0,h:+ng.h||0,n:+ng.n||0,m:+ng.m||0,r:+ng.r||0}}]); setNg({ex:"",dt:"",l:"",h:"",n:"",m:"",r:""}); setMgr(false); }} disabled={!ng.ex.trim()} style={{ padding:14, borderRadius:16, backgroundColor:ng.ex.trim()?T.accent:T.border, alignItems:"center" }}>
+            <TouchableOpacity onPress={()=>{ if(!ng.ex.trim())return; setGs([...gs,{id:Date.now(),ex:ng.ex,dt:ng.dt||"2025",type:ng.type||"prova",s:{l:+ng.l||0,h:+ng.h||0,n:+ng.n||0,m:+ng.m||0,r:+ng.r||0}}]); setNg({ex:"",dt:"",l:"",h:"",n:"",m:"",r:"",type:"prova"}); setMgr(false); }} disabled={!ng.ex.trim()} style={{ padding:14, borderRadius:16, backgroundColor:ng.ex.trim()?T.accent:T.border, alignItems:"center" }}>
               <Text style={{ color:ng.ex.trim()?AT:T.muted, fontSize:15, fontWeight:"800" }}>Salvar nota ✓</Text>
             </TouchableOpacity>
           </View>
