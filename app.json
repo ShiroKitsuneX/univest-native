@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "univest-native",
+    "name": "UniVest",
     "slug": "univest-native",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,22 +10,28 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#003366"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.univest.app"
+      "bundleIdentifier": "com.univest.app",
+      "icon": "./assets/icon.png"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#003366"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.univestnative"
+      "package": "com.univest.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "univest-6b10d"
+      }
     }
   }
 }
