@@ -12,6 +12,7 @@ import { db, auth } from "./src/firebase/config";
 import {
   collection, getDocs, doc, setDoc, getDoc, deleteDoc,
   updateDoc, increment, addDoc, serverTimestamp, arrayUnion, arrayRemove,
+  writeBatch,
 } from "firebase/firestore";
 import {
   onAuthStateChanged, signInWithEmailAndPassword,
@@ -155,6 +156,319 @@ const saveLocalUserData = async (data) => {
   try { await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 };
 
+const GEO_DATA = {
+  countries: [
+    { id: "BR", name: "Brasil" },
+  ],
+  states: [
+    { id: "AC", countryId: "BR", name: "Acre" },
+    { id: "AL", countryId: "BR", name: "Alagoas" },
+    { id: "AP", countryId: "BR", name: "Amapá" },
+    { id: "AM", countryId: "BR", name: "Amazonas" },
+    { id: "BA", countryId: "BR", name: "Bahia" },
+    { id: "CE", countryId: "BR", name: "Ceará" },
+    { id: "DF", countryId: "BR", name: "Distrito Federal" },
+    { id: "ES", countryId: "BR", name: "Espírito Santo" },
+    { id: "GO", countryId: "BR", name: "Goiás" },
+    { id: "MA", countryId: "BR", name: "Maranhão" },
+    { id: "MT", countryId: "BR", name: "Mato Grosso" },
+    { id: "MS", countryId: "BR", name: "Mato Grosso do Sul" },
+    { id: "MG", countryId: "BR", name: "Minas Gerais" },
+    { id: "PA", countryId: "BR", name: "Pará" },
+    { id: "PB", countryId: "BR", name: "Paraíba" },
+    { id: "PR", countryId: "BR", name: "Paraná" },
+    { id: "PE", countryId: "BR", name: "Pernambuco" },
+    { id: "PI", countryId: "BR", name: "Piauí" },
+    { id: "RJ", countryId: "BR", name: "Rio de Janeiro" },
+    { id: "RN", countryId: "BR", name: "Rio Grande do Norte" },
+    { id: "RS", countryId: "BR", name: "Rio Grande do Sul" },
+    { id: "RO", countryId: "BR", name: "Rondônia" },
+    { id: "RR", countryId: "BR", name: "Roraima" },
+    { id: "SC", countryId: "BR", name: "Santa Catarina" },
+    { id: "SP", countryId: "BR", name: "São Paulo" },
+    { id: "SE", countryId: "BR", name: "Sergipe" },
+    { id: "TO", countryId: "BR", name: "Tocantins" },
+  ],
+  cities: [
+    { id: "rio-branco-ac", stateId: "AC", name: "Rio Branco" },
+    { id: "cruzeiro-do-sul-ac", stateId: "AC", name: "Cruzeiro do Sul" },
+    { id: "maceio-al", stateId: "AL", name: "Maceió" },
+    { id: "arapiraca-al", stateId: "AL", name: "Arapiraca" },
+    { id: "palmeira-dos-indios-al", stateId: "AL", name: "Palmeira dos Índios" },
+    { id: "macapa-ap", stateId: "AP", name: "Macapá" },
+    { id: "santana-ap", stateId: "AP", name: "Santana" },
+    { id: "laranjal-do-jari-ap", stateId: "AP", name: "Laranjal do Jari" },
+    { id: "manaus-am", stateId: "AM", name: "Manaus" },
+    { id: "parintins-am", stateId: "AM", name: "Parintins" },
+    { id: "itacoatiara-am", stateId: "AM", name: "Itacoatiara" },
+    { id: "coari-am", stateId: "AM", name: "Coari" },
+    { id: "humbiatas-am", stateId: "AM", name: "Humaitá" },
+    { id: "salvador-ba", stateId: "BA", name: "Salvador" },
+    { id: "feira-de-santana-ba", stateId: "BA", name: "Feira de Santana" },
+    { id: "vitoria-da-conquista-ba", stateId: "BA", name: "Vitória da Conquista" },
+    { id: "camacari-ba", stateId: "BA", name: "Camaçari" },
+    { id: "itabuna-ba", stateId: "BA", name: "Itabuna" },
+    { id: "juazeiro-ba", stateId: "BA", name: "Juazeiro" },
+    { id: "lauro-de-freitas-ba", stateId: "BA", name: "Lauro de Freitas" },
+    { id: "teixeira-de-freitas-ba", stateId: "BA", name: "Teixeira de Freitas" },
+    { id: "barreiras-ba", stateId: "BA", name: "Barreiras" },
+    { id: "alagoinhas-ba", stateId: "BA", name: "Alagoinhas" },
+    { id: "porto-seguro-ba", stateId: "BA", name: "Porto Seguro" },
+    { id: "fortaleza-ce", stateId: "CE", name: "Fortaleza" },
+    { id: "caucaia-ce", stateId: "CE", name: "Caucaia" },
+    { id: "juazeiro-do-norte-ce", stateId: "CE", name: "Juazeiro do Norte" },
+    { id: "maracanau-ce", stateId: "CE", name: "Maracanaú" },
+    { id: "sobral-ce", stateId: "CE", name: "Sobral" },
+    { id: "crateus-ce", stateId: "CE", name: "Crateús" },
+    { id: "quixada-ce", stateId: "CE", name: "Quixadá" },
+    { id: "tiangue-ce", stateId: "CE", name: "Tiangua" },
+    { id: "brasilia-df", stateId: "DF", name: "Brasília" },
+    { id: "taguatinga-df", stateId: "DF", name: "Taguatinga" },
+    { id: "ceilandia-df", stateId: "DF", name: "Ceilândia" },
+    { id: "samambaia-df", stateId: "DF", name: "Samambaia" },
+    { id: "planaltina-df", stateId: "DF", name: "Planaltina" },
+    { id: "vitoria-es", stateId: "ES", name: "Vitória" },
+    { id: "serra-es", stateId: "ES", name: "Serra" },
+    { id: "vila-velha-es", stateId: "ES", name: "Vila Velha" },
+    { id: "cachoeiro-de-itapemirim-es", stateId: "ES", name: "Cachoeiro de Itapemirim" },
+    { id: "guarapari-es", stateId: "ES", name: "Guarapari" },
+    { id: "linhares-es", stateId: "ES", name: "Linhares" },
+    { id: "sao-mateus-es", stateId: "ES", name: "São Mateus" },
+    { id: "goiania-go", stateId: "GO", name: "Goiânia" },
+    { id: "aparecida-de-goiania-go", stateId: "GO", name: "Aparecida de Goiânia" },
+    { id: "anapolis-go", stateId: "GO", name: "Anápolis" },
+    { id: "rio-verde-go", stateId: "GO", name: "Rio Verde" },
+    { id: "luziania-go", stateId: "GO", name: "Luziânia" },
+    { id: "aguas-lindas-de-goias-go", stateId: "GO", name: "Águas Lindas de Goiás" },
+    { id: "valparaiso-de-goias-go", stateId: "GO", name: "Valparaíso de Goiás" },
+    { id: "catalao-go", stateId: "GO", name: "Catalão" },
+    { id: "cristalina-go", stateId: "GO", name: "Cristalina" },
+    { id: "senador-canedo-go", stateId: "GO", name: "Senador Canedo" },
+    { id: "sao-luis-ma", stateId: "MA", name: "São Luís" },
+    { id: "imperatriz-ma", stateId: "MA", name: "Imperatriz" },
+    { id: "sao-jose-de-ribamar-ma", stateId: "MA", name: "São José de Ribamar" },
+    { id: "timon-ma", stateId: "MA", name: "Timon" },
+    { id: "caxias-ma", stateId: "MA", name: "Caxias" },
+    { id: "codo-ma", stateId: "MA", name: "Codó" },
+    { id: "paco-do-lumiar-ma", stateId: "MA", name: "Paço do Lumiar" },
+    { id: "acailandia-ma", stateId: "MA", name: "Açailândia" },
+    { id: "cuiaba-mt", stateId: "MT", name: "Cuiabá" },
+    { id: "varzea-grande-mt", stateId: "MT", name: "Várzea Grande" },
+    { id: "rondonopolis-mt", stateId: "MT", name: "Rondonópolis" },
+    { id: "sinop-mt", stateId: "MT", name: "Sinop" },
+    { id: "tangara-da-serra-mt", stateId: "MT", name: "Tangará da Serra" },
+    { id: "caceres-mt", stateId: "MT", name: "Cáceres" },
+    { id: "sorriso-mt", stateId: "MT", name: "Sorriso" },
+    { id: "primavera-do-leste-mt", stateId: "MT", name: "Primavera do Leste" },
+    { id: "barra-do-garcas-mt", stateId: "MT", name: "Barra do Garças" },
+    { id: "campo-grande-ms", stateId: "MS", name: "Campo Grande" },
+    { id: "dourados-ms", stateId: "MS", name: "Dourados" },
+    { id: "tres-lagoas-ms", stateId: "MS", name: "Três Lagoas" },
+    { id: "corumba-ms", stateId: "MS", name: "Corumbá" },
+    { id: "ponta-pora-ms", stateId: "MS", name: "Ponta Porã" },
+    { id: "aquidauana-ms", stateId: "MS", name: "Aquidauana" },
+    { id: "navirai-ms", stateId: "MS", name: "Naviraí" },
+    { id: "belo-horizonte-mg", stateId: "MG", name: "Belo Horizonte" },
+    { id: "uberlandia-mg", stateId: "MG", name: "Uberlândia" },
+    { id: "contagem-mg", stateId: "MG", name: "Contagem" },
+    { id: "juiz-de-fora-mg", stateId: "MG", name: "Juiz de Fora" },
+    { id: "betim-mg", stateId: "MG", name: "Betim" },
+    { id: "montes-claros-mg", stateId: "MG", name: "Montes Claros" },
+    { id: "uberaba-mg", stateId: "MG", name: "Uberaba" },
+    { id: "governador-valadares-mg", stateId: "MG", name: "Governador Valadares" },
+    { id: "ipatinga-mg", stateId: "MG", name: "Ipatinga" },
+    { id: "sete-lagoas-mg", stateId: "MG", name: "Sete Lagoas" },
+    { id: "divinopolis-mg", stateId: "MG", name: "Divinópolis" },
+    { id: "santana-do-jacarandaba-mg", stateId: "MG", name: "Santana do Jacaré" },
+    { id: "pouso-alegre-mg", stateId: "MG", name: "Pouso Alegre" },
+    { id: "araxa-mg", stateId: "MG", name: "Araxá" },
+    { id: "ribeirao-das-neves-mg", stateId: "MG", name: "Ribeirão das Neves" },
+    { id: "uba-mg", stateId: "MG", name: "Ubá" },
+    { id: "passos-mg", stateId: "MG", name: "Passos" },
+    { id: "varzea-da-palma-mg", stateId: "MG", name: "Várzea da Palma" },
+    { id: "belem-pa", stateId: "PA", name: "Belém" },
+    { id: "ananindeua-pa", stateId: "PA", name: "Ananindeua" },
+    { id: "santarem-pa", stateId: "PA", name: "Santarém" },
+    { id: "maraba-pa", stateId: "PA", name: "Marabá" },
+    { id: "parauapebas-pa", stateId: "PA", name: "Parauapebas" },
+    { id: "castanhal-pa", stateId: "PA", name: "Castanhal" },
+    { id: "itaituba-pa", stateId: "PA", name: "Itaituba" },
+    { id: "braganca-pa", stateId: "PA", name: "Bragança" },
+    { id: "altamira-pa", stateId: "PA", name: "Altamira" },
+    { id: "paragominas-pa", stateId: "PA", name: "Paragominas" },
+    { id: "joao-pessoa-pb", stateId: "PB", name: "João Pessoa" },
+    { id: "campina-grande-pb", stateId: "PB", name: "Campina Grande" },
+    { id: "santa-rita-pb", stateId: "PB", name: "Santa Rita" },
+    { id: "patos-pb", stateId: "PB", name: "Patos" },
+    { id: "bayeux-pb", stateId: "PB", name: "Bayeux" },
+    { id: "sousa-pb", stateId: "PB", name: "Sousa" },
+    { id: "cajazeiras-pb", stateId: "PB", name: "Cajazeiras" },
+    { id: "monteiro-pb", stateId: "PB", name: "Monteiro" },
+    { id: "curitiba-pr", stateId: "PR", name: "Curitiba" },
+    { id: "londrina-pr", stateId: "PR", name: "Londrina" },
+    { id: "maringa-pr", stateId: "PR", name: "Maringá" },
+    { id: "ponta-grossa-pr", stateId: "PR", name: "Ponta Grossa" },
+    { id: "cascavel-pr", stateId: "PR", name: "Cascavel" },
+    { id: "sao-jose-dos-pinhais-pr", stateId: "PR", name: "São José dos Pinhais" },
+    { id: "foz-do-iguacu-pr", stateId: "PR", name: "Foz do Iguaçu" },
+    { id: "colombo-pr", stateId: "PR", name: "Colombo" },
+    { id: "guarapuava-pr", stateId: "PR", name: "Guarapuava" },
+    { id: "paranagua-pr", stateId: "PR", name: "Paranaguá" },
+    { id: "arapongas-pr", stateId: "PR", name: "Arapongas" },
+    { id: "apucarana-pr", stateId: "PR", name: "Apucarana" },
+    { id: "toledo-pr", stateId: "PR", name: "Toledo" },
+    { id: "pinhais-pr", stateId: "PR", name: "Pinhais" },
+    { id: "recife-pe", stateId: "PE", name: "Recife" },
+    { id: "jaboatao-dos-guararapes-pe", stateId: "PE", name: "Jaboatão dos Guararapes" },
+    { id: "olinda-pe", stateId: "PE", name: "Olinda" },
+    { id: "caruaru-pe", stateId: "PE", name: "Caruaru" },
+    { id: "petrolina-pe", stateId: "PE", name: "Petrolina" },
+    { id: "paulista-pe", stateId: "PE", name: "Paulista" },
+    { id: "cabo-de-santo-agostinho-pe", stateId: "PE", name: "Cabo de Santo Agostinho" },
+    { id: "camaragibe-pe", stateId: "PE", name: "Camaragibe" },
+    { id: "garanhuns-pe", stateId: "PE", name: "Garanhuns" },
+    { id: "vitoria-de-santo-antao-pe", stateId: "PE", name: "Vitória de Santo Antão" },
+    { id: "teresina-pi", stateId: "PI", name: "Teresina" },
+    { id: "parnaiba-pi", stateId: "PI", name: "Parnaíba" },
+    { id: "picos-pi", stateId: "PI", name: "Picos" },
+    { id: "floriano-pi", stateId: "PI", name: "Floriano" },
+    { id: "piripiri-pi", stateId: "PI", name: "Piripiri" },
+    { id: "barra-pi", stateId: "PI", name: "Barras" },
+    { id: "campo-maior-pi", stateId: "PI", name: "Campo Maior" },
+    { id: "rio-de-janeiro-rj", stateId: "RJ", name: "Rio de Janeiro" },
+    { id: "sao-goncalo-rj", stateId: "RJ", name: "São Gonçalo" },
+    { id: "duque-de-caxias-rj", stateId: "RJ", name: "Duque de Caxias" },
+    { id: "nova-iguacu-rj", stateId: "RJ", name: "Nova Iguaçu" },
+    { id: "niteroi-rj", stateId: "RJ", name: "Niterói" },
+    { id: "belford-roxo-rj", stateId: "RJ", name: "Belford Roxo" },
+    { id: "sao-joao-de-meriti-rj", stateId: "RJ", name: "São João de Meriti" },
+    { id: "petropolis-rj", stateId: "RJ", name: "Petrópolis" },
+    { id: "volta-redonda-rj", stateId: "RJ", name: "Volta Redonda" },
+    { id: "macae-rj", stateId: "RJ", name: "Macaé" },
+    { id: "campos-dos-goytacazes-rj", stateId: "RJ", name: "Campos dos Goytacazes" },
+    { id: "angra-dos-reis-rj", stateId: "RJ", name: "Angra dos Reis" },
+    { id: "teresopolis-rj", stateId: "RJ", name: "Teresópolis" },
+    { id: "cabofrio-rj", stateId: "RJ", name: "Cabo Frio" },
+    { id: "natal-rn", stateId: "RN", name: "Natal" },
+    { id: "mossoro-rn", stateId: "RN", name: "Mossoró" },
+    { id: "parnamirim-rn", stateId: "RN", name: "Parnamirim" },
+    { id: "sao-goncalo-do-amarante-rn", stateId: "RN", name: "São Gonçalo do Amarante" },
+    { id: "macaiba-rn", stateId: "RN", name: "Macaíba" },
+    { id: "caico-rn", stateId: "RN", name: "Caicó" },
+    { id: "currais-novos-rn", stateId: "RN", name: "Currais Novos" },
+    { id: "porto-alegre-rs", stateId: "RS", name: "Porto Alegre" },
+    { id: "caxias-do-sul-rs", stateId: "RS", name: "Caxias do Sul" },
+    { id: "pelotas-rs", stateId: "RS", name: "Pelotas" },
+    { id: "canoas-rs", stateId: "RS", name: "Canoas" },
+    { id: "santa-maria-rs", stateId: "RS", name: "Santa Maria" },
+    { id: "gravatai-rs", stateId: "RS", name: "Gravataí" },
+    { id: "viamao-rs", stateId: "RS", name: "Viamão" },
+    { id: "novo-hamburgo-rs", stateId: "RS", name: "Novo Hamburgo" },
+    { id: "sao-leopoldo-rs", stateId: "RS", name: "São Leopoldo" },
+    { id: "rio-grande-rs", stateId: "RS", name: "Rio Grande" },
+    { id: "alvorada-rs", stateId: "RS", name: "Alvorada" },
+    { id: "uruguaiana-rs", stateId: "RS", name: "Uruguaiana" },
+    { id: "passo-fundo-rs", stateId: "RS", name: "Passo Fundo" },
+    { id: "sapucaia-do-sul-rs", stateId: "RS", name: "Sapucaia do Sul" },
+    { id: "santo-angelo-rs", stateId: "RS", name: "Santo Ângelo" },
+    { id: "porto-velho-ro", stateId: "RO", name: "Porto Velho" },
+    { id: "ji-parana-ro", stateId: "RO", name: "Ji-Paraná" },
+    { id: "ariquemes-ro", stateId: "RO", name: "Ariquemes" },
+    { id: "cacoal-ro", stateId: "RO", name: "Cacoal" },
+    { id: "rolim-de-moura-ro", stateId: "RO", name: "Rolim de Moura" },
+    { id: "jaru-ro", stateId: "RO", name: "Jaru" },
+    { id: "guajara-mirim-ro", stateId: "RO", name: "Guajará-Mirim" },
+    { id: "boa-vista-rr", stateId: "RR", name: "Boa Vista" },
+    { id: "rorainopolis-rr", stateId: "RR", name: "Rorainópolis" },
+    { id: "caroebe-rr", stateId: "RR", name: "Caroebe" },
+    { id: "alto-alegre-rr", stateId: "RR", name: "Alto Alegre" },
+    { id: "florianopolis-sc", stateId: "SC", name: "Florianópolis" },
+    { id: "joinville-sc", stateId: "SC", name: "Joinville" },
+    { id: "blumenau-sc", stateId: "SC", name: "Blumenau" },
+    { id: "sao-jose-sc", stateId: "SC", name: "São José" },
+    { id: "criciuma-sc", stateId: "SC", name: "Criciúma" },
+    { id: "palhoca-sc", stateId: "SC", name: "Palhoça" },
+    { id: "balneario-camboriu-sc", stateId: "SC", name: "Balneário Camboriú" },
+    { id: "chapeco-sc", stateId: "SC", name: "Chapecó" },
+    { id: "itajai-sc", stateId: "SC", name: "Itajaí" },
+    { id: "jaragua-do-sul-sc", stateId: "SC", name: "Jaraguá do Sul" },
+    { id: "lages-sc", stateId: "SC", name: "Lages" },
+    { id: "brusque-sc", stateId: "SC", name: "Brusque" },
+    { id: "rio-do-sul-sc", stateId: "SC", name: "Rio do Sul" },
+    { id: "sao-paulo-sp", stateId: "SP", name: "São Paulo" },
+    { id: "guarulhos-sp", stateId: "SP", name: "Guarulhos" },
+    { id: "campinas-sp", stateId: "SP", name: "Campinas" },
+    { id: "sao-bernardo-do-campo-sp", stateId: "SP", name: "São Bernardo do Campo" },
+    { id: "santo-andre-sp", stateId: "SP", name: "Santo André" },
+    { id: "osasco-sp", stateId: "SP", name: "Osasco" },
+    { id: "ribeirao-preto-sp", stateId: "SP", name: "Ribeirão Preto" },
+    { id: "sorocaba-sp", stateId: "SP", name: "Sorocaba" },
+    { id: "santos-sp", stateId: "SP", name: "Santos" },
+    { id: "maua-sp", stateId: "SP", name: "Mauá" },
+    { id: "sao-jose-dos-campos-sp", stateId: "SP", name: "São José dos Campos" },
+    { id: "diadema-sp", stateId: "SP", name: "Diadema" },
+    { id: "mogi-das-cruzes-sp", stateId: "SP", name: "Mogi das Cruzes" },
+    { id: "jundiai-sp", stateId: "SP", name: "Jundiaí" },
+    { id: "piracicaba-sp", stateId: "SP", name: "Piracicaba" },
+    { id: "carapicuiba-sp", stateId: "SP", name: "Carapicuíba" },
+    { id: "bauru-sp", stateId: "SP", name: "Bauru" },
+    { id: "sao-vicente-sp", stateId: "SP", name: "São Vicente" },
+    { id: "franca-sp", stateId: "SP", name: "Franca" },
+    { id: "itaquaquecetuba-sp", stateId: "SP", name: "Itaquaquecetuba" },
+    { id: "limeira-sp", stateId: "SP", name: "Limeira" },
+    { id: "suzano-sp", stateId: "SP", name: "Suzano" },
+    { id: "taubate-sp", stateId: "SP", name: "Taubaté" },
+    { id: "guaruja-sp", stateId: "SP", name: "Guarujá" },
+    { id: "praia-grande-sp", stateId: "SP", name: "Praia Grande" },
+    { id: "aracatuba-sp", stateId: "SP", name: "Araçatuba" },
+    { id: "marilia-sp", stateId: "SP", name: "Marília" },
+    { id: "presidente-prudente-sp", stateId: "SP", name: "Presidente Prudente" },
+    { id: "sao-caetano-do-sul-sp", stateId: "SP", name: "São Caetano do Sul" },
+    { id: "hortolandia-sp", stateId: "SP", name: "Hortolândia" },
+    { id: "aracaju-se", stateId: "SE", name: "Aracaju" },
+    { id: "nossa-senhora-do-socorro-se", stateId: "SE", name: "Nossa Senhora do Socorro" },
+    { id: "lagarto-se", stateId: "SE", name: "Lagarto" },
+    { id: "itabaiana-se", stateId: "SE", name: "Itabaiana" },
+    { id: "sao-cristovao-se", stateId: "SE", name: "São Cristóvão" },
+    { id: "estancia-se", stateId: "SE", name: "Estância" },
+    { id: "tobias-barreto-se", stateId: "SE", name: "Tobias Barreto" },
+    { id: "palmas-to", stateId: "TO", name: "Palmas" },
+    { id: "araguaina-to", stateId: "TO", name: "Araguaína" },
+    { id: "gurupi-to", stateId: "TO", name: "Gurupi" },
+    { id: "porto-nacional-to", stateId: "TO", name: "Porto Nacional" },
+    { id: "paraiso-do-tocantins-to", stateId: "TO", name: "Paraíba do Tocantins" },
+    { id: "wanderlandia-to", stateId: "TO", name: "Wanderlândia" },
+    { id: "araguatins-to", stateId: "TO", name: "Araguatins" },
+    { id: "colinas-do-tocantins-to", stateId: "TO", name: "Colinas do Tocantins" },
+  ],
+};
+
+const seedGeoData = async () => {
+  try {
+    const countriesSnap = await getDocs(collection(db, "countries"));
+    if (!countriesSnap.empty) return;
+
+    const batch = writeBatch(db);
+
+    GEO_DATA.countries.forEach(c => {
+      batch.set(doc(db, "countries", c.id), c);
+    });
+
+    GEO_DATA.states.forEach(s => {
+      batch.set(doc(db, "states", s.id), s);
+    });
+
+    GEO_DATA.cities.forEach(c => {
+      batch.set(doc(db, "cities", c.id), c);
+    });
+
+    await batch.commit();
+    console.log("Geo data seeded successfully!");
+  } catch (e) {
+    console.log("Error seeding geo data:", e.message);
+  }
+};
+
 function SBox({ val, set, ph, T }) {
   return (
     <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:13, paddingHorizontal:14, paddingVertical:11, borderWidth:1, borderColor:T.inpB }}>
@@ -257,12 +571,42 @@ function MainApp() {
   const [eC2,   setEC2]   = useState("");
   const [ePick, setEpick] = useState(1);
   const [eSrch, setEsrch] = useState("");
+  const [mLoc,  setMloc]  = useState(false);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [countryId, setCountryId] = useState("");
+  const [stateId, setStateId] = useState("");
+  const [cityId, setCityId] = useState("");
+  const [studyCountryId, setStudyCountryId] = useState("");
+  const [studyStateId, setStudyStateId] = useState("");
+  const [studyCityId, setStudyCityId] = useState("");
+  const [tmpCountryId, setTmpCountryId] = useState("");
+  const [tmpStateId, setTmpStateId] = useState("");
+  const [tmpCityId, setTmpCityId] = useState("");
+  const [tmpStudyCountryId, setTmpStudyCountryId] = useState("");
+  const [tmpStudyStateId, setTmpStudyStateId] = useState("");
+  const [tmpStudyCityId, setTmpStudyCityId] = useState("");
+  const [stateSearch, setStateSearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  const [studyStateSearch, setStudyStateSearch] = useState("");
+  const [studyCitySearch, setStudyCitySearch] = useState("");
+
+  const getCountry = (id) => countries.find(c => c.id === id);
+  const getState = (id) => states.find(s => s.id === id);
+  const getCity = (id) => cities.find(c => c.id === id);
+  const getStatesForCountry = (cid) => states.filter(s => s.countryId === cid);
+  const getCitiesForState = (sid) => cities.filter(c => c.stateId === sid);
+  const getCityDisplayName = (id) => getCity(id)?.name || "";
+  const getStateDisplayName = (id) => getState(id)?.name || "";
+  const getCountryDisplayName = (id) => getCountry(id)?.name || "";
 
   const getIcon = (id, fallback) => fbIcons[id] || fallback;
 
   const currentData = () => ({
     step, done, uTypeId:uType?.id, c1, c2, theme, av, avBgIdx, 
-    grades:gs, saved, liked, followedUnis: unis.filter(u=>u.followed).map(u=>u.name)
+    grades:gs, saved, liked, followedUnis: unis.filter(u=>u.followed).map(u=>u.name),
+    countryId, stateId, cityId, studyCountryId, studyStateId, studyCityId
   });
 
   useEffect(() => {
@@ -279,6 +623,12 @@ function MainApp() {
         if (localData.grades) setGs(localData.grades);
         if (localData.saved) setSaved(localData.saved);
         if (localData.liked) setLiked(localData.liked);
+        if (localData.countryId) setCountryId(localData.countryId);
+        if (localData.stateId) setStateId(localData.stateId);
+        if (localData.cityId) setCityId(localData.cityId);
+        if (localData.studyCountryId) setStudyCountryId(localData.studyCountryId);
+        if (localData.studyStateId) setStudyStateId(localData.studyStateId);
+        if (localData.studyCityId) setStudyCityId(localData.studyCityId);
       }
       setOnboardingLoaded(true);
     });
@@ -321,6 +671,12 @@ function MainApp() {
             if (fbData.avBgIdx!==undefined) setAvBgIdx(fbData.avBgIdx);
             if (fbData.grades) setGs(fbData.grades);
             if (fbData.saved) setSaved(fbData.saved);
+            if (fbData.countryId) setCountryId(fbData.countryId);
+            if (fbData.stateId) setStateId(fbData.stateId);
+            if (fbData.cityId) setCityId(fbData.cityId);
+            if (fbData.studyCountryId) setStudyCountryId(fbData.studyCountryId);
+            if (fbData.studyStateId) setStudyStateId(fbData.studyStateId);
+            if (fbData.studyCityId) setStudyCityId(fbData.studyCityId);
           } else { 
             setStep(1); setDone(false);
           }
@@ -349,6 +705,23 @@ function MainApp() {
       } catch {}
     };
     fetch();
+  }, []);
+
+  useEffect(() => {
+    const loadGeoData = async () => {
+      try {
+        await seedGeoData();
+        const [countriesSnap, statesSnap, citiesSnap] = await Promise.all([
+          getDocs(collection(db, "countries")),
+          getDocs(collection(db, "states")),
+          getDocs(collection(db, "cities")),
+        ]);
+        if (!countriesSnap.empty) setCountries(countriesSnap.docs.map(d => ({id: d.id, ...d.data()})));
+        if (!statesSnap.empty) setStates(statesSnap.docs.map(d => ({id: d.id, ...d.data()})));
+        if (!citiesSnap.empty) setCities(citiesSnap.docs.map(d => ({id: d.id, ...d.data()})));
+      } catch (e) { console.log("Error loading geo data:", e.message); }
+    };
+    loadGeoData();
   }, []);
 
   useEffect(() => {
@@ -1290,10 +1663,16 @@ function MainApp() {
             <Text>{uType?.emoji}</Text>
             <Text style={{ color:T.sub, fontSize:12 }}>{uType?.label}</Text>
           </View>
-          <View style={{ flexDirection:"row", gap:8, marginBottom:16, flexWrap:"wrap", justifyContent:"center" }}>
+          <View style={{ flexDirection:"row", gap:8, marginBottom:12, flexWrap:"wrap", justifyContent:"center" }}>
             {!!c1 && <View style={{ backgroundColor:T.acBg, paddingHorizontal:12, paddingVertical:4, borderRadius:20, borderWidth:1, borderColor:T.accent+"40" }}><Text style={{ color:T.accent, fontSize:11, fontWeight:"700" }}>1ª {c1}</Text></View>}
             {!!c2 && <View style={{ backgroundColor:T.card2, paddingHorizontal:12, paddingVertical:4, borderRadius:20, borderWidth:1, borderColor:T.border }}><Text style={{ color:T.sub, fontSize:11, fontWeight:"700" }}>2ª {c2}</Text></View>}
           </View>
+          {(cityId||stateId||studyCityId||studyStateId) && (
+            <View style={{ marginBottom:12 }}>
+              {cityId&&stateId && <Text style={{ color:T.sub, fontSize:11, textAlign:"center" }}>📍 {getCityDisplayName(cityId)}, {getStateDisplayName(stateId)}</Text>}
+              {studyCityId&&studyStateId && <Text style={{ color:T.muted, fontSize:10, textAlign:"center", marginTop:2 }}>🎯 Pretendo estudar em {getCityDisplayName(studyCityId)}, {getStateDisplayName(studyStateId)}</Text>}
+            </View>
+          )}
           <View style={{ flexDirection:"row", justifyContent:"center", gap:0, width:"100%", borderTopWidth:1, borderColor:T.border, paddingTop:14 }}>
             {[{v:fol.length,l:"seguindo"},{v:gs.length,l:"provas"},{v:Object.values(saved).filter(Boolean).length,l:"salvos"}].map(({v,l},i,arr)=>(
               <View key={l} style={{ flex:1, alignItems:"center", borderRightWidth:i<arr.length-1?1:0, borderColor:T.border }}>
@@ -1414,6 +1793,7 @@ function MainApp() {
           {[
             ["📷","Alterar foto de perfil","Ícone e cor",()=>{setTmpAv(av);setTmpBgIdx(avBgIdx);setMcfg(false);setMpho(true);}],
             ["✏️","Editar opções de curso","Altere suas preferências",()=>{setEC1(c1);setEC2(c2);setEpick(1);setEsrch("");setMcfg(false);setMedit(true);}],
+            ["📍","Localização","Sua cidade e destino de estudos",()=>{setTmpCountryId(countryId||"BR");setTmpStateId(stateId);setTmpCityId(cityId);setTmpStudyCountryId(studyCountryId||"BR");setTmpStudyStateId(studyStateId);setTmpStudyCityId(studyCityId);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");setMcfg(false);setMloc(true);}],
             ["📧","E-mail",currentUser?.email||"—",()=>{}],
           ].map(([ic,ti,su,fn])=>(
             <TouchableOpacity key={ti} onPress={fn} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card2, borderRadius:14, padding:15, marginBottom:10, borderWidth:1, borderColor:T.border }}>
@@ -1725,6 +2105,134 @@ function MainApp() {
             </>
           ) : null}
         </View>
+      </BottomSheet>
+
+      {/* Location settings */}
+      <BottomSheet visible={mLoc} onClose={()=>{setMloc(false);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");}} T={T}>
+        <ScrollView style={{ maxHeight:520 }} keyboardShouldPersistTaps="handled">
+          <View style={{ padding:20, paddingBottom:24 }}>
+            <View style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:16 }}>
+              <TouchableOpacity onPress={()=>{setMloc(false);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");}} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:16 }}>←</Text></TouchableOpacity>
+              <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>📍 Localização</Text>
+            </View>
+            <Text style={{ color:T.sub, fontSize:13, marginBottom:16 }}>Sua localização atual</Text>
+            <Text style={[lbl,{marginBottom:8}]}>País</Text>
+            <View style={{ marginBottom:14 }}>
+              <TextInput value={getCountryDisplayName(tmpCountryId)||"Brasil"} onChangeText={()=>{}} placeholder="Brasil" placeholderTextColor={T.muted} editable={false} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+            </View>
+            <Text style={[lbl,{marginBottom:8}]}>Estado</Text>
+            <View style={{ marginBottom:14 }}>
+              <TextInput value={tmpStateId ? getStateDisplayName(tmpStateId) : stateSearch} onChangeText={t=>{setStateSearch(t);if(tmpStateId)setTmpStateId("");setTmpCityId("");}} placeholder="Selecione ou digite um estado" placeholderTextColor={T.muted} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+              <View style={{ marginTop:6, backgroundColor:T.card2, borderRadius:12, maxHeight:140, borderWidth:1, borderColor:T.border }}>
+                <ScrollView style={{ maxHeight:130 }}>
+                  {(() => {
+                    const searchText = tmpStateId ? "" : stateSearch;
+                    const statesList = getStatesForCountry(tmpCountryId||"BR");
+                    const filtered = searchText.length >= 1 ? statesList.filter(s=>s.name.toLowerCase().includes(searchText.toLowerCase())||s.id.toLowerCase().includes(searchText.toLowerCase())) : statesList;
+                    if (filtered.length === 0) {
+                      return <TouchableOpacity style={{ padding:10 }}><Text style={{ color:T.muted, fontSize:12 }}>Nenhum resultado</Text></TouchableOpacity>;
+                    }
+                    return filtered.map(s=>(
+                      <TouchableOpacity key={s.id} onPress={()=>{setTmpStateId(s.id);setTmpCityId("");setStateSearch("");}} style={{ padding:10, borderBottomWidth:1, borderBottomColor:T.border }}>
+                        <Text style={{ color:T.text, fontSize:13 }}>{s.name} ({s.id})</Text>
+                      </TouchableOpacity>
+                    ));
+                  })()}
+                </ScrollView>
+              </View>
+            </View>
+            <Text style={[lbl,{marginBottom:8}]}>Cidade</Text>
+            <View style={{ marginBottom:16 }}>
+              <TextInput value={tmpCityId ? getCityDisplayName(tmpCityId) : citySearch} onChangeText={t=>{setCitySearch(t);if(tmpCityId)setTmpCityId("");}} placeholder={tmpStateId?"Selecione ou digite uma cidade":"Selecione o estado primeiro"} placeholderTextColor={T.muted} editable={!!tmpStateId} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+              {tmpStateId && (
+                <View style={{ marginTop:6, backgroundColor:T.card2, borderRadius:12, maxHeight:140, borderWidth:1, borderColor:T.border }}>
+                  <ScrollView style={{ maxHeight:130 }}>
+                    {(() => {
+                      const searchText = tmpCityId ? "" : citySearch;
+                      const citiesList = getCitiesForState(tmpStateId);
+                      const filtered = searchText.length >= 1 ? citiesList.filter(c=>c.name.toLowerCase().includes(searchText.toLowerCase())) : citiesList;
+                      if (filtered.length === 0) {
+                        return <TouchableOpacity style={{ padding:10 }}><Text style={{ color:T.muted, fontSize:12 }}>Nenhum resultado</Text></TouchableOpacity>;
+                      }
+                      return filtered.map(c=>(
+                        <TouchableOpacity key={c.id} onPress={()=>{setTmpCityId(c.id);setCitySearch("");}} style={{ padding:10, borderBottomWidth:1, borderBottomColor:T.border }}>
+                          <Text style={{ color:T.text, fontSize:13 }}>{c.name}</Text>
+                        </TouchableOpacity>
+                      ));
+                    })()}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+            <View style={{ height:1, backgroundColor:T.border, marginVertical:8 }} />
+            <Text style={{ color:T.sub, fontSize:13, marginBottom:16, marginTop:8 }}>Destino de estudos preferido</Text>
+            <Text style={[lbl,{marginBottom:8}]}>País</Text>
+            <View style={{ marginBottom:14 }}>
+              <TextInput value={getCountryDisplayName(tmpStudyCountryId)||"Brasil"} onChangeText={()=>{}} placeholder="Brasil" placeholderTextColor={T.muted} editable={false} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+            </View>
+            <Text style={[lbl,{marginBottom:8}]}>Estado</Text>
+            <View style={{ marginBottom:14 }}>
+              <TextInput value={tmpStudyStateId ? getStateDisplayName(tmpStudyStateId) : studyStateSearch} onChangeText={t=>{setStudyStateSearch(t);if(tmpStudyStateId)setTmpStudyStateId("");setTmpStudyCityId("");}} placeholder="Selecione ou digite um estado" placeholderTextColor={T.muted} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+              <View style={{ marginTop:6, backgroundColor:T.card2, borderRadius:12, maxHeight:140, borderWidth:1, borderColor:T.border }}>
+                <ScrollView style={{ maxHeight:130 }}>
+                  {(() => {
+                    const searchText = tmpStudyStateId ? "" : studyStateSearch;
+                    const statesList = getStatesForCountry(tmpStudyCountryId||"BR");
+                    const filtered = searchText.length >= 1 ? statesList.filter(s=>s.name.toLowerCase().includes(searchText.toLowerCase())||s.id.toLowerCase().includes(searchText.toLowerCase())) : statesList;
+                    if (filtered.length === 0) {
+                      return <TouchableOpacity style={{ padding:10 }}><Text style={{ color:T.muted, fontSize:12 }}>Nenhum resultado</Text></TouchableOpacity>;
+                    }
+                    return filtered.map(s=>(
+                      <TouchableOpacity key={s.id} onPress={()=>{setTmpStudyStateId(s.id);setTmpStudyCityId("");setStudyStateSearch("");}} style={{ padding:10, borderBottomWidth:1, borderBottomColor:T.border }}>
+                        <Text style={{ color:T.text, fontSize:13 }}>{s.name} ({s.id})</Text>
+                      </TouchableOpacity>
+                    ));
+                  })()}
+                </ScrollView>
+              </View>
+            </View>
+            <Text style={[lbl,{marginBottom:8}]}>Cidade</Text>
+            <View style={{ marginBottom:16 }}>
+              <TextInput value={tmpStudyCityId ? getCityDisplayName(tmpStudyCityId) : studyCitySearch} onChangeText={t=>{setStudyCitySearch(t);if(tmpStudyCityId)setTmpStudyCityId("");}} placeholder={tmpStudyStateId?"Selecione ou digite uma cidade":"Selecione o estado primeiro"} placeholderTextColor={T.muted} editable={!!tmpStudyStateId} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+              {tmpStudyStateId && (
+                <View style={{ marginTop:6, backgroundColor:T.card2, borderRadius:12, maxHeight:140, borderWidth:1, borderColor:T.border }}>
+                  <ScrollView style={{ maxHeight:130 }}>
+                    {(() => {
+                      const searchText = tmpStudyCityId ? "" : studyCitySearch;
+                      const citiesList = getCitiesForState(tmpStudyStateId);
+                      const filtered = searchText.length >= 1 ? citiesList.filter(c=>c.name.toLowerCase().includes(searchText.toLowerCase())) : citiesList;
+                      if (filtered.length === 0) {
+                        return <TouchableOpacity style={{ padding:10 }}><Text style={{ color:T.muted, fontSize:12 }}>Nenhum resultado</Text></TouchableOpacity>;
+                      }
+                      return filtered.map(c=>(
+                        <TouchableOpacity key={c.id} onPress={()=>{setTmpStudyCityId(c.id);setStudyCitySearch("");}} style={{ padding:10, borderBottomWidth:1, borderBottomColor:T.border }}>
+                          <Text style={{ color:T.text, fontSize:13 }}>{c.name}</Text>
+                        </TouchableOpacity>
+                      ));
+                    })()}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+            <TouchableOpacity onPress={()=>{
+              setCountryId(tmpCountryId||"BR");
+              setStateId(tmpStateId);
+              setCityId(tmpCityId);
+              setStudyCountryId(tmpStudyCountryId||"BR");
+              setStudyStateId(tmpStudyStateId);
+              setStudyCityId(tmpStudyCityId);
+              setMloc(false);
+              setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");
+              if (currentUser) {
+                const data = {countryId:tmpCountryId||"BR",stateId:tmpStateId,cityId:tmpCityId,studyCountryId:tmpStudyCountryId||"BR",studyStateId:tmpStudyStateId,studyCityId:tmpStudyCityId,updatedAt:new Date().toISOString()};
+                saveLocalUserData({...currentData(), ...data});
+                setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
+              }
+            }} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center", marginTop:8 }}>
+              <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </BottomSheet>
     </View>
   );
