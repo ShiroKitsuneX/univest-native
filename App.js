@@ -2189,7 +2189,7 @@ function MainApp() {
 
       <View style={{ ...cd({ padding:15, marginBottom:12, backgroundColor:isDark?"#1a1a2e":"#f5f5ff" }), borderWidth:1, borderColor:T.accent+"30", borderRadius:16 }}>
         <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
-          <Text style={[lbl,{color:T.accent, marginBottom:0}]}>🎯 Metas de Vestibular</Text>
+          <Text style={[lbl,{color:T.accent, marginBottom:0}]}>📋 Tarefas</Text>
           <TouchableOpacity onPress={()=>setGoalsModal(true)} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.acBg }}>
             <Text style={{ color:T.accent, fontSize:10, fontWeight:"700" }}>+ Adicionar</Text>
           </TouchableOpacity>
@@ -2201,16 +2201,16 @@ function MainApp() {
 {goalsUnis.map(goal => {
               const nextExam = goal.exams?.find(e => e.status === "upcoming");
               const daysUntil = nextExam ? Math.max(0, Math.ceil((new Date(nextExam.date) - new Date()) / (1000 * 60 * 60 * 24))) : null;
-               const goalTodos = [
-                 ...(goal.books?.slice(0,4).map((book, i) => ({ 
-                   id: `${goal.id}-${book}`, 
-                   bookKey: `${goal.id}-${book}`,
-                   text: `Ler "${book.split(" - ")[0]}"`, 
-                   type: "book" 
-                 })) || []),
-                 { id: `${goal.id}-inscricao`, text: "Fazer inscrição", type: "inscricao" },
-                 { id: `${goal.id}-taxa`, text: "Pagar taxa de inscrição", type: "taxa" },
-               ];
+const goalTodos = [
+                  ...(goal.books?.map((book, i) => ({ 
+                    id: `${goal.id}-${book}`, 
+                    bookKey: `${goal.id}-${book}`,
+                    text: `Ler "${book.split(" - ")[0]}"`, 
+                    type: "book" 
+                  })) || []),
+                  { id: `${goal.id}-inscricao`, text: "Fazer inscrição", type: "inscricao" },
+                  { id: `${goal.id}-taxa`, text: "Pagar taxa de inscrição", type: "taxa" },
+                ];
                const completedCount = goalTodos.filter(t => t.type === "book" ? readBooks[t.bookKey] === "read" : completedTodos[t.id]).length;
                
                return (
@@ -2248,7 +2248,13 @@ function MainApp() {
                                   setDoc(doc(db,"usuarios",currentUser.uid),{completedTodos:newCompleted,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
                                 }
                               }
-                            }} activeOpacity={0.7} style={{ paddingVertical:6 }}>
+                            }} activeOpacity={0.7} style={{ 
+                              paddingVertical:6, 
+                              paddingHorizontal: (isCompleted || isReading) ? 6 : 0, 
+                              marginHorizontal: (isCompleted || isReading) ? -6 : 0, 
+                              borderRadius: (isCompleted || isReading) ? 6 : 0, 
+                              backgroundColor: isCompleted ? T.accent+"10" : isReading ? "#f59e0b10" : "transparent" 
+                            }}>
                               {showMenu ? (
                                 <View style={{ flexDirection:"row", gap:4 }}>
                                   <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks}; delete newRead[todo.bookKey]; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:4, borderRadius:6, backgroundColor:T.card, borderWidth:1, borderColor:T.border }}>
@@ -2854,7 +2860,7 @@ function MainApp() {
         <View style={{ padding:20, paddingBottom:24 }}>
           <View style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:16 }}>
             <TouchableOpacity onPress={()=>{setGoalsModal(false);setGoalsSearch("");}} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:16 }}>←</Text></TouchableOpacity>
-            <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>🎯 Metas de Vestibular</Text>
+            <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>📋 Tarefas</Text>
           </View>
           <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:12, paddingHorizontal:12, paddingVertical:10, marginBottom:16, borderWidth:1, borderColor:T.inpB }}>
             <Text style={{ fontSize:14, marginRight:8 }}>🔍</Text>
