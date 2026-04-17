@@ -564,6 +564,8 @@ function MainApp() {
   const [goalsModal, setGoalsModal] = useState(false);
   const [goalsSearch, setGoalsSearch] = useState("");
   const [completedTodos, setCompletedTodos] = useState({});
+  const [readBooks, setReadBooks] = useState({});
+  const [readingBooks, setReadingBooks] = useState([]);
   const [requirementsModal, setRequirementsModal] = useState(false);
   const [selectedRequirements, setSelectedRequirements] = useState(null);
   const [query, setQuery] = useState("");
@@ -597,6 +599,8 @@ function MainApp() {
   const [mExam, setMexam] = useState(null);
   const [examYear, setExamYear] = useState(null);
   const [showExamsPage, setShowExamsPage] = useState(false);
+  const [showBooksPage, setShowBooksPage] = useState(false);
+  const [booksSearch, setBooksSearch] = useState("");
   const [expandedYears, setExpandedYears] = useState({});
   const [examSearch, setExamSearch] = useState("");
   const [examSort, setExamSort] = useState("newest");
@@ -656,10 +660,37 @@ function MainApp() {
 
   const getIcon = (id, fallback) => fbIcons[id] || fallback;
 
+  const updateBookStatus = (bookKey, status) => {
+    const isReading = readingBooks.includes(bookKey);
+    const isRead = readBooks.includes(bookKey);
+    let newRead = [...readBooks];
+    let newReading = [...readingBooks];
+    
+    if (status === "reading") {
+      newRead = newRead.filter(b => b !== bookKey);
+      if (!isReading) newReading = [...newReading, bookKey];
+    } else if (status === "read") {
+      newReading = newReading.filter(b => b !== bookKey);
+      if (!isRead) newRead = [...newRead, bookKey];
+    } else if (status === "none") {
+      newRead = newRead.filter(b => b !== bookKey);
+      newReading = newReading.filter(b => b !== bookKey);
+    }
+    
+    setReadBooks(newRead);
+    setReadingBooks(newReading);
+    const data = {readBooks: newRead, readingBooks: newReading};
+    saveLocalUserData({...currentData(), ...data});
+    if (currentUser) {
+      setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+    }
+  };
+
   const currentData = () => ({
     step, done, uTypeId:uType?.id, c1, c2, theme, av, avBgIdx, nome, sobrenome,
     grades:gs, saved, liked, followedUnis: unis.filter(u=>u.followed).map(u=>u.name),
-    countryId, stateId, cityId, studyCountryId, studyStateId, studyCityId
+    countryId, stateId, cityId, studyCountryId, studyStateId, studyCityId,
+    readBooks, readingBooks
   });
 
   useEffect(() => {
@@ -678,6 +709,8 @@ function MainApp() {
         if (localData.nome) setNome(localData.nome);
         if (localData.sobrenome) setSobrenome(localData.sobrenome);
         if (localData.liked) setLiked(localData.liked);
+        if (localData.readBooks) setReadBooks(localData.readBooks);
+        if (localData.readingBooks) setReadingBooks(localData.readingBooks);
         if (localData.countryId) setCountryId(localData.countryId);
         if (localData.stateId) setStateId(localData.stateId);
         if (localData.cityId) setCityId(localData.cityId);
@@ -736,7 +769,10 @@ function MainApp() {
             if (fbData.studyCityId) setStudyCityId(fbData.studyCityId);
             if (fbData.goalsUnis) setGoalsUnis(fbData.goalsUnis);
             if (fbData.completedTodos) setCompletedTodos(fbData.completedTodos);
-          } else { 
+            if (fbData.readBooks) setReadBooks(fbData.readBooks);
+            if (fbData.readingBooks) setReadingBooks(fbData.readingBooks);
+          } else {
+            setUserData({ followedUnis: [] });
             setStep(1); setDone(false);
           }
         } catch (e) { console.log("Error loading user data:", e.message); }
@@ -784,27 +820,30 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    if (!fbUnis.length) return;
-    setUnis(fbUnis.map(u=>({...u, followed:userData?.followedUnis?.includes(u.name)||false})));
+    const source = fbUnis.length ? fbUnis : UNIVERSITIES;
+    setUnis(source.map(u=>({...u, followed:userData?.followedUnis?.includes(u.name)||false})));
   }, [fbUnis, userData]);
 
   useEffect(() => {
     const fetchPosts = async () => {
+      let displayed = FEED;
       try {
         const snap = await getDocs(collection(db,"posts"));
         const f = snap.docs.map(d=>({id:d.id,...d.data()}));
         f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
-        setPosts(f);
-        // Batch all like checks in parallel instead of sequential N+1
-        if (currentUser && f.length) {
+        if (f.length) { setPosts(f); displayed = f; }
+        else setPosts(FEED);
+      } catch { setPosts(FEED); }
+      if (currentUser && displayed.length) {
+        try {
           const likeChecks = await Promise.all(
-            f.map(p => getDoc(doc(db,"posts",p.id,"likes",currentUser.uid)))
+            displayed.map(p => getDoc(doc(db,"posts",String(p.id),"likes",currentUser.uid)))
           );
           const lk={};
-          likeChecks.forEach((snap,i) => { if(snap.exists()) lk[f[i].id]=true; });
+          likeChecks.forEach((snap,i) => { if(snap.exists()) lk[displayed[i].id]=true; });
           setLiked(lk);
-        }
-      } catch { setPosts(FEED); }
+        } catch {}
+      }
     };
     fetchPosts();
   }, [currentUser]);
@@ -910,19 +949,32 @@ function MainApp() {
     if (!currentUser){Alert.alert("Atenção","Faça login para seguir universidades");return;}
     setUnis(prev=>prev.map(u=>u.name===uni.name?{...u,followed:isFollowing,followersCount:(u.followersCount||0)+(isFollowing?1:-1)}:u));
     if(selUni?.name===uni.name) setSU(p=>({...p,followed:isFollowing,followersCount:(p.followersCount||0)+(isFollowing?1:-1)}));
+    setUserData(prev => {
+      const cur = prev?.followedUnis || [];
+      const next = isFollowing ? [...new Set([...cur, uni.name])] : cur.filter(n=>n!==uni.name);
+      return { ...(prev||{}), followedUnis: next };
+    });
     saveLocalUserData(currentData());
     try {
       const userRef=doc(db,"usuarios",currentUser.uid);
-      await updateDoc(userRef,{
+      await setDoc(userRef,{
         followedUnis: isFollowing ? arrayUnion(uni.name) : arrayRemove(uni.name),
         updatedAt: new Date().toISOString(),
-      });
-      const uniRef=doc(db,"universidades",uni.id);
-      await updateDoc(uniRef,{followersCount:increment(isFollowing?1:-1)}).catch(()=>{});
+      }, { merge: true });
+      if (uni.id) {
+        const uniRef=doc(db,"universidades",String(uni.id));
+        await setDoc(uniRef,{followersCount:increment(isFollowing?1:-1)},{merge:true}).catch(()=>{});
+      }
     } catch(err){
+      console.log("toggleFollow error:", err?.message);
       setUnis(prev=>prev.map(u=>u.name===uni.name?{...u,followed:!isFollowing,followersCount:(u.followersCount||0)+(isFollowing?-1:1)}:u));
       if(selUni?.name===uni.name) setSU(p=>({...p,followed:!isFollowing}));
-      Alert.alert("Erro","Não foi possível seguir.");
+      setUserData(prev => {
+        const cur = prev?.followedUnis || [];
+        const next = !isFollowing ? [...new Set([...cur, uni.name])] : cur.filter(n=>n!==uni.name);
+        return { ...(prev||{}), followedUnis: next };
+      });
+      Alert.alert("Erro","Não foi possível seguir. " + (err?.message||""));
     }
   };
 
@@ -1254,7 +1306,7 @@ function MainApp() {
       {[{id:"feed",ic:"🏠",l:"Feed"},{id:"explorar",ic:"🔍",l:"Explorar"},{id:"notas",ic:"📊",l:"Notas"},{id:"perfil",ic:"👤",l:"Perfil"}].map(t=>{
         const active = tab===t.id;
         return (
-          <TouchableOpacity key={t.id} onPress={()=>{setTab(t.id);setSU(null);}} style={{ flex:1, alignItems:"center", paddingVertical:6 }}>
+          <TouchableOpacity key={t.id} onPress={()=>{setTab(t.id);setSU(null);setShowBooksPage(false);}} style={{ flex:1, alignItems:"center", paddingVertical:6 }}>
             <View style={{ paddingHorizontal:16, paddingVertical:5, borderRadius:20, backgroundColor:active?T.acBg:"transparent", alignItems:"center", marginBottom:2 }}>
               <Text style={{ fontSize:20 }}>{getIcon("tab_"+t.id,t.ic)}</Text>
             </View>
@@ -1375,6 +1427,90 @@ function MainApp() {
     );
   };
 
+  const renderBooksPage = () => {
+    const allBooks = [];
+    unis.forEach(uni => {
+      if (uni.books && Array.isArray(uni.books) && !Array.isArray(uni.books[0])) {
+        uni.books.forEach(book => {
+          allBooks.push({ id: `${uni.id}-${book}`, book, uni });
+        });
+      }
+    });
+
+    const filteredBooks = allBooks.filter(b => 
+      !booksSearch || 
+      b.book.toLowerCase().includes(booksSearch.toLowerCase()) ||
+      b.uni.name.toLowerCase().includes(booksSearch.toLowerCase())
+    );
+
+    const readCount = readBooks.length;
+    const totalCount = allBooks.length;
+
+    return (
+      <View style={{ flex:1, backgroundColor:T.bg }}>
+        <View style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, borderBottomWidth:1, borderColor:T.border }}>
+          <TouchableOpacity onPress={()=>{setShowBooksPage(false);setBooksSearch("");}} style={{ marginRight:12 }}>
+            <Text style={{ fontSize:24, color:T.accent }}>←</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize:18, fontWeight:"800", color:T.text, flex:1 }}>📚 Todos os Livros</Text>
+        </View>
+
+        <ScrollView style={{ flex:1, paddingHorizontal:16, paddingTop:16 }}>
+          {readCount > 0 && (
+            <Text style={{ color:T.sub, fontSize:12, marginBottom:12 }}>Você já leu {readCount} {readCount === 1 ? "livro" : "livros"}</Text>
+          )}
+
+          <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:13, paddingHorizontal:14, paddingVertical:11, borderWidth:1, borderColor:T.inpB, marginBottom:16 }}>
+            <Text style={{ fontSize:14, marginRight:10 }}>🔍</Text>
+            <TextInput value={booksSearch} onChangeText={setBooksSearch} placeholder="Buscar livro ou universidade..." placeholderTextColor={T.muted} style={{ flex:1, color:T.text, fontSize:14, padding:0 }} />
+            {booksSearch ? <TouchableOpacity onPress={()=>setBooksSearch("")}><Text style={{ color:T.muted }}>✕</Text></TouchableOpacity> : null}
+          </View>
+
+          {filteredBooks.length === 0 ? (
+            <View style={{ paddingVertical:40, alignItems:"center" }}>
+              <Text style={{ fontSize:48, marginBottom:12 }}>📚</Text>
+              <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>Nenhum livro encontrado</Text>
+            </View>
+          ) : (
+            <View style={{ gap:8, marginBottom:40 }}>
+              {filteredBooks.map(item => {
+                const isRead = readBooks.includes(item.id);
+                return (
+                  <TouchableOpacity key={item.id} onPress={() => {
+                    if (isRead) {
+                      const newBooks = readBooks.filter(b => b !== item.id);
+                      setReadBooks(newBooks);
+                      saveLocalUserData({...currentData(), readBooks: newBooks});
+                      if (currentUser) {
+                        setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newBooks,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                      }
+                    } else {
+                      const newBooks = [...readBooks, item.id];
+                      setReadBooks(newBooks);
+                      saveLocalUserData({...currentData(), readBooks: newBooks});
+                      if (currentUser) {
+                        setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newBooks,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                      }
+                    }
+                  }} style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:14, backgroundColor:isRead ? T.accent+"15" : T.card2, borderWidth:1, borderColor:isRead ? T.accent+"40" : T.border }}>
+                    <View style={{ width:32, height:32, borderRadius:16, backgroundColor:isRead ? T.accent : item.uni.color, alignItems:"center", justifyContent:"center", marginRight:12 }}>
+                      {isRead ? <Text style={{ color:AT, fontSize:14, fontWeight:"800" }}>✓</Text> : <Text style={{ color:"#fff", fontSize:10, fontWeight:"800" }}>{item.uni.name.slice(0,2)}</Text>}
+                    </View>
+                    <View style={{ flex:1 }}>
+                      <Text style={{ color:isRead ? T.muted : T.text, fontSize:13, fontWeight:"600", textDecorationLine:isRead?"line-through":"none" }} numberOfLines={2}>{item.book}</Text>
+                      <Text style={{ color:T.sub, fontSize:11 }}>{item.uni.name}</Text>
+                    </View>
+                    <Text style={{ fontSize:20 }}>{isRead ? "📕" : "📗"}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    );
+  };
+
   const renderUniDetail = () => (
     <ScrollView style={{ flex:1 }}>
       <TouchableOpacity onPress={()=>setSU(null)} style={{ paddingHorizontal:14, paddingVertical:8, borderRadius:12, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignSelf:"flex-start", margin:16 }}>
@@ -1433,21 +1569,42 @@ function MainApp() {
           <View style={cd({ padding:16 })}>
             <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
               <Text style={[lbl,{marginBottom:0}]}>📚 Livros Obrigatórios</Text>
-              {selUni.books.length > 4 && (
+              {selUni.books && selUni.books.length > 4 && (
                 <TouchableOpacity onPress={()=>setSelectedBookYear(selectedBookYear === "2026" ? "2025" : "2026")} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
                   <Text style={{ color:T.sub, fontSize:10, fontWeight:"600" }}>{selectedBookYear || "2026"} ▼</Text>
                 </TouchableOpacity>
               )}
             </View>
-            {Array.isArray(selUni.books[0]) ? (
+            {Array.isArray(selUni.books?.[0]) ? (
               <Text style={{ color:T.text, fontSize:12 }}>Verificar ano...</Text>
             ) : (
-              selUni.books.slice(0, 8).map((book, i)=>(
-                <View key={i} style={{ flexDirection:"row", alignItems:"flex-start", paddingVertical:8, borderBottomWidth:i<Math.min(selUni.books.length, 8)-1?1:0, borderColor:T.border }}>
-                  <Text style={{ fontSize:14, marginRight:10, marginTop:2 }}>📖</Text>
-                  <Text style={{ color:T.text, fontSize:12, flex:1, lineHeight:18 }}>{book}</Text>
-                </View>
-              ))
+              <View>
+                {selUni.books?.slice(0, 8).map((book, i) => {
+                  const bookKey = `${selUni.id}-${book}`;
+                  const isRead = readBooks[bookKey] === "read";
+                  const isReading = readBooks[bookKey] === "reading";
+                  const status = readBooks[bookKey] || "none";
+                  return (
+                    <TouchableOpacity key={i} onPress={() => {
+                      const nextStatus = status === "none" ? "reading" : status === "reading" ? "read" : "none";
+                      const newRead = {...readBooks};
+                      if (nextStatus === "none") delete newRead[bookKey];
+                      else newRead[bookKey] = nextStatus;
+                      setReadBooks(newRead);
+                      saveLocalUserData({...currentData(), readBooks: newRead});
+                      if (currentUser) {
+                        setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                      }
+                    }} style={{ flexDirection:"row", alignItems:"center", paddingVertical:8, borderBottomWidth:i<Math.min(selUni.books.length, 8)-1?1:0, borderColor:T.border }}>
+                      <View style={{ width:24, height:24, borderRadius:12, backgroundColor:isRead ? T.accent : isReading ? "#f59e0b" : T.card2, borderWidth:2, borderColor:isRead ? T.accent : isReading ? "#f59e0b" : T.border, alignItems:"center", justifyContent:"center", marginRight:10 }}>
+                        {isRead && <Text style={{ color:AT, fontSize:12, fontWeight:"800" }}>✓</Text>}
+                        {isReading && <Text style={{ color:"#fff", fontSize:10 }}>📖</Text>}
+                      </View>
+                      <Text style={{ color:isRead?T.muted:T.text, fontSize:12, flex:1, textDecorationLine:isRead?"line-through":"none" }}>{book}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             )}
           </View>
         )}
@@ -1483,6 +1640,35 @@ function MainApp() {
         </TouchableOpacity>
       </ScrollView>
       <View style={{ height:1, backgroundColor:T.border, marginBottom:8 }} />
+      {(() => {
+        const upcoming = goalsUnis.flatMap(g => (g.exams||[]).filter(e=>e.status==="upcoming").map(e=>({...e, uni:g})))
+          .map(e=>({...e, daysUntil: Math.ceil((new Date(e.date) - new Date()) / 86400000)}))
+          .filter(e=>e.daysUntil >= 0 && e.daysUntil <= 180)
+          .sort((a,b)=>a.daysUntil-b.daysUntil).slice(0,5);
+        if (!upcoming.length) return null;
+        return (
+          <View style={{ paddingHorizontal:16, marginBottom:12 }}>
+            <Text style={{ color:T.sub, fontSize:11, fontWeight:"700", marginBottom:8, textTransform:"uppercase", letterSpacing:0.5 }}>⏳ Contagem regressiva</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {upcoming.map((e,i)=>{
+                const urgent = e.daysUntil <= 30;
+                return (
+                  <TouchableOpacity key={i} onPress={()=>{const u=unis.find(x=>x.id===e.uni.id);if(u){setSU(u);setTab("explorar");}}} style={{ minWidth:130, marginRight:10, padding:12, borderRadius:14, backgroundColor:urgent?"#dc262615":T.card, borderWidth:1, borderColor:urgent?"#dc262660":T.border }}>
+                    <View style={{ flexDirection:"row", alignItems:"center", gap:6, marginBottom:4 }}>
+                      <View style={{ width:22, height:22, borderRadius:11, backgroundColor:e.uni.color, alignItems:"center", justifyContent:"center" }}>
+                        <Text style={{ color:"#fff", fontSize:8, fontWeight:"800" }}>{e.uni.name.slice(0,2)}</Text>
+                      </View>
+                      <Text style={{ color:T.sub, fontSize:10, fontWeight:"700" }} numberOfLines={1}>{e.uni.name}</Text>
+                    </View>
+                    <Text style={{ color:urgent?"#dc2626":T.text, fontSize:22, fontWeight:"900" }}>{e.daysUntil}d</Text>
+                    <Text style={{ color:T.muted, fontSize:10, fontWeight:"600" }} numberOfLines={1}>{e.name||"Prova"}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        );
+      })()}
       {feedItems.length===0 && fol.length===0 && (
         <View style={{ flex:1, alignItems:"center", justifyContent:"center", padding:40 }}>
           <Text style={{ fontSize:48, marginBottom:16 }}>📰</Text>
@@ -1670,7 +1856,7 @@ function MainApp() {
             </View>
           )}
         </View>
-        <Text style={{ color:isDark?"#94a3b8":"#64748b", fontSize:10, marginTop:8 }}>Essas notas de corte guiam toda a análise abaixo</Text>
+        <Text style={{ color:isDark?"#94a3b8":"#64748b", fontSize:10, marginTop:8 }}>Os cursos selecionados guiam toda a análise abaixo</Text>
       </View>
 
       <Text style={[lbl,{marginBottom:8}]}>📊 Notas de Corte</Text>
@@ -1940,21 +2126,48 @@ function MainApp() {
       <View style={{ ...cd(), padding:15, marginBottom:12 }}>
         <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
           <Text style={lbl}>🏛️ Universidades que sigo</Text>
-          {fol.length>0 && <TouchableOpacity onPress={()=>setMUni(true)} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}><Text style={{ color:T.sub, fontSize:10, fontWeight:"700" }}>⚙️</Text></TouchableOpacity>}
+          {fol.length>0 && <TouchableOpacity onPress={()=>setMUni(true)} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}><Text style={{ color:T.sub, fontSize:10, fontWeight:"700" }}>Ordenar</Text></TouchableOpacity>}
         </View>
         {fol.length===0 ? (
           <Text style={{ color:T.muted, fontSize:13, textAlign:"center", padding:10 }}>Nenhuma ainda.</Text>
         ) : (
-          <View style={{ flexDirection:"row", flexWrap:"wrap", gap:8 }}>
+          <View style={{ flexDirection:"row", flexWrap:"wrap", gap:6 }}>
             {fol.map(u=>(
-              <TouchableOpacity key={u.id} onPress={()=>{setSU(u);setTab("explorar");}} style={{ alignItems:"center", gap:3, minWidth:56, padding:8, backgroundColor:T.card2, borderRadius:12, borderWidth:1, borderColor:T.border }}>
-                <View style={{ width:40, height:40, borderRadius:20, backgroundColor:u.color, alignItems:"center", justifyContent:"center" }}>
-                  <Text style={{ color:"#fff", fontSize:11, fontWeight:"800" }}>{u.name.slice(0,2)}</Text>
+              <TouchableOpacity key={u.id} onPress={()=>{setSU(u);setTab("explorar");}} style={{ alignItems:"center", gap:2, minWidth:44, padding:6, backgroundColor:T.card2, borderRadius:10, borderWidth:1, borderColor:T.border }}>
+                <View style={{ width:28, height:28, borderRadius:14, backgroundColor:u.color, alignItems:"center", justifyContent:"center" }}>
+                  <Text style={{ color:"#fff", fontSize:8, fontWeight:"800" }}>{u.name.slice(0,2)}</Text>
                 </View>
-                <Text style={{ color:T.sub, fontSize:9, fontWeight:"600", textAlign:"center" }}>{u.name}</Text>
-                <Text style={{ color:T.muted, fontSize:8 }}>{u.prova}</Text>
+                <Text style={{ color:T.sub, fontSize:8, fontWeight:"600", textAlign:"center" }} numberOfLines={1}>{u.name}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+        )}
+      </View>
+
+      <View style={{ ...cd(), padding:15, marginBottom:12 }}>
+        <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+          <Text style={lbl}>📚 Livros Lidos</Text>
+          {readBooks.length > 0 && <TouchableOpacity onPress={()=>setShowBooksPage(true)} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
+            <Text style={{ color:T.sub, fontSize:10, fontWeight:"700" }}>Ver todos</Text>
+          </TouchableOpacity>}
+        </View>
+        {readBooks.length === 0 ? (
+          <TouchableOpacity onPress={()=>setShowBooksPage(true)} style={{ flexDirection:"row", alignItems:"center", justifyContent:"center", gap:8, paddingVertical:12, backgroundColor:T.card2, borderRadius:12, borderWidth:1, borderColor:T.border }}>
+            <Text style={{ color:T.sub, fontSize:12 }}>Adicione livros das universidades que você segue</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ flexDirection:"row", flexWrap:"wrap", gap:6 }}>
+            {readBooks.slice(0,6).map(bk => {
+              const [uniId, ...bookParts] = bk.split("-");
+              const bookName = bookParts.join("-");
+              const uni = unis.find(u => String(u.id) === uniId);
+              return (
+                <View key={bk} style={{ flexDirection:"row", alignItems:"center", gap:6, paddingHorizontal:10, paddingVertical:6, backgroundColor:T.card2, borderRadius:20, borderWidth:1, borderColor:T.border }}>
+                  <Text style={{ fontSize:12 }}>✓</Text>
+                  <Text style={{ color:T.sub, fontSize:11 }} numberOfLines={1}>{bookName.slice(0,15)}{bookName.length>15?"...":""}</Text>
+                </View>
+              );
+            })}
           </View>
         )}
       </View>
@@ -1970,49 +2183,72 @@ function MainApp() {
           <Text style={{ color:T.sub, fontSize:12 }}>Adicione universidades que você pretende fazer vestibular</Text>
         ) : (
           <View>
-            {goalsUnis.map(goal => {
+{goalsUnis.map(goal => {
               const nextExam = goal.exams?.find(e => e.status === "upcoming");
               const daysUntil = nextExam ? Math.max(0, Math.ceil((new Date(nextExam.date) - new Date()) / (1000 * 60 * 60 * 24))) : null;
-              const goalTodos = [
-                ...(goal.books?.slice(0,4).map((b, i) => ({ id: `${goal.id}-book-${i}`, text: `Ler "${b.split(" - ")[0]}"`, type: "book" })) || []),
-                { id: `${goal.id}-inscricao`, text: "Fazer inscrição", type: "inscricao" },
-                { id: `${goal.id}-taxa`, text: "Pagar taxa de inscrição", type: "taxa" },
-              ];
-              const completedCount = goalTodos.filter(t => completedTodos[t.id]).length;
-              
-              return (
-                <View key={goal.id} style={{ marginBottom:10 }}>
-                  <TouchableOpacity onPress={()=>{const u=unis.find(x=>x.id===goal.id);if(u)setSU(u);setTab("explorar");}} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card2, borderRadius:12, padding:12, borderWidth:1, borderColor:T.border }}>
-                    <View style={{ width:40, height:40, borderRadius:20, backgroundColor:goal.color, alignItems:"center", justifyContent:"center" }}>
-                      <Text style={{ color:"#fff", fontSize:11, fontWeight:"800" }}>{goal.name.slice(0,2)}</Text>
-                    </View>
-                    <View style={{ flex:1, marginLeft:10 }}>
-                      <Text style={{ color:T.text, fontSize:13, fontWeight:"700" }}>{goal.name}</Text>
-                      <Text style={{ color:T.muted, fontSize:10 }}>{goal.vestibular}</Text>
-                    </View>
-                    {daysUntil !== null && (
-                      <View style={{ backgroundColor:daysUntil <= 30 ? "#dc2626" : T.accent, borderRadius:8, paddingHorizontal:8, paddingVertical:4 }}>
-                        <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>{daysUntil}d</Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                  <View style={{ backgroundColor:T.card, borderRadius:8, marginTop:6, padding:8, borderWidth:1, borderColor:T.border }}>
-                    {goalTodos.map(todo => {
-                      const isCompleted = completedTodos[todo.id];
-                      return (
-                        <TouchableOpacity key={todo.id} onPress={() => {
-                          const newCompleted = {...completedTodos, [todo.id]: !isCompleted};
-                          setCompletedTodos(newCompleted);
-                          saveLocalUserData({...currentData(), goalsUnis, completedTodos: newCompleted});
-                          if (currentUser) {
-                            setDoc(doc(db,"usuarios",currentUser.uid),{completedTodos:newCompleted,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-                          }
-                        }} style={{ flexDirection:"row", alignItems:"center", gap:8, paddingVertical:6 }}>
-                          <View style={{ width:20, height:20, borderRadius:10, backgroundColor:isCompleted?T.accent:T.card2, borderWidth:2, borderColor:isCompleted?T.accent:T.border, alignItems:"center", justifyContent:"center" }}>
-                            {isCompleted && <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>✓</Text>}
-                          </View>
-                          <Text style={{ color:isCompleted?T.muted:T.text, fontSize:11, textDecorationLine:isCompleted?"line-through":"none", flex:1 }}>{todo.type === "book" ? "📚" : todo.type === "inscricao" ? "📝" : "💳"} {todo.text}</Text>
-                        </TouchableOpacity>
+               const goalTodos = [
+                 ...(goal.books?.slice(0,4).map((book, i) => ({ 
+                   id: `${goal.id}-${book}`, 
+                   bookKey: `${goal.id}-${book}`,
+                   text: `Ler "${book.split(" - ")[0]}"`, 
+                   type: "book" 
+                 })) || []),
+                 { id: `${goal.id}-inscricao`, text: "Fazer inscrição", type: "inscricao" },
+                 { id: `${goal.id}-taxa`, text: "Pagar taxa de inscrição", type: "taxa" },
+               ];
+               const completedCount = goalTodos.filter(t => t.type === "book" ? readBooks.includes(t.bookKey) : completedTodos[t.id]).length;
+               
+               return (
+                 <View key={goal.id} style={{ marginBottom:10 }}>
+                   <TouchableOpacity onPress={()=>{const u=unis.find(x=>x.id===goal.id);if(u)setSU(u);setTab("explorar");}} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card2, borderRadius:12, padding:12, borderWidth:1, borderColor:T.border }}>
+                     <View style={{ width:40, height:40, borderRadius:20, backgroundColor:goal.color, alignItems:"center", justifyContent:"center" }}>
+                       <Text style={{ color:"#fff", fontSize:11, fontWeight:"800" }}>{goal.name.slice(0,2)}</Text>
+                     </View>
+                     <View style={{ flex:1, marginLeft:10 }}>
+                       <Text style={{ color:T.text, fontSize:13, fontWeight:"700" }}>{goal.name}</Text>
+                       <Text style={{ color:T.muted, fontSize:10 }}>{goal.vestibular}</Text>
+                     </View>
+                     {daysUntil !== null && (
+                       <View style={{ backgroundColor:daysUntil <= 30 ? "#dc2626" : T.accent, borderRadius:8, paddingHorizontal:8, paddingVertical:4 }}>
+                         <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>{daysUntil}d</Text>
+                       </View>
+                     )}
+                   </TouchableOpacity>
+                   <View style={{ backgroundColor:T.card, borderRadius:8, marginTop:6, padding:8, borderWidth:1, borderColor:T.border }}>
+                     {goalTodos.map(todo => {
+                       const isCompleted = todo.type === "book" ? readBooks.includes(todo.bookKey) : completedTodos[todo.id];
+                       return (
+                         <TouchableOpacity key={todo.id} onPress={() => {
+                           if (todo.type === "book") {
+                             if (isCompleted) {
+                               const newBooks = readBooks.filter(b => b !== todo.bookKey);
+                               setReadBooks(newBooks);
+                               saveLocalUserData({...currentData(), readBooks: newBooks});
+                               if (currentUser) {
+                                 setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newBooks,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                               }
+                             } else {
+                               const newBooks = [...readBooks, todo.bookKey];
+                               setReadBooks(newBooks);
+                               saveLocalUserData({...currentData(), readBooks: newBooks});
+                               if (currentUser) {
+                                 setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newBooks,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                               }
+                             }
+                           } else {
+                             const newCompleted = {...completedTodos, [todo.id]: !isCompleted};
+                             setCompletedTodos(newCompleted);
+                             saveLocalUserData({...currentData(), goalsUnis, completedTodos: newCompleted});
+                             if (currentUser) {
+                               setDoc(doc(db,"usuarios",currentUser.uid),{completedTodos:newCompleted,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                             }
+                           }
+                         }} style={{ flexDirection:"row", alignItems:"center", gap:8, paddingVertical:6 }}>
+                           <View style={{ width:20, height:20, borderRadius:10, backgroundColor:isCompleted?T.accent:T.card2, borderWidth:2, borderColor:isCompleted?T.accent:T.border, alignItems:"center", justifyContent:"center" }}>
+                             {isCompleted && <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>✓</Text>}
+                           </View>
+                           <Text style={{ color:isCompleted?T.muted:T.text, fontSize:11, textDecorationLine:isCompleted?"line-through":"none", flex:1 }}>{todo.type === "book" ? "📚" : todo.type === "inscricao" ? "📝" : "💳"} {todo.text}</Text>
+                         </TouchableOpacity>
                       );
                     })}
                     <View style={{ flexDirection:"row", justifyContent:"space-between", marginTop:4, paddingTop:6, borderTopWidth:1, borderTopColor:T.border }}>
@@ -2028,7 +2264,7 @@ function MainApp() {
       </View>
 
       {goalsUnis.length > 0 && goalsUnis.some(g => g.exams?.some(e => e.status === "upcoming")) && (
-        <View style={cd({ padding:15 })}>
+        <View style={cd({ padding:15, marginBottom:12 })}>
           <Text style={[lbl,{marginBottom:12}]}>📅 Provas das suas metas</Text>
           {goalsUnis.flatMap(g => {
             const upcomingExams = g.exams?.filter(e => e.status === "upcoming") || [];
@@ -2078,13 +2314,13 @@ function MainApp() {
   return (
     <View style={{ flex:1, backgroundColor:T.bg }}>
       <StatusBar barStyle={isDark?"light-content":"dark-content"} />
-      {!showExamsPage && <SBar />}
-      {!selUni && !showExamsPage && (
+      {!showExamsPage && !showBooksPage && <SBar />}
+      {!selUni && !showExamsPage && !showBooksPage && (
         <View style={{ paddingHorizontal:20, paddingTop:0, paddingBottom:6 }}>
           <Text style={{ color:T.sub, fontSize:11 }}>{tab==="feed"?"Novidades para você":tab==="explorar"?"Encontre sua universidade":tab==="notas"?"Notas de corte & suas provas":`${uType?.emoji||"👤"} ${uType?.label||"Meu Perfil"}`}</Text>
         </View>
       )}
-      {showExamsPage && selUni ? renderExamsPage() : selUni ? renderUniDetail() : (
+      {showExamsPage && selUni ? renderExamsPage() : showBooksPage ? renderBooksPage() : selUni ? renderUniDetail() : (
         <>
           {tab==="feed"     && renderFeed()}
           {tab==="explorar" && renderExplorar()}
@@ -2372,7 +2608,12 @@ function MainApp() {
       {/* Uni sort */}
       <BottomSheet visible={mUni} onClose={()=>setMUni(false)} T={T}>
         <View style={{ padding:20, paddingBottom:24 }}>
-          <Text style={{ color:T.text, fontSize:17, fontWeight:"800", marginBottom:4 }}>⚙️ Ordenar universidades</Text>
+          <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+            <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>⚙️ Ordenar universidades</Text>
+            <TouchableOpacity onPress={()=>setMUni(false)} style={{ padding:4 }}>
+              <Text style={{ color:T.muted, fontSize:20, fontWeight:"700" }}>✕</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={{ color:T.sub, fontSize:13, marginBottom:14 }}>Escolha como ordenar</Text>
           <View style={{ flexDirection:"row", gap:8, marginBottom:16 }}>
             {[["date","📅 Por data"],["pref","⭐ Por preferência"]].map(([v,l])=>(
