@@ -48,6 +48,12 @@ const AREAS = [
 const ALL_COURSES = [...new Set(AREAS.flatMap(a=>a.courses))].sort();
 
 const UNIVERSITIES = [
+  { id:"enem", name:"ENEM", fullName:"Exame Nacional do Ensino Médio", city:"Nacional", state:"BR", color:"#1a3a5c", followers:"890k", type:"Nacional", description:"O maior exame educacional do Brasil. Usado para admissão em universidades públicas via SISU, Prouni e FIES.", courses:["Todos os cursos via SISU"], vestibular:"ENEM 2025", inscricao:"Mai–Jun/2025", prova:"Nov/2025", site:"https://enem.inep.gov.br", followed:false, books:["Dom Casmurro - Machado de Assis","Vidas Secas - Graciliano Ramos","O Cortiço - Aluísio Azevedo","Grande Sertão: Veredas - João Guimarães Rosa","Cem Anos de Solidão - Gabriel García Márquez","A Hora da Estrela - Clarice Lispector","Auto da Compadecida - Ariano Suassuna","Memórias Póstumas de Brás Cubas - Machado de Assis"],
+    exams:[
+      {id:"enem1",year:2025,phase:"1º dia",subject:"Linguagens e Humanas",date:"2025-11-09",status:"upcoming",pdfUrl:"",sourceUrl:"https://enem.inep.gov.br",description:"Prova dia 1 - Linguagens, Ciências Humanas e Redação",duration:"5h30",questions:90},
+      {id:"enem2",year:2025,phase:"2º dia",subject:"Natureza e Matemática",date:"2025-11-16",status:"upcoming",pdfUrl:"",sourceUrl:"https://enem.inep.gov.br",description:"Prova dia 2 - Ciências da Natureza e Matemática",duration:"5h",questions:90},
+    ],
+  },
   { id:"1",  name:"USP",     fullName:"Universidade de São Paulo",             city:"São Paulo",       state:"SP", color:"#003366", followers:"142k", type:"Estadual", description:"A maior universidade da América Latina, referência em pesquisa e inovação.",  courses:["Medicina","Direito","Engenharia Civil","Arquitetura","Psicologia"],     vestibular:"FUVEST 2026",        inscricao:"Ago–Set/2025", prova:"Jan/2026", site:"https://fuvest.br",          followed:false, books:["Dom Casmurro - Machado de Assis","Vidas Secas - Graciliano Ramos","Memórias Póstulas de Brás Cubas - Machado de Assis","O Cortiço - Aluísio Azevedo","Quarto de Despejo - Carolina Maria de Jesus","A Hora da Estrela - Clarice Lispector","O Mundo de Sofia - Jostein Gaarden","Auto da Compadecida - Ariano Suassuna"],
     exams:[
       {id:"e1",year:2026,phase:"1ª fase",subject:"Prova Comum",date:"2026-01-12",status:"upcoming",pdfUrl:"",sourceUrl:"https://fuvest.br",description:"Primeira fase - 90 questões de múltipla escolha",duration:"5h",questions:90},
@@ -73,6 +79,19 @@ const UNIVERSITIES = [
   { id:"6",  name:"UFRJ",    fullName:"Universidade Federal do Rio de Janeiro", city:"Rio de Janeiro", state:"RJ", color:"#003580", followers:"110k", type:"Federal",  description:"A maior universidade federal do Brasil, com tradição centenária.",        courses:["Medicina","Engenharia Civil","Arquitetura","Economia"],                vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufrj.br",             followed:false, books:["O Crime do Padre Amaro - Eça de Queirós","Os Bruzundangas - Lima Barreto","Lição de Coisas - Caio Fernando Abreu","A Noite da Espera - Ferreira Gullar"], exams:[] },
   { id:"7",  name:"COTUCA",  fullName:"Colégio Técnico da UNICAMP",            city:"Campinas",        state:"SP", color:"#1a4a3a", followers:"18k",  type:"Técnico",  description:"Escola técnica de nível médio vinculada à UNICAMP.",                      courses:["Mecânica","Eletrônica","Informática","Edificações"],                   vestibular:"Proc. Seletivo 2026",inscricao:"Out/2025",    prova:"Dez/2025", site:"https://cotuca.unicamp.br",   followed:false, books:[], exams:[] },
   { id:"8",  name:"ETEC",    fullName:"Escola Técnica Estadual de SP",         city:"São Paulo",       state:"SP", color:"#2d4a7a", followers:"32k",  type:"Técnico",  description:"Rede de escolas técnicas estaduais com cursos gratuitos.",               courses:["Administração","Informática","Enfermagem","Logística"],                vestibular:"Vestibulinho 2026",  inscricao:"Set/2025",     prova:"Nov/2025", site:"https://etec.sp.gov.br",      followed:false, books:[], exams:[] },
+
+  { id:"9",  name:"UFPR",    fullName:"Universidade Federal do Paraná",           city:"Curitiba",       state:"PR", color:"#1a5c3a", followers:"95k",  type:"Federal",  description:"A maior universidade do Sul do Brasil, referência em pesquisa.",              courses:["Medicina","Direito","Engenharia Civil","Arquitetura","Letras"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufpr.br",            followed:false, books:["Vidas Secas - Graciliano Ramos","Grande Sertão: Veredas - João Guimarães Rosa","O Primo Basílio - Eça de Queirós"], exams:[] },
+  { id:"10", name:"UFBA",    fullName:"Universidade Federal da Bahia",            city:"Salvador",        state:"BA", color:"#0d47a1", followers:"78k",  type:"Federal",  description:"A maior universidade da região Nordeste.",                            courses:["Medicina","Direito","Engenharia","Arquitetura","Farmácia"],        vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufba.br",            followed:false, books:["Tereza de Ângelos - Rachel de Queiroz","Vidas Secas - Graciliano Ramos","O Seminarista - Bernardo Élis"], exams:[] },
+  { id:"11", name:"UFPE",    fullName:"Universidade Federal de Pernambuco",      city:"Recife",         state:"PE", color:"#00695c", followers:"65k",  type:"Federal",  description:"Excelência em ensino e pesquisa no Nordeste.",                       courses:["Medicina","Engenharia","Direito","Odontologia","Computação"],      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufpe.br",            followed:false, books:["A Biografia de Lima Barreto","Vidas Secas - Graciliano Ramos","O Mundo de Sofia - Jostein Gaarden"], exams:[] },
+  { id:"12", name:"UFSC",    fullName:"Universidade Federal de Santa Catarina",    city:"Florianópolis",  state:"SC", color:"#1565c0", followers:"72k",  type:"Federal",  description:"Referência em tecnologia e ciências no Sul do Brasil.",                  courses:["Engenharia","Medicina","Direito","Computação","Oceanografia"],      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufsc.br",            followed:false, books:["O Tempo e o Vento - Érico Veríssimo","Vidas Secas - Graciliano Ramos","A Moreninha - Joaquim Manuel de Macedo"], exams:[] },
+  { id:"13", name:"UFRGS",   fullName:"Universidade Federal do Rio Grande do Sul", city:"Porto Alegre",   state:"RS", color:"#004d40", followers:"88k",  type:"Federal",  description:"A mais importante universidade do Sul, tradição e excelência.",           courses:["Medicina","Direito","Engenharia","Computação","Letras"],          vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufrgs.br",           followed:false, books:["O Tempo e o Vento - Érico Veríssimo","Vidas Secas - Graciliano Ramos","Grande Sertão: Veredas - João Guimarães Rosa"], exams:[] },
+  { id:"14", name:"UFC",     fullName:"Universidade Federal do Ceará",            city:"Fortaleza",       state:"CE", color:"#f57c00", followers:"58k",  type:"Federal",  description:"Principal universidade do Ceará e região.",                                courses:["Medicina","Engenharia","Direito","Computação","Nutrição"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufc.br",             followed:false, books:["Vidas Secas - Graciliano Ramos","A Bagagem do Viajante - Rubem Alves","O Seminarista - Bernardo Élis"], exams:[] },
+  { id:"15", name:"UFG",     fullName:"Universidade Federal de Goiás",             city:"Goiânia",         state:"GO", color:"#7b1fa2", followers:"52k",  type:"Federal",  description:"Referência em pesquisa e extensão no Centro-Oeste.",                     courses:["Medicina","Engenharia","Direito","Agronomia","Veterinária"],      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufg.br",             followed:false, books:["O Primeiro Homem - Albert Camus","Vidas Secas - Graciliano Ramos","Grande Sertão: Veredas - João Guimarães Rosa"], exams:[] },
+  { id:"16", name:"UnB",     fullName:"Universidade de Brasília",                  city:"Brasília",        state:"DF", color:"#2e7d32", followers:"82k",  type:"Federal",  description:"A principal universidade do Distrito Federal.",                           courses:["Medicina","Direito","Engenharia","Arquitetura","Letras"],          vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://unb.br",             followed:false, books:["Grande Sertão: Veredas - João Guimarães Rosa","Vidas Secas - Graciliano Ramos","O Primo Basílio - Eça de Queirós"], exams:[] },
+  { id:"17", name:"UFPA",    fullName:"Universidade Federal do Pará",              city:"Belém",          state:"PA", color:"#6a1b9a", followers:"45k",  type:"Federal",  description:"A maior universidade da Amazônia.",                                      courses:["Medicina","Engenharia","Direito","Biologia","Agronomia"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufpa.br",            followed:false, books:["Vidas Secas - Graciliano Ramos","O Mundo de Sofia - Jostein Gaarden","A Bagagem do Viajante - Rubem Alves"], exams:[] },
+  { id:"18", name:"UFAM",    fullName:"Universidade Federal do Amazonas",          city:"Manaus",          state:"AM", color:"#00838f", followers:"38k",  type:"Federal",  description:"Centro de excelência na Amazônia.",                                       courses:["Medicina","Engenharia","Computação","Biologia","Química"],        vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufam.edu.br",        followed:false, books:["Vidas Secas - Graciliano Ramos","A Hora da Estrela - Clarice Lispector","A Bagagem do Viajante - Rubem Alves"], exams:[] },
+  { id:"19", name:"UFF",     fullName:"Universidade Federal Fluminense",          city:"Niterói",         state:"RJ", color:"#c62828", followers:"76k",  type:"Federal",  description:"Uma das maiores universidades do Rio de Janeiro.",                     courses:["Medicina","Direito","Engenharia","Computação","Odontologia"],      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://uff.br",             followed:false, books:["Os Bruzundangas - Lima Barreto","O Crime do Padre Amaro - Eça de Queirós","Lição de Coisas - Caio Fernando Abreu"], exams:[] },
+  { id:"20", name:"UNICAMP", fullName:"Universidade Estadual de Campinas (SP)",     city:"Campinas",        state:"SP", color:"#004d2c", followers:"98k",  type:"Estadual", description:"Excelência em ciência e tecnologia.",                                    courses:["Medicina","Engenharia de Computação","Ciências da Computação","Física","Química"], vestibular:"COMVEST 2026",       inscricao:"Ago/2025",     prova:"Nov/2025", site:"https://comvest.unicamp.br", followed:false, books:["Mrs. Dalloway - Virginia Woolf","A Metamorfose - Franz Kafka","A Piada Mortal - Milan Kundera","O Poço - José Saramago","O Inspetor Geral - Nikolai Gogol","Os Lusíadas - Luís de Camões"], exams:[] },
 ];
 
 const FEED = [
@@ -142,6 +161,11 @@ const fmtCount = (n) => {
   if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"")+"M";
   if (n >= 1000) return (n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,"")+"k";
   return n.toString();
+};
+
+const removeAccents = (str) => {
+  if (!str) return "";
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
 
 const STORAGE_KEY = "univest_user";
@@ -482,12 +506,12 @@ function SBox({ val, set, ph, T }) {
 function BottomSheet({ visible, onClose, children, T }) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableOpacity activeOpacity={1} onPress={onClose} style={{ flex:1, backgroundColor:"rgba(0,0,0,.72)", justifyContent:"flex-end" }}>
-        <TouchableOpacity activeOpacity={1} style={{ backgroundColor:T.card, borderTopLeftRadius:24, borderTopRightRadius:24, maxHeight:"88%", borderTopWidth:1, borderColor:T.border }}>
+      <View style={{ flex:1, backgroundColor:"rgba(0,0,0,.72)", justifyContent:"flex-end" }}>
+        <TouchableOpacity activeOpacity={1} style={{ backgroundColor:T.card, borderTopLeftRadius:24, borderTopRightRadius:24, minHeight:"85%", maxHeight:"95%", borderTopWidth:1, borderColor:T.border }}>
           <View style={{ width:36, height:4, backgroundColor:T.border, borderRadius:2, alignSelf:"center", marginTop:12, marginBottom:4 }} />
-          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>{children}</ScrollView>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flex:1 }}>{children}</ScrollView>
         </TouchableOpacity>
-      </TouchableOpacity>
+      </View>
     </Modal>
   );
 }
@@ -535,6 +559,13 @@ function MainApp() {
   const [fbCourses, setFbCourses] = useState([]);
   const [fbIcons, setFbIcons] = useState({});
   const [selUni, setSU] = useState(null);
+  const [selectedBookYear, setSelectedBookYear] = useState(null);
+  const [goalsUnis, setGoalsUnis] = useState([]);
+  const [goalsModal, setGoalsModal] = useState(false);
+  const [goalsSearch, setGoalsSearch] = useState("");
+  const [completedTodos, setCompletedTodos] = useState({});
+  const [requirementsModal, setRequirementsModal] = useState(false);
+  const [selectedRequirements, setSelectedRequirements] = useState(null);
   const [query, setQuery] = useState("");
   const [fSt, setFSt] = useState("Todos");
   const [nSrch, setNsrch] = useState("");
@@ -601,12 +632,24 @@ function MainApp() {
   const [citySearch, setCitySearch] = useState("");
   const [studyStateSearch, setStudyStateSearch] = useState("");
   const [studyCitySearch, setStudyCitySearch] = useState("");
+  const [showStatePicker, setShowStatePicker] = useState(false);
+  const [showCityPicker, setShowCityPicker] = useState(false);
+  const [showStudyStatePicker, setShowStudyStatePicker] = useState(false);
+  const [showStudyCityPicker, setShowStudyCityPicker] = useState(false);
 
-  const getCountry = (id) => countries.find(c => c.id === id);
-  const getState = (id) => states.find(s => s.id === id);
-  const getCity = (id) => cities.find(c => c.id === id);
-  const getStatesForCountry = (cid) => states.filter(s => s.countryId === cid);
-  const getCitiesForState = (sid) => cities.filter(c => c.stateId === sid);
+  const getCountry = (id) => countries.find(c => c.id === id) || GEO_DATA.countries.find(c => c.id === id);
+  const getState = (id) => states.find(s => s.id === id) || GEO_DATA.states.find(s => s.id === id);
+  const getCity = (id) => cities.find(c => c.id === id) || GEO_DATA.cities.find(c => c.id === id);
+  const getStatesForCountry = (cid) => {
+    const fromDb = states.filter(s => s.countryId === cid);
+    if (fromDb.length > 0) return fromDb;
+    return GEO_DATA.states.filter(s => s.countryId === cid);
+  };
+  const getCitiesForState = (sid) => {
+    const fromDb = cities.filter(c => c.stateId === sid);
+    if (fromDb.length > 0) return fromDb;
+    return GEO_DATA.cities.filter(c => c.stateId === sid);
+  };
   const getCityDisplayName = (id) => getCity(id)?.name || "";
   const getStateDisplayName = (id) => getState(id)?.name || "";
   const getCountryDisplayName = (id) => getCountry(id)?.name || "";
@@ -691,6 +734,8 @@ function MainApp() {
             if (fbData.studyCountryId) setStudyCountryId(fbData.studyCountryId);
             if (fbData.studyStateId) setStudyStateId(fbData.studyStateId);
             if (fbData.studyCityId) setStudyCityId(fbData.studyCityId);
+            if (fbData.goalsUnis) setGoalsUnis(fbData.goalsUnis);
+            if (fbData.completedTodos) setCompletedTodos(fbData.completedTodos);
           } else { 
             setStep(1); setDone(false);
           }
@@ -916,7 +961,29 @@ function MainApp() {
   };
   const uCourses = [c1,c2].filter(Boolean);
   const filtN = NOTAS_CORTE.filter(n=>{ if(nSrch) return n.curso.toLowerCase().includes(nSrch.toLowerCase())||n.uni.toLowerCase().includes(nSrch.toLowerCase()); return uCourses.length===0||uCourses.some(c=>c&&n.curso===c); });
-  const filtU = unis.filter(u=>{ const q=query.toLowerCase(); return (u.name.toLowerCase().includes(q)||u.fullName.toLowerCase().includes(q))&&(fSt==="Todos"||u.state===fSt||(fSt==="Técnico"&&u.type==="Técnico")); });
+  const userStudyState = studyStateId ? getStateDisplayName(studyStateId) : null;
+  const isMyRegionFilter = userStudyState && fSt === userStudyState;
+  let filtU = [];
+  try {
+    filtU = unis.filter(u => { 
+      if (!u || !u.state || !u.name) return false;
+      const q = removeAccents(query.toLowerCase());
+      const stateName = removeAccents(getStateDisplayName(u.state) || "");
+      const matchesSearch = 
+        removeAccents(u.name.toLowerCase()).includes(q) ||
+        (u.fullName && removeAccents(u.fullName.toLowerCase()).includes(q)) ||
+        (u.city && removeAccents(u.city.toLowerCase()).includes(q)) ||
+        (u.state.toLowerCase() === q) ||
+        stateName.includes(q) ||
+        (u.courses && u.courses.some(c => removeAccents(c.toLowerCase()).includes(q)));
+      const matchesFilter = fSt === "Todos" || u.state === fSt;
+      return matchesSearch && matchesFilter;
+    });
+  } catch (e) {
+    console.log("Filter error:", e.message);
+    filtU = [];
+  }
+  const hasSearch = query.length > 0;
   const coursesToUse = fbCourses.length ? fbCourses : ALL_COURSES;
   const feedItems = posts.length ? posts : FEED;
 
@@ -1364,13 +1431,24 @@ function MainApp() {
         </View>
         {selUni.books && selUni.books.length > 0 && (
           <View style={cd({ padding:16 })}>
-            <Text style={[lbl,{marginBottom:10}]}>📚 Livros Obrigatórios {selUni.vestibular?.includes("2026") ? "2026" : ""}</Text>
-            {selUni.books.map((book, i)=>(
-              <View key={i} style={{ flexDirection:"row", alignItems:"flex-start", paddingVertical:8, borderBottomWidth:i<selUni.books.length-1?1:0, borderColor:T.border }}>
-                <Text style={{ fontSize:14, marginRight:10, marginTop:2 }}>📖</Text>
-                <Text style={{ color:T.text, fontSize:12, flex:1, lineHeight:18 }}>{book}</Text>
-              </View>
-            ))}
+            <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <Text style={[lbl,{marginBottom:0}]}>📚 Livros Obrigatórios</Text>
+              {selUni.books.length > 4 && (
+                <TouchableOpacity onPress={()=>setSelectedBookYear(selectedBookYear === "2026" ? "2025" : "2026")} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
+                  <Text style={{ color:T.sub, fontSize:10, fontWeight:"600" }}>{selectedBookYear || "2026"} ▼</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {Array.isArray(selUni.books[0]) ? (
+              <Text style={{ color:T.text, fontSize:12 }}>Verificar ano...</Text>
+            ) : (
+              selUni.books.slice(0, 8).map((book, i)=>(
+                <View key={i} style={{ flexDirection:"row", alignItems:"flex-start", paddingVertical:8, borderBottomWidth:i<Math.min(selUni.books.length, 8)-1?1:0, borderColor:T.border }}>
+                  <Text style={{ fontSize:14, marginRight:10, marginTop:2 }}>📖</Text>
+                  <Text style={{ color:T.text, fontSize:12, flex:1, lineHeight:18 }}>{book}</Text>
+                </View>
+              ))
+            )}
           </View>
         )}
         <TouchableOpacity onPress={()=>Linking.openURL(selUni.site)} style={{ backgroundColor:isDark?"#0a1f15":"#f0fdf4", borderRadius:14, padding:13, borderWidth:1, borderColor:T.accent+"30", flexDirection:"row", alignItems:"center", gap:10 }}>
@@ -1490,6 +1568,16 @@ function MainApp() {
 
   const renderExplorar = () => (
     <ScrollView style={{ flex:1 }} contentContainerStyle={{ padding:16, paddingBottom:16 }} keyboardShouldPersistTaps="handled" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={T.accent} colors={[T.accent]} />}>
+      {!studyStateId && (
+        <TouchableOpacity onPress={()=>{setTmpCountryId(countryId||"BR");setTmpStateId(stateId);setTmpCityId(cityId);setTmpStudyCountryId(studyCountryId||"BR");setTmpStudyStateId(studyStateId);setTmpStudyCityId(studyCityId);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");setMloc(true);}} style={{ backgroundColor:isDark?"#1a2e4a":"#dbeafe", borderRadius:14, padding:12, flexDirection:"row", alignItems:"center", gap:10, marginBottom:12, borderWidth:1, borderColor:isDark?"#3b82f6":"#93c5fd" }}>
+          <Text style={{ fontSize:20 }}>📍</Text>
+          <View style={{ flex:1 }}>
+            <Text style={{ color:T.text, fontSize:12, fontWeight:"700" }}>Defina seu destino de estudos</Text>
+            <Text style={{ color:T.sub, fontSize:10 }}>Toque para selecionar onde você pretende estudar</Text>
+          </View>
+          <Text style={{ color:T.accent, fontSize:18 }}>›</Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity onPress={()=>setMdisc(true)} style={{ backgroundColor:isDark?"#0c1f3a":"#dbeafe", borderRadius:18, padding:16, flexDirection:"row", alignItems:"center", gap:14, marginBottom:14, borderWidth:1, borderColor:isDark?"#1e40af40":"#bfdbfe" }}>
         <View style={{ width:52, height:52, borderRadius:26, backgroundColor:isDark?"#1e3a6a":"#bfdbfe", alignItems:"center", justifyContent:"center" }}>
           <Text style={{ fontSize:28 }}>🧭</Text>
@@ -1503,13 +1591,31 @@ function MainApp() {
         </View>
       </TouchableOpacity>
       <SBox val={query} set={setQuery} ph="Buscar universidade…" T={T} />
+      {hasSearch && (
+        <View style={{ flexDirection:"row", alignItems:"center", marginBottom:8, marginTop:4 }}>
+          <Text style={{ color:T.accent, fontSize:12, fontWeight:"600" }}>🔍 {filtU.length} resultado{filtU.length !== 1 ? "s" : ""}</Text>
+          <Text style={{ color:T.muted, fontSize:11, marginLeft:8 }}>para "{query}"</Text>
+        </View>
+      )}
       <View style={{ height:10 }} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:10 }}>
-        {["Todos","SP","RJ","MG","RS","Técnico"].map(s=>(
-          <TouchableOpacity key={s} onPress={()=>setFSt(s)} style={{ paddingHorizontal:13, paddingVertical:7, borderRadius:20, backgroundColor:fSt===s?T.accent:T.card2, marginRight:7, borderWidth:1, borderColor:fSt===s?T.accent:T.border }}>
-            <Text style={{ color:fSt===s?AT:T.sub, fontSize:12, fontWeight:"700" }}>{s}</Text>
-          </TouchableOpacity>
-        ))}
+        {(() => {
+          const allStates = [...new Set(unis.map(u => u.state))].filter(Boolean);
+          const validStates = allStates.filter(s => s && s.length === 2 && /^[A-Z]{2}$/.test(s));
+          const studyStateCode = studyStateId ? studyStateId : null;
+          const filterChips = ["Todos"];
+          if (studyStateCode) filterChips.push("🎯 " + studyStateCode);
+          filterChips.push(...validStates.sort());
+          return filterChips.map(s => {
+            const chipValue = s.replace("🎯 ","");
+            const isSelected = fSt === chipValue;
+            return (
+              <TouchableOpacity key={s} onPress={()=>setFSt(isSelected ? "Todos" : chipValue)} style={{ paddingHorizontal:13, paddingVertical:7, borderRadius:20, backgroundColor:isSelected?T.accent:T.card2, marginRight:7, borderWidth:1, borderColor:isSelected?T.accent:T.border }}>
+                <Text style={{ color:isSelected?AT:T.sub, fontSize:12, fontWeight:"700" }}>{s}</Text>
+              </TouchableOpacity>
+            );
+          });
+        })()}
       </ScrollView>
       <View style={{ gap:9 }}>
         {filtU.map(u=>(
@@ -1518,7 +1624,10 @@ function MainApp() {
               <Text style={{ color:"#fff", fontSize:14, fontWeight:"800" }}>{u.name.slice(0,2)}</Text>
             </View>
             <View style={{ flex:1 }}>
-              <Text style={{ color:T.text, fontSize:15, fontWeight:"800" }}>{u.name}</Text>
+              <View style={{ flexDirection:"row", alignItems:"center", gap:6 }}>
+                <Text style={{ color:T.text, fontSize:15, fontWeight:"800" }}>{u.name}</Text>
+                {userStudyState && u.state === userStudyState && <View style={{ backgroundColor:T.accent, borderRadius:8, paddingHorizontal:6, paddingVertical:2 }}><Text style={{ color:AT, fontSize:8, fontWeight:"800" }}>🎯</Text></View>}
+              </View>
               <Text style={{ color:T.sub, fontSize:11 }} numberOfLines={1}>{u.fullName}</Text>
               <View style={{ flexDirection:"row", gap:5, marginTop:5 }}>
                 {[u.state,u.type].map(x=><View key={x} style={{ backgroundColor:T.card2, borderRadius:8, paddingHorizontal:7, paddingVertical:2 }}><Text style={{ color:T.muted, fontSize:9, fontWeight:"600" }}>{x}</Text></View>)}
@@ -1791,8 +1900,8 @@ function MainApp() {
           </View>
           {(cityId||stateId||studyCityId||studyStateId) && (
             <View style={{ marginBottom:12 }}>
-              {cityId&&stateId && <Text style={{ color:T.sub, fontSize:11, textAlign:"center" }}>📍 {getCityDisplayName(cityId)}, {getStateDisplayName(stateId)}</Text>}
-              {studyCityId&&studyStateId && <Text style={{ color:T.muted, fontSize:10, textAlign:"center", marginTop:2 }}>🎯 Pretendo estudar em {getCityDisplayName(studyCityId)}, {getStateDisplayName(studyStateId)}</Text>}
+              {cityId&&stateId && <Text style={{ color:T.sub, fontSize:11, textAlign:"center" }}>📍 {getCityDisplayName(cityId)}, {stateId}</Text>}
+              {studyCityId&&studyStateId && <Text style={{ color:T.muted, fontSize:10, textAlign:"center", marginTop:2 }}>🎯 Pretendo estudar em {getCityDisplayName(studyCityId)}, {studyStateId}</Text>}
             </View>
           )}
           <View style={{ flexDirection:"row", justifyContent:"center", gap:0, width:"100%", borderTopWidth:1, borderColor:T.border, paddingTop:14 }}>
@@ -1849,6 +1958,102 @@ function MainApp() {
           </View>
         )}
       </View>
+
+      <View style={{ ...cd({ padding:15, marginBottom:12, backgroundColor:isDark?"#1a1a2e":"#f5f5ff" }), borderWidth:1, borderColor:T.accent+"30", borderRadius:16 }}>
+        <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+          <Text style={[lbl,{color:T.accent, marginBottom:0}]}>🎯 Metas de Vestibular</Text>
+          <TouchableOpacity onPress={()=>setGoalsModal(true)} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.acBg }}>
+            <Text style={{ color:T.accent, fontSize:10, fontWeight:"700" }}>+ Adicionar</Text>
+          </TouchableOpacity>
+        </View>
+        {goalsUnis.length === 0 ? (
+          <Text style={{ color:T.sub, fontSize:12 }}>Adicione universidades que você pretende fazer vestibular</Text>
+        ) : (
+          <View>
+            {goalsUnis.map(goal => {
+              const nextExam = goal.exams?.find(e => e.status === "upcoming");
+              const daysUntil = nextExam ? Math.max(0, Math.ceil((new Date(nextExam.date) - new Date()) / (1000 * 60 * 60 * 24))) : null;
+              const goalTodos = [
+                ...(goal.books?.slice(0,4).map((b, i) => ({ id: `${goal.id}-book-${i}`, text: `Ler "${b.split(" - ")[0]}"`, type: "book" })) || []),
+                { id: `${goal.id}-inscricao`, text: "Fazer inscrição", type: "inscricao" },
+                { id: `${goal.id}-taxa`, text: "Pagar taxa de inscrição", type: "taxa" },
+              ];
+              const completedCount = goalTodos.filter(t => completedTodos[t.id]).length;
+              
+              return (
+                <View key={goal.id} style={{ marginBottom:10 }}>
+                  <TouchableOpacity onPress={()=>{const u=unis.find(x=>x.id===goal.id);if(u)setSU(u);setTab("explorar");}} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card2, borderRadius:12, padding:12, borderWidth:1, borderColor:T.border }}>
+                    <View style={{ width:40, height:40, borderRadius:20, backgroundColor:goal.color, alignItems:"center", justifyContent:"center" }}>
+                      <Text style={{ color:"#fff", fontSize:11, fontWeight:"800" }}>{goal.name.slice(0,2)}</Text>
+                    </View>
+                    <View style={{ flex:1, marginLeft:10 }}>
+                      <Text style={{ color:T.text, fontSize:13, fontWeight:"700" }}>{goal.name}</Text>
+                      <Text style={{ color:T.muted, fontSize:10 }}>{goal.vestibular}</Text>
+                    </View>
+                    {daysUntil !== null && (
+                      <View style={{ backgroundColor:daysUntil <= 30 ? "#dc2626" : T.accent, borderRadius:8, paddingHorizontal:8, paddingVertical:4 }}>
+                        <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>{daysUntil}d</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                  <View style={{ backgroundColor:T.card, borderRadius:8, marginTop:6, padding:8, borderWidth:1, borderColor:T.border }}>
+                    {goalTodos.map(todo => {
+                      const isCompleted = completedTodos[todo.id];
+                      return (
+                        <TouchableOpacity key={todo.id} onPress={() => {
+                          const newCompleted = {...completedTodos, [todo.id]: !isCompleted};
+                          setCompletedTodos(newCompleted);
+                          saveLocalUserData({...currentData(), goalsUnis, completedTodos: newCompleted});
+                          if (currentUser) {
+                            setDoc(doc(db,"usuarios",currentUser.uid),{completedTodos:newCompleted,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                          }
+                        }} style={{ flexDirection:"row", alignItems:"center", gap:8, paddingVertical:6 }}>
+                          <View style={{ width:20, height:20, borderRadius:10, backgroundColor:isCompleted?T.accent:T.card2, borderWidth:2, borderColor:isCompleted?T.accent:T.border, alignItems:"center", justifyContent:"center" }}>
+                            {isCompleted && <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>✓</Text>}
+                          </View>
+                          <Text style={{ color:isCompleted?T.muted:T.text, fontSize:11, textDecorationLine:isCompleted?"line-through":"none", flex:1 }}>{todo.type === "book" ? "📚" : todo.type === "inscricao" ? "📝" : "💳"} {todo.text}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                    <View style={{ flexDirection:"row", justifyContent:"space-between", marginTop:4, paddingTop:6, borderTopWidth:1, borderTopColor:T.border }}>
+                      <Text style={{ color:T.sub, fontSize:10 }}>{completedCount}/{goalTodos.length} tarefas</Text>
+                      <Text style={{ color:T.accent, fontSize:10, fontWeight:"700" }}>{Math.round(completedCount/goalTodos.length*100)}%</Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
+
+      {goalsUnis.length > 0 && goalsUnis.some(g => g.exams?.some(e => e.status === "upcoming")) && (
+        <View style={cd({ padding:15 })}>
+          <Text style={[lbl,{marginBottom:12}]}>📅 Provas das suas metas</Text>
+          {goalsUnis.flatMap(g => {
+            const upcomingExams = g.exams?.filter(e => e.status === "upcoming") || [];
+            return upcomingExams.map((exam, idx) => {
+              const daysUntil = Math.max(0, Math.ceil((new Date(exam.date) - new Date()) / (1000 * 60 * 60 * 24)));
+              return (
+                <View key={`${g.id}-${exam.id}-${idx}`} style={{ flexDirection:"row", alignItems:"center", gap:10, paddingVertical:9, borderBottomWidth:1, borderColor:T.border }}>
+                  <View style={{ backgroundColor:g.color, borderRadius:10, width:52, height:52, alignItems:"center", justifyContent:"center" }}>
+                    <Text style={{ color:"rgba(255,255,255,.55)", fontSize:8, fontWeight:"700" }}>{new Date(exam.date).toLocaleString("pt-BR", { month: "short" }).toUpperCase()}</Text>
+                    <Text style={{ color:"#fff", fontSize:16, fontWeight:"800" }}>{new Date(exam.date).getDate()}</Text>
+                    <Text style={{ color:"rgba(255,255,255,.45)", fontSize:8 }}>{new Date(exam.date).getFullYear()}</Text>
+                  </View>
+                  <View style={{ flex:1 }}>
+                    <Text style={{ color:T.text, fontSize:12, fontWeight:"700" }} numberOfLines={1}>{exam.subject}</Text>
+                    <Text style={{ color:T.muted, fontSize:10 }}>{g.name} • {exam.phase}</Text>
+                  </View>
+                  <View style={{ backgroundColor:daysUntil <= 7 ? "#dc2626" : daysUntil <= 30 ? "#f59e0b" : T.accent, borderRadius:8, paddingHorizontal:8, paddingVertical:4 }}>
+                    <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>{daysUntil}d</Text>
+                  </View>
+                </View>
+              );
+            });
+          }).slice(0, 5)}
+        </View>
+      )}
 
       <View style={cd({ padding:15 })}>
         <Text style={[lbl,{marginBottom:12}]}>⏰ Próximos Eventos</Text>
@@ -1917,6 +2122,7 @@ function MainApp() {
             ["📷","Alterar foto de perfil","Ícone e cor",()=>{setTmpAv(av);setTmpBgIdx(avBgIdx);setMcfg(false);setMpho(true);}],
             ["✏️","Editar opções de curso","Altere suas preferências",()=>{setEC1(c1);setEC2(c2);setEpick(1);setEsrch("");setMcfg(false);setMedit(true);}],
             ["📍","Localização","Sua cidade e destino de estudos",()=>{setTmpCountryId(countryId||"BR");setTmpStateId(stateId);setTmpCityId(cityId);setTmpStudyCountryId(studyCountryId||"BR");setTmpStudyStateId(studyStateId);setTmpStudyCityId(studyCityId);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");setMcfg(false);setMloc(true);}],
+            ["🎯","Metas de vestibular","Universidades que você vai fazer",()=>{setMcfg(false);setGoalsModal(true);}],
             ["📧","E-mail",currentUser?.email||"—",()=>{}],
           ].map(([ic,ti,su,fn])=>(
             <TouchableOpacity key={ti} onPress={fn} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card2, borderRadius:14, padding:15, marginBottom:10, borderWidth:1, borderColor:T.border }}>
@@ -2265,132 +2471,183 @@ function MainApp() {
         </View>
       </BottomSheet>
 
-      {/* Location settings */}
+      {/* Location settings - completely redesigned */}
       <BottomSheet visible={mLoc} onClose={()=>{setMloc(false);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");}} T={T}>
-        <ScrollView style={{ maxHeight:520 }} keyboardShouldPersistTaps="handled">
-          <View style={{ padding:20, paddingBottom:24 }}>
-            <View style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:16 }}>
-              <TouchableOpacity onPress={()=>{setMloc(false);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");}} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:16 }}>←</Text></TouchableOpacity>
-              <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>📍 Localização</Text>
-            </View>
-            <Text style={{ color:T.sub, fontSize:13, marginBottom:16 }}>Sua localização atual</Text>
-            <Text style={[lbl,{marginBottom:8}]}>País</Text>
-            <View style={{ marginBottom:14 }}>
-              <TextInput value={getCountryDisplayName(tmpCountryId)||"Brasil"} onChangeText={()=>{}} placeholder="Brasil" placeholderTextColor={T.muted} editable={false} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
-            </View>
-            <Text style={[lbl,{marginBottom:8}]}>Estado</Text>
-            <View style={{ marginBottom:14 }}>
-              <TextInput value={tmpStateId ? getStateDisplayName(tmpStateId) : stateSearch} onChangeText={t=>{setStateSearch(t);if(tmpStateId)setTmpStateId("");setTmpCityId("");}} placeholder="Selecione ou digite um estado" placeholderTextColor={T.muted} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
-              <View style={{ marginTop:6, backgroundColor:T.card2, borderRadius:12, maxHeight:140, borderWidth:1, borderColor:T.border }}>
-                <ScrollView style={{ maxHeight:130 }}>
-                  {(() => {
-                    const searchText = tmpStateId ? "" : stateSearch;
-                    const statesList = getStatesForCountry(tmpCountryId||"BR");
-                    const filtered = searchText.length >= 1 ? statesList.filter(s=>s.name.toLowerCase().includes(searchText.toLowerCase())||s.id.toLowerCase().includes(searchText.toLowerCase())) : statesList;
-                    if (filtered.length === 0) {
-                      return <TouchableOpacity style={{ padding:10 }}><Text style={{ color:T.muted, fontSize:12 }}>Nenhum resultado</Text></TouchableOpacity>;
-                    }
-                    return filtered.map(s=>(
-                      <TouchableOpacity key={s.id} onPress={()=>{setTmpStateId(s.id);setTmpCityId("");setStateSearch("");}} style={{ padding:10, borderBottomWidth:1, borderBottomColor:T.border }}>
-                        <Text style={{ color:T.text, fontSize:13 }}>{s.name} ({s.id})</Text>
-                      </TouchableOpacity>
-                    ));
-                  })()}
-                </ScrollView>
-              </View>
-            </View>
-            <Text style={[lbl,{marginBottom:8}]}>Cidade</Text>
-            <View style={{ marginBottom:16 }}>
-              <TextInput value={tmpCityId ? getCityDisplayName(tmpCityId) : citySearch} onChangeText={t=>{setCitySearch(t);if(tmpCityId)setTmpCityId("");}} placeholder={tmpStateId?"Selecione ou digite uma cidade":"Selecione o estado primeiro"} placeholderTextColor={T.muted} editable={!!tmpStateId} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
-              {tmpStateId && (
-                <View style={{ marginTop:6, backgroundColor:T.card2, borderRadius:12, maxHeight:140, borderWidth:1, borderColor:T.border }}>
-                  <ScrollView style={{ maxHeight:130 }}>
-                    {(() => {
-                      const searchText = tmpCityId ? "" : citySearch;
-                      const citiesList = getCitiesForState(tmpStateId);
-                      const filtered = searchText.length >= 1 ? citiesList.filter(c=>c.name.toLowerCase().includes(searchText.toLowerCase())) : citiesList;
-                      if (filtered.length === 0) {
-                        return <TouchableOpacity style={{ padding:10 }}><Text style={{ color:T.muted, fontSize:12 }}>Nenhum resultado</Text></TouchableOpacity>;
-                      }
-                      return filtered.map(c=>(
-                        <TouchableOpacity key={c.id} onPress={()=>{setTmpCityId(c.id);setCitySearch("");}} style={{ padding:10, borderBottomWidth:1, borderBottomColor:T.border }}>
-                          <Text style={{ color:T.text, fontSize:13 }}>{c.name}</Text>
-                        </TouchableOpacity>
-                      ));
-                    })()}
-                  </ScrollView>
-                </View>
-              )}
-            </View>
-            <View style={{ height:1, backgroundColor:T.border, marginVertical:8 }} />
-            <Text style={{ color:T.sub, fontSize:13, marginBottom:16, marginTop:8 }}>Destino de estudos preferido</Text>
-            <Text style={[lbl,{marginBottom:8}]}>País</Text>
-            <View style={{ marginBottom:14 }}>
-              <TextInput value={getCountryDisplayName(tmpStudyCountryId)||"Brasil"} onChangeText={()=>{}} placeholder="Brasil" placeholderTextColor={T.muted} editable={false} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
-            </View>
-            <Text style={[lbl,{marginBottom:8}]}>Estado</Text>
-            <View style={{ marginBottom:14 }}>
-              <TextInput value={tmpStudyStateId ? getStateDisplayName(tmpStudyStateId) : studyStateSearch} onChangeText={t=>{setStudyStateSearch(t);if(tmpStudyStateId)setTmpStudyStateId("");setTmpStudyCityId("");}} placeholder="Selecione ou digite um estado" placeholderTextColor={T.muted} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
-              <View style={{ marginTop:6, backgroundColor:T.card2, borderRadius:12, maxHeight:140, borderWidth:1, borderColor:T.border }}>
-                <ScrollView style={{ maxHeight:130 }}>
-                  {(() => {
-                    const searchText = tmpStudyStateId ? "" : studyStateSearch;
-                    const statesList = getStatesForCountry(tmpStudyCountryId||"BR");
-                    const filtered = searchText.length >= 1 ? statesList.filter(s=>s.name.toLowerCase().includes(searchText.toLowerCase())||s.id.toLowerCase().includes(searchText.toLowerCase())) : statesList;
-                    if (filtered.length === 0) {
-                      return <TouchableOpacity style={{ padding:10 }}><Text style={{ color:T.muted, fontSize:12 }}>Nenhum resultado</Text></TouchableOpacity>;
-                    }
-                    return filtered.map(s=>(
-                      <TouchableOpacity key={s.id} onPress={()=>{setTmpStudyStateId(s.id);setTmpStudyCityId("");setStudyStateSearch("");}} style={{ padding:10, borderBottomWidth:1, borderBottomColor:T.border }}>
-                        <Text style={{ color:T.text, fontSize:13 }}>{s.name} ({s.id})</Text>
-                      </TouchableOpacity>
-                    ));
-                  })()}
-                </ScrollView>
-              </View>
-            </View>
-            <Text style={[lbl,{marginBottom:8}]}>Cidade</Text>
-            <View style={{ marginBottom:16 }}>
-              <TextInput value={tmpStudyCityId ? getCityDisplayName(tmpStudyCityId) : studyCitySearch} onChangeText={t=>{setStudyCitySearch(t);if(tmpStudyCityId)setTmpStudyCityId("");}} placeholder={tmpStudyStateId?"Selecione ou digite uma cidade":"Selecione o estado primeiro"} placeholderTextColor={T.muted} editable={!!tmpStudyStateId} style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
-              {tmpStudyStateId && (
-                <View style={{ marginTop:6, backgroundColor:T.card2, borderRadius:12, maxHeight:140, borderWidth:1, borderColor:T.border }}>
-                  <ScrollView style={{ maxHeight:130 }}>
-                    {(() => {
-                      const searchText = tmpStudyCityId ? "" : studyCitySearch;
-                      const citiesList = getCitiesForState(tmpStudyStateId);
-                      const filtered = searchText.length >= 1 ? citiesList.filter(c=>c.name.toLowerCase().includes(searchText.toLowerCase())) : citiesList;
-                      if (filtered.length === 0) {
-                        return <TouchableOpacity style={{ padding:10 }}><Text style={{ color:T.muted, fontSize:12 }}>Nenhum resultado</Text></TouchableOpacity>;
-                      }
-                      return filtered.map(c=>(
-                        <TouchableOpacity key={c.id} onPress={()=>{setTmpStudyCityId(c.id);setStudyCitySearch("");}} style={{ padding:10, borderBottomWidth:1, borderBottomColor:T.border }}>
-                          <Text style={{ color:T.text, fontSize:13 }}>{c.name}</Text>
-                        </TouchableOpacity>
-                      ));
-                    })()}
-                  </ScrollView>
-                </View>
-              )}
-            </View>
-            <TouchableOpacity onPress={()=>{
-              setCountryId(tmpCountryId||"BR");
-              setStateId(tmpStateId);
-              setCityId(tmpCityId);
-              setStudyCountryId(tmpStudyCountryId||"BR");
-              setStudyStateId(tmpStudyStateId);
-              setStudyCityId(tmpStudyCityId);
-              setMloc(false);
-              setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");
-              if (currentUser) {
-                const data = {countryId:tmpCountryId||"BR",stateId:tmpStateId,cityId:tmpCityId,studyCountryId:tmpStudyCountryId||"BR",studyStateId:tmpStudyStateId,studyCityId:tmpStudyCityId,updatedAt:new Date().toISOString()};
-                saveLocalUserData({...currentData(), ...data});
-                setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
-              }
-            }} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center", marginTop:8 }}>
-              <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar</Text>
+        <View style={{ flex:1, paddingBottom:20 }}>
+          <View style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", paddingHorizontal:20, paddingVertical:12, borderBottomWidth:1, borderBottomColor:T.border }}>
+            <TouchableOpacity onPress={()=>{setMloc(false);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");}} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}>
+              <Text style={{ color:T.sub, fontSize:18 }}>←</Text>
             </TouchableOpacity>
+            <Text style={{ color:T.text, fontSize:18, fontWeight:"800" }}>📍 Localização</Text>
+            <View style={{ width:34 }} />
           </View>
-        </ScrollView>
+          <ScrollView style={{ flex:1 }} keyboardShouldPersistTaps="handled">
+            <View style={{ padding:20 }}>
+              {/* Current Location Section */}
+              <View style={{ backgroundColor:T.card2, borderRadius:16, padding:16, marginBottom:16 }}>
+                <Text style={{ color:T.accent, fontSize:14, fontWeight:"800", marginBottom:12 }}>📍 Sua localização atual</Text>
+                
+                <Text style={[lbl,{marginBottom:6}]}>Estado</Text>
+                <TouchableOpacity onPress={() => setShowStatePicker(!showStatePicker)} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:12, borderRadius:12, backgroundColor:T.inp, borderWidth:1, borderColor:T.inpB }}>
+                  <Text style={{ color:T.text, fontSize:14 }}>{tmpStateId ? getStateDisplayName(tmpStateId) : "Selecione o estado"}</Text>
+                  <Text style={{ color:T.muted, fontSize:14 }}>▼</Text>
+                </TouchableOpacity>
+                {showStatePicker && (
+                  <View style={{ marginTop:8, backgroundColor:T.card, borderRadius:12, maxHeight:200, borderWidth:1, borderColor:T.border }}>
+                    <ScrollView style={{ maxHeight:190 }}>
+                      {getStatesForCountry(tmpCountryId||"BR").map(s => (
+                        <TouchableOpacity key={s.id} onPress={() => {setTmpStateId(s.id);setTmpCityId("");setShowStatePicker(false);}} style={{ padding:12, borderBottomWidth:1, borderBottomColor:T.border }}>
+                          <Text style={{ color:T.text, fontSize:14 }}>{s.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+
+                <Text style={[lbl,{marginTop:12, marginBottom:6}]}>Cidade</Text>
+                <TouchableOpacity onPress={() => tmpStateId ? setShowCityPicker(!showCityPicker) : null} disabled={!tmpStateId} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:12, borderRadius:12, backgroundColor:T.inp, borderWidth:1, borderColor:T.inpB, opacity:tmpStateId?1:0.5 }}>
+                  <Text style={{ color:T.text, fontSize:14 }}>{tmpCityId ? getCityDisplayName(tmpCityId) : (tmpStateId ? "Selecione a cidade" : "Selecione o estado primeiro")}</Text>
+                  <Text style={{ color:T.muted, fontSize:14 }}>▼</Text>
+                </TouchableOpacity>
+                {showCityPicker && tmpStateId && (
+                  <View style={{ marginTop:8, backgroundColor:T.card, borderRadius:12, maxHeight:200, borderWidth:1, borderColor:T.border }}>
+                    <ScrollView style={{ maxHeight:190 }}>
+                      {getCitiesForState(tmpStateId).map(c => (
+                        <TouchableOpacity key={c.id} onPress={() => {setTmpCityId(c.id);setShowCityPicker(false);}} style={{ padding:12, borderBottomWidth:1, borderBottomColor:T.border }}>
+                          <Text style={{ color:T.text, fontSize:14 }}>{c.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+
+              {/* Study Destination Section */}
+              <View style={{ backgroundColor:T.card2, borderRadius:16, padding:16, marginBottom:16 }}>
+                <Text style={{ color:T.accent, fontSize:14, fontWeight:"800", marginBottom:12 }}>🎯 Destino de estudos</Text>
+                
+                <Text style={[lbl,{marginBottom:6}]}>Estado</Text>
+                <TouchableOpacity onPress={() => setShowStudyStatePicker(!showStudyStatePicker)} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:12, borderRadius:12, backgroundColor:T.inp, borderWidth:1, borderColor:T.inpB }}>
+                  <Text style={{ color:T.text, fontSize:14 }}>{tmpStudyStateId ? getStateDisplayName(tmpStudyStateId) : "Selecione o estado"}</Text>
+                  <Text style={{ color:T.muted, fontSize:14 }}>▼</Text>
+                </TouchableOpacity>
+                {showStudyStatePicker && (
+                  <View style={{ marginTop:8, backgroundColor:T.card, borderRadius:12, maxHeight:200, borderWidth:1, borderColor:T.border }}>
+                    <ScrollView style={{ maxHeight:190 }}>
+                      {getStatesForCountry(tmpStudyCountryId||"BR").map(s => (
+                        <TouchableOpacity key={s.id} onPress={() => {setTmpStudyStateId(s.id);setTmpStudyCityId("");setShowStudyStatePicker(false);}} style={{ padding:12, borderBottomWidth:1, borderBottomColor:T.border }}>
+                          <Text style={{ color:T.text, fontSize:14 }}>{s.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+
+                <Text style={[lbl,{marginTop:12, marginBottom:6}]}>Cidade</Text>
+                <TouchableOpacity onPress={() => tmpStudyStateId ? setShowStudyCityPicker(!showStudyCityPicker) : null} disabled={!tmpStudyStateId} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:12, borderRadius:12, backgroundColor:T.inp, borderWidth:1, borderColor:T.inpB, opacity:tmpStudyStateId?1:0.5 }}>
+                  <Text style={{ color:T.text, fontSize:14 }}>{tmpStudyCityId ? getCityDisplayName(tmpStudyCityId) : (tmpStudyStateId ? "Selecione a cidade" : "Selecione o estado primeiro")}</Text>
+                  <Text style={{ color:T.muted, fontSize:14 }}>▼</Text>
+                </TouchableOpacity>
+                {showStudyCityPicker && tmpStudyStateId && (
+                  <View style={{ marginTop:8, backgroundColor:T.card, borderRadius:12, maxHeight:200, borderWidth:1, borderColor:T.border }}>
+                    <ScrollView style={{ maxHeight:190 }}>
+                      {getCitiesForState(tmpStudyStateId).map(c => (
+                        <TouchableOpacity key={c.id} onPress={() => {setTmpStudyCityId(c.id);setShowStudyCityPicker(false);}} style={{ padding:12, borderBottomWidth:1, borderBottomColor:T.border }}>
+                          <Text style={{ color:T.text, fontSize:14 }}>{c.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+
+              <TouchableOpacity onPress={()=>{
+                setCountryId(tmpCountryId||"BR");
+                setStateId(tmpStateId);
+                setCityId(tmpCityId);
+                setStudyCountryId(tmpStudyCountryId||"BR");
+                setStudyStateId(tmpStudyStateId);
+                setStudyCityId(tmpStudyCityId);
+                setShowStatePicker(false);setShowCityPicker(false);setShowStudyStatePicker(false);setShowStudyCityPicker(false);
+                setMloc(false);
+                setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");
+                if (currentUser) {
+                  const data = {countryId:tmpCountryId||"BR",stateId:tmpStateId,cityId:tmpCityId,studyCountryId:tmpStudyCountryId||"BR",studyStateId:tmpStudyStateId,studyCityId:tmpStudyCityId,updatedAt:new Date().toISOString()};
+                  saveLocalUserData({...currentData(), ...data});
+                  setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
+                }
+              }} style={{ padding:16, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
+                <Text style={{ color:AT, fontSize:16, fontWeight:"800" }}>Salvar</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </BottomSheet>
+
+      {/* Goals modal */}
+      <BottomSheet visible={goalsModal} onClose={()=>setGoalsModal(false)} T={T}>
+        <View style={{ padding:20, paddingBottom:24 }}>
+          <View style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:16 }}>
+            <TouchableOpacity onPress={()=>{setGoalsModal(false);setGoalsSearch("");}} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:16 }}>←</Text></TouchableOpacity>
+            <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>🎯 Metas de Vestibular</Text>
+          </View>
+          <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:12, paddingHorizontal:12, paddingVertical:10, marginBottom:16, borderWidth:1, borderColor:T.inpB }}>
+            <Text style={{ fontSize:14, marginRight:8 }}>🔍</Text>
+            <TextInput value={goalsSearch} onChangeText={setGoalsSearch} placeholder="Buscar universidade..." placeholderTextColor={T.muted} style={{ flex:1, color:T.text, fontSize:14, padding:0 }} />
+            {goalsSearch.length > 0 && <TouchableOpacity onPress={()=>setGoalsSearch("")}><Text style={{ color:T.muted, fontSize:12 }}>✕</Text></TouchableOpacity>}
+          </View>
+          <Text style={{ color:T.sub, fontSize:12, marginBottom:12 }}>Selecione as universidades que você pretende fazer vestibular</Text>
+          <ScrollView style={{ maxHeight:400 }} showsVerticalScrollIndicator={false}>
+            {(() => {
+              const allUnis = fbUnis.filter(u => u.type !== "Técnico");
+              const filtered = goalsSearch.length > 0 
+                ? allUnis.filter(u => removeAccents(u.name.toLowerCase()).includes(removeAccents(goalsSearch.toLowerCase())) || removeAccents(u.fullName.toLowerCase()).includes(removeAccents(goalsSearch.toLowerCase())))
+                : allUnis;
+              if (filtered.length === 0) {
+                return <Text style={{ color:T.muted, textAlign:"center", padding:20 }}>Nenhuma universidade encontrada</Text>;
+              }
+              return filtered.map(uni => {
+                const isSelected = goalsUnis.some(g => g.id === uni.id);
+                const nextExam = uni.exams?.find(e => e.status === "upcoming");
+                return (
+                  <TouchableOpacity key={uni.id} onPress={() => {
+                    if (isSelected) {
+                      setGoalsUnis(goalsUnis.filter(g => g.id !== uni.id));
+                    } else {
+                      setGoalsUnis([...goalsUnis, uni]);
+                    }
+                  }} style={{ flexDirection:"row", alignItems:"center", backgroundColor:isSelected?T.acBg:T.card2, borderRadius:14, padding:14, marginBottom:10, borderWidth:1, borderColor:isSelected?T.accent:T.border }}>
+                    <View style={{ width:44, height:44, borderRadius:22, backgroundColor:uni.color, alignItems:"center", justifyContent:"center", marginRight:12 }}>
+                      <Text style={{ color:"#fff", fontSize:12, fontWeight:"800" }}>{uni.name.slice(0,2)}</Text>
+                    </View>
+                    <View style={{ flex:1 }}>
+                      <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>{uni.name}</Text>
+                      <View style={{ flexDirection:"row", alignItems:"center", gap:8, marginTop:2 }}>
+                        <Text style={{ color:T.muted, fontSize:11 }}>{uni.vestibular}</Text>
+                        {nextExam && <Text style={{ color:T.accent, fontSize:10, fontWeight:"600" }}>📅 {nextExam.date}</Text>}
+                      </View>
+                    </View>
+                    <View style={{ width:24, height:24, borderRadius:12, backgroundColor:isSelected?T.accent:T.card, borderWidth:2, borderColor:isSelected?T.accent:T.border, alignItems:"center", justifyContent:"center" }}>
+                      {isSelected && <Text style={{ color:AT, fontSize:12, fontWeight:"800" }}>✓</Text>}
+                    </View>
+                  </TouchableOpacity>
+                );
+              });
+            })()}
+          </ScrollView>
+          {goalsUnis.length > 0 && (
+            <TouchableOpacity onPress={() => {
+              saveLocalUserData({...currentData(), goalsUnis});
+              if (currentUser) {
+                setDoc(doc(db,"usuarios",currentUser.uid),{goalsUnis,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+              }
+              setGoalsModal(false);
+              setGoalsSearch("");
+            }} style={{ marginTop:16, padding:16, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
+              <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar Metas ({goalsUnis.length})</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </BottomSheet>
 
       {/* Saved posts */}
