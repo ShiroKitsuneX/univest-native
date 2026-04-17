@@ -2,8 +2,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   Modal, Alert, Appearance, Linking, Platform, StatusBar,
-  KeyboardAvoidingView, Dimensions, ActivityIndicator,
-  RefreshControl,
+  KeyboardAvoidingView, Dimensions, ActivityIndicator, Animated, Pressable,
+  RefreshControl, LayoutAnimation,
 } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { BarChart } from "react-native-chart-kit";
@@ -531,6 +531,9 @@ function MainApp() {
   const [loginMode, setLoginMode] = useState("login");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
+  const [authBirthdate, setAuthBirthdate] = useState("");
+  const [authAcceptTerms, setAuthAcceptTerms] = useState(false);
   const [authName, setAuthName] = useState("");
   const [authSobrenome, setAuthSobrenome] = useState("");
   const [nome, setNome] = useState("");
@@ -572,6 +575,8 @@ function MainApp() {
   const [fSt, setFSt] = useState("Todos");
   const [nSrch, setNsrch] = useState("");
   const [saved, setSaved] = useState({});
+  const loginBtnScale = useRef(new Animated.Value(1)).current;
+  const loginBtnOpacity = useRef(new Animated.Value(1)).current;
   const [liked, setLiked] = useState({});
   const [uniSort, setUniSort] = useState("date");
   const [uniPrefs, setUniPrefs] = useState({});
@@ -605,6 +610,7 @@ function MainApp() {
   const [examSearch, setExamSearch] = useState("");
   const [examSort, setExamSort] = useState("newest");
   const [bookMenu, setBookMenu] = useState(null);
+  const [showFollowingPage, setShowFollowingPage] = useState(false);
   const [mGr,   setMgr]   = useState(false);
   const [mShr,  setMshr]  = useState(null);
   const [mDisc, setMdisc] = useState(false);
@@ -900,12 +906,15 @@ function MainApp() {
     if (!authEmail||!authPassword){setAuthError("Preencha e-mail e senha");return;}
     if (!authName.trim()){setAuthError("Preencha seu nome");return;}
     if (authPassword.length<6){setAuthError("Senha deve ter pelo menos 6 caracteres");return;}
+    if (authPassword !== authConfirmPassword){setAuthError("As senhas não coincidem");return;}
+    if (!authBirthdate.trim()){setAuthError("Preencha sua data de nascimento");return;}
+    if (!authAcceptTerms){setAuthError("Você deve aceitar os Termos e Condições");return;}
     setAuthSubmitting(true); setAuthError("");
     try {
       const cred = await createUserWithEmailAndPassword(auth,authEmail,authPassword);
-      await setDoc(doc(db,"usuarios",cred.user.uid),{email:cred.user.email,nome:authName.trim(),sobrenome:authSobrenome?.trim()||"",tipo:"usuario",done:false,followedUnis:[],updatedAt:new Date().toISOString()});
+      await setDoc(doc(db,"usuarios",cred.user.uid),{email:cred.user.email,nome:authName.trim(),sobrenome:authSobrenome?.trim()||"",dataNascimento:authBirthdate.trim(),tipo:"usuario",done:false,followedUnis:[],updatedAt:new Date().toISOString()});
       await sendEmailVerification(cred.user);
-      setAuthEmail(""); setAuthPassword(""); setAuthName(""); setAuthSobrenome("");
+      setAuthEmail(""); setAuthPassword(""); setAuthName(""); setAuthSobrenome(""); setAuthConfirmPassword(""); setAuthBirthdate(""); setAuthAcceptTerms(false);
     } catch(err){ setAuthError(getAuthError(err, "signup")); }
     setAuthSubmitting(false);
   };
@@ -1063,22 +1072,23 @@ function MainApp() {
           <Text style={{ fontSize:34, fontWeight:"800", color:T.text, textAlign:"center", marginBottom:8 }}>Uni<Text style={{ color:T.accent }}>Vest</Text></Text>
           <Text style={{ color:T.sub, fontSize:14, textAlign:"center", lineHeight:24, marginBottom:32 }}>Seu portal inteligente para toda a jornada acadêmica</Text>
           <View style={{ gap:10, marginBottom:32 }}>
-            {[["vestibular","🎯","Vestibulares & ENEM","#e11d48"],["graduacao","🎓","Graduação & Pós-graduação","#7c3aed"],["mestrado","🔬","Mestrado & Doutorado","#2563eb"],["tecnico","📚","Ensino Médio & Técnico","#059669"]].map(([id,ic,l,cor])=>(
+            {[["vestibular","🎯","Vestibulares & ENEM","#e11d48"],["graduacao","🎓","Graduação & Pós-graduação","#7c3aed"],["mestrado","🔬","Mestrado & Doutorado","#2563eb"],["tecnico","📚","Ensino Médio & Técnico","#059669"],["cursos","📖","Cursos e outros","#f59e0b"]].map(([id,ic,l,cor])=>(
               <View key={id} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card, borderRadius:16, padding:14, borderWidth:1, borderColor:T.border, gap:14 }}>
                 <View style={{ width:44, height:44, borderRadius:22, backgroundColor:cor+"22", alignItems:"center", justifyContent:"center" }}>
                   <Text style={{ fontSize:22 }}>{getIcon(id,ic)}</Text>
                 </View>
                 <Text style={{ color:T.text, fontSize:14, fontWeight:"600", flex:1 }}>{l}</Text>
-                <Text style={{ color:T.muted, fontSize:18 }}>›</Text>
               </View>
             ))}
           </View>
-          <TouchableOpacity onPress={()=>setShowLogin(true)} style={{ padding:16, borderRadius:18, backgroundColor:T.accent, alignItems:"center" }}>
-            <Text style={{ color:AT, fontSize:16, fontWeight:"800" }}>Entrar ou criar conta</Text>
+          <TouchableOpacity onPress={() => { Animated.spring(loginBtnScale, { toValue: 0.9, useNativeDriver: true }).start(); setTimeout(() => { Animated.spring(loginBtnScale, { toValue: 1, useNativeDriver: true }).start(); setShowLogin(true); }, 100); }} activeOpacity={0.9}>
+            <Animated.View style={{ padding:16, borderRadius:18, backgroundColor:T.accent, alignItems:"center", transform: [{ scale: loginBtnScale }], shadowColor:T.accent, shadowOffset:{width:0,height:4}, shadowOpacity:0.3, shadowRadius:8 }}>
+              <Text style={{ color:AT, fontSize:16, fontWeight:"800" }}>Entrar ou criar conta</Text>
+            </Animated.View>
           </TouchableOpacity>
         </ScrollView>
 
-        <Modal visible={showLogin} transparent animationType="fade" onRequestClose={()=>setShowLogin(false)}>
+        <Modal visible={showLogin} transparent animationType="slide" animationDuration={200} onRequestClose={()=>setShowLogin(false)}>
           <KeyboardAvoidingView behavior={Platform.OS==="ios"?"padding":"height"} style={{ flex:1 }}>
             <ScrollView contentContainerStyle={{ flexGrow:1, justifyContent:"center", backgroundColor:T.bg, padding:20, paddingTop:insets.top+20, paddingBottom:insets.bottom+20 }} keyboardShouldPersistTaps="handled">
               <View style={{ backgroundColor:T.card, borderRadius:20, padding:24, width:"100%", maxWidth:360, alignSelf:"center" }}>
@@ -1088,27 +1098,47 @@ function MainApp() {
                   <>
                     <View style={{ flexDirection:"row", gap:8, marginBottom:20 }}>
                       {[["login","Entrar"],["signup","Criar conta"]].map(([m,l])=>(
-                        <TouchableOpacity key={m} onPress={()=>setLoginMode(m)} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:loginMode===m?T.accent:T.card2, alignItems:"center" }}>
+                        <TouchableOpacity key={m} onPress={() => { 
+                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                          if(m==="login"){setAuthConfirmPassword("");setAuthBirthdate("");setAuthAcceptTerms(false);}
+                          setLoginMode(m); 
+                        }} activeOpacity={0.8} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:loginMode===m?T.accent:T.card2, alignItems:"center" }}>
                           <Text style={{ color:loginMode===m?AT:T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
                     <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>E-mail</Text>
-                    <TextInput value={authEmail} onChangeText={setAuthEmail} placeholder="seu@email.com" placeholderTextColor={T.muted} autoCapitalize="none" keyboardType="email-address" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:12 }} />
+                    <TextInput value={authEmail} onChangeText={setAuthEmail} placeholder="seu@email.com" placeholderTextColor={T.muted} autoCapitalize="none" keyboardType="email-address" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:16 }} />
                     {loginMode==="signup" && (
-                      <>
+                      <Animated.View style={{ overflow: "hidden", marginBottom: 16 }}>
                         <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Nome</Text>
-                        <View style={{ flexDirection:"row", gap:8 }}>
+                        <View style={{ flexDirection:"row", gap:12 }}>
                           <TextInput value={authName} onChangeText={setAuthName} placeholder="Nome" placeholderTextColor={T.muted} autoCapitalize="words" style={{ flex:1, padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
                           <TextInput value={authSobrenome} onChangeText={setAuthSobrenome} placeholder="Sobrenome" placeholderTextColor={T.muted} autoCapitalize="words" style={{ flex:1, padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
                         </View>
-                      </>
+                      </Animated.View>
                     )}
                     <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Senha</Text>
-                    <View style={{ marginBottom:8 }}>
+                    <View style={{ marginBottom:16 }}>
                       <TextInput value={authPassword} onChangeText={setAuthPassword} placeholder={loginMode==="signup"?"Mínimo 6 caracteres":"••••••••"} placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
                       <TouchableOpacity onPress={()=>setShowLoginPwd(!showLoginPwd)} style={{ position:"absolute", right:12, top:12 }}><Text style={{ fontSize:16 }}>{showLoginPwd?"👁️‍🗨️":"👁️"}</Text></TouchableOpacity>
                     </View>
+                    {loginMode==="signup" && (
+                      <>
+                        <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Confirmar Senha</Text>
+                        <View style={{ marginBottom:16 }}>
+                          <TextInput value={authConfirmPassword} onChangeText={setAuthConfirmPassword} placeholder="••••••••" placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+                        </View>
+                        <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Data de Nascimento</Text>
+                        <TextInput value={authBirthdate} onChangeText={setAuthBirthdate} placeholder="DD/MM/AAAA" placeholderTextColor={T.muted} keyboardType="numeric" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:16 }} />
+                        <TouchableOpacity onPress={()=>setAuthAcceptTerms(!authAcceptTerms)} style={{ flexDirection:"row", alignItems:"center", marginBottom:16 }}>
+                          <View style={{ width:22, height:22, borderRadius:6, backgroundColor:authAcceptTerms?T.accent:T.inp, borderWidth:1, borderColor:authAcceptTerms?T.accent:T.border, alignItems:"center", justifyContent:"center", marginRight:10 }}>
+                            {authAcceptTerms && <Text style={{ color:AT, fontSize:14, fontWeight:"700" }}>✓</Text>}
+                          </View>
+                          <Text style={{ color:T.sub, fontSize:12, flex:1 }}>Aceito os <Text style={{ color:T.accent, textDecorationLine:"underline" }}>Termos e Condições</Text></Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
                     {!!authError && <Text style={{ color:"#f87171", fontSize:12, marginBottom:8, textAlign:"center" }}>{authError}</Text>}
                     <TouchableOpacity onPress={loginMode==="login"?handleLogin:handleSignup} disabled={authSubmitting} style={{ padding:14, borderRadius:14, backgroundColor:T.accent, alignItems:"center", marginTop:8 }}>
                       <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>{authSubmitting?"Aguarde...":loginMode==="login"?"Entrar":"Criar conta"}</Text>
@@ -1138,7 +1168,7 @@ function MainApp() {
                     </TouchableOpacity>
                   </>
                 )}
-                <TouchableOpacity onPress={()=>{setShowLogin(false);setLoginMode("login");setForgotMode(false);setPasswordSent(false);setAuthError("");}} style={{ padding:10, alignItems:"center", marginTop:12 }}>
+                <TouchableOpacity onPress={()=>{setShowLogin(false);setLoginMode("login");setForgotMode(false);setPasswordSent(false);setAuthError("");setAuthConfirmPassword("");setAuthBirthdate("");setAuthAcceptTerms(false);}} style={{ padding:10, alignItems:"center", marginTop:12 }}>
                   <Text style={{ color:T.muted, fontSize:13 }}>Fechar</Text>
                 </TouchableOpacity>
               </View>
@@ -1301,7 +1331,7 @@ function MainApp() {
       {[{id:"feed",ic:"🏠",l:"Feed"},{id:"explorar",ic:"🔍",l:"Explorar"},{id:"notas",ic:"📊",l:"Notas"},{id:"perfil",ic:"👤",l:"Perfil"}].map(t=>{
         const active = tab===t.id;
         return (
-          <TouchableOpacity key={t.id} onPress={()=>{setTab(t.id);setSU(null);setShowBooksPage(false);}} style={{ flex:1, alignItems:"center", paddingVertical:6 }}>
+          <TouchableOpacity key={t.id} onPress={()=>{setTab(t.id);setSU(null);setShowBooksPage(false);setShowFollowingPage(false);}} style={{ flex:1, alignItems:"center", paddingVertical:6 }}>
             <View style={{ paddingHorizontal:16, paddingVertical:5, borderRadius:20, backgroundColor:active?T.acBg:"transparent", alignItems:"center", marginBottom:2 }}>
               <Text style={{ fontSize:20 }}>{getIcon("tab_"+t.id,t.ic)}</Text>
             </View>
@@ -1515,6 +1545,44 @@ function MainApp() {
       </View>
     );
   };
+
+  const renderFollowingPage = () => (
+    <View style={{ flex:1, backgroundColor:T.bg }}>
+      <View style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, borderBottomWidth:1, borderColor:T.border }}>
+        <TouchableOpacity onPress={()=>setShowFollowingPage(false)} style={{ marginRight:12 }}>
+          <Text style={{ fontSize:24, color:T.accent }}>←</Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize:18, fontWeight:"800", color:T.text, flex:1 }}>🏛️ Seguindo</Text>
+      </View>
+
+      <ScrollView style={{ flex:1, paddingHorizontal:16, paddingTop:16 }}>
+        {fol.length === 0 ? (
+          <View style={{ paddingVertical:40, alignItems:"center" }}>
+            <Text style={{ fontSize:48, marginBottom:12 }}>🏛️</Text>
+            <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>Nenhuma universidade seguida</Text>
+            <TouchableOpacity onPress={()=>{setShowFollowingPage(false);setTab("explorar");}} style={{ marginTop:16, paddingHorizontal:16, paddingVertical:8, backgroundColor:T.accent, borderRadius:8 }}>
+              <Text style={{ color:AT, fontSize:12, fontWeight:"700" }}>Explorar universidades</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={{ gap:10, marginBottom:40 }}>
+            {fol.map(u => (
+              <TouchableOpacity key={u.id} onPress={()=>{setSU(u);setTab("explorar");setShowFollowingPage(false);}} style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:14, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
+                <View style={{ width:44, height:44, borderRadius:22, backgroundColor:u.color, alignItems:"center", justifyContent:"center" }}>
+                  <Text style={{ color:"#fff", fontSize:14, fontWeight:"800" }}>{u.name.slice(0,2)}</Text>
+                </View>
+                <View style={{ flex:1, marginLeft:12 }}>
+                  <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>{u.name}</Text>
+                  <Text style={{ color:T.sub, fontSize:11 }}>{u.fullName}</Text>
+                </View>
+                <Text style={{ color:T.accent, fontSize:20 }}>›</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+    </View>
+  );
 
   const renderUniDetail = () => (
     <ScrollView style={{ flex:1 }}>
@@ -1835,13 +1903,14 @@ function MainApp() {
                 <Text style={{ color:T.sub, fontSize:10 }}>👥 {fmtCount(u.followersCount??u.followers)}</Text>
               </View>
             </View>
-            <TouchableOpacity onPress={()=>toggleFollow(u,!u.followed)} style={{ paddingHorizontal:12, paddingVertical:7, borderRadius:11, backgroundColor:u.followed?"transparent":T.accent, borderWidth:u.followed?1.5:0, borderColor:"#C62828" }}>
-              <Text style={{ color:u.followed?"#C62828":AT, fontSize:11, fontWeight:"800" }}>{u.followed?"✓ Seguindo":"+ Seguir"}</Text>
-            </TouchableOpacity>
           </TouchableOpacity>
         ))}
-        {filtU.length===0 && <Text style={{ color:T.muted, textAlign:"center", padding:40, fontSize:13 }}>Nenhuma universidade encontrada.</Text>}
       </View>
+      <TouchableOpacity onPress={() => { Animated.spring(loginBtnScale, { toValue: 0.9, useNativeDriver: true }).start(); setTimeout(() => { Animated.spring(loginBtnScale, { toValue: 1, useNativeDriver: true }).start(); setShowLogin(true); }, 100); }} activeOpacity={0.9}>
+        <Animated.View style={{ padding:16, borderRadius:18, backgroundColor:T.accent, alignItems:"center", transform: [{ scale: loginBtnScale }], shadowColor:T.accent, shadowOffset:{width:0,height:4}, shadowOpacity:0.3, shadowRadius:8 }}>
+          <Text style={{ color:AT, fontSize:16, fontWeight:"800" }}>Entrar ou criar conta</Text>
+        </Animated.View>
+      </TouchableOpacity>
     </ScrollView>
   );
 
@@ -2106,8 +2175,8 @@ function MainApp() {
             </View>
           )}
           <View style={{ flexDirection:"row", justifyContent:"center", gap:0, width:"100%", borderTopWidth:1, borderColor:T.border, paddingTop:14 }}>
-            {[{v:fol.length,l:"seguindo"},{v:gs.filter(g=>g.type!=="simulado").length,l:"provas"},{v:gs.filter(g=>g.type==="simulado").length,l:"simulados"},{v:Object.values(saved).filter(Boolean).length,l:"salvos",isSaved:true}].map(({v,l,isSaved},i,arr)=>(
-              <TouchableOpacity key={l} onPress={isSaved&&v>0?()=>setMSaved(true):undefined} style={{ flex:1, alignItems:"center", borderRightWidth:i<arr.length-1?1:0, borderColor:T.border, paddingVertical:4 }}>
+            {[{v:fol.length,l:"seguindo",isFollowing:true},{v:gs.filter(g=>g.type!=="simulado").length,l:"provas"},{v:gs.filter(g=>g.type==="simulado").length,l:"simulados"},{v:Object.values(saved).filter(Boolean).length,l:"salvos",isSaved:true}].map(({v,l,isFollowing,isSaved},i,arr)=>(
+              <TouchableOpacity key={l} onPress={() => { if (isFollowing && v > 0) setShowFollowingPage(true); else if (isSaved && v > 0) setMSaved(true); }} style={{ flex:1, alignItems:"center", borderRightWidth:i<arr.length-1?1:0, borderColor:T.border, paddingVertical:4 }}>
                 <Text style={{ color:T.accent, fontSize:18, fontWeight:"800" }}>{v}</Text>
                 <Text style={{ color:T.muted, fontSize:9 }}>{l}</Text>
               </TouchableOpacity>
@@ -2135,27 +2204,6 @@ function MainApp() {
           <TouchableOpacity onPress={()=>setTab("notas")} style={{ padding:9, borderRadius:12, backgroundColor:T.acBg, alignItems:"center", borderWidth:1, borderColor:T.accent+"40" }}>
             <Text style={{ color:T.accent, fontSize:12, fontWeight:"700" }}>+ Adicionar minhas notas</Text>
           </TouchableOpacity>
-        )}
-      </View>
-
-      <View style={{ ...cd(), padding:15, marginBottom:12 }}>
-        <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-          <Text style={lbl}>🏛️ Universidades que sigo</Text>
-          {fol.length>0 && <TouchableOpacity onPress={()=>setMUni(true)} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}><Text style={{ color:T.sub, fontSize:10, fontWeight:"700" }}>Ordenar</Text></TouchableOpacity>}
-        </View>
-        {fol.length===0 ? (
-          <Text style={{ color:T.muted, fontSize:13, textAlign:"center", padding:10 }}>Nenhuma ainda.</Text>
-        ) : (
-          <View style={{ flexDirection:"row", flexWrap:"wrap", gap:6 }}>
-            {fol.map(u=>(
-              <TouchableOpacity key={u.id} onPress={()=>{setSU(u);setTab("explorar");}} style={{ alignItems:"center", gap:2, minWidth:44, padding:6, backgroundColor:T.card2, borderRadius:10, borderWidth:1, borderColor:T.border }}>
-                <View style={{ width:28, height:28, borderRadius:14, backgroundColor:u.color, alignItems:"center", justifyContent:"center" }}>
-                  <Text style={{ color:"#fff", fontSize:8, fontWeight:"800" }}>{u.name.slice(0,2)}</Text>
-                </View>
-                <Text style={{ color:T.sub, fontSize:8, fontWeight:"600", textAlign:"center" }} numberOfLines={1}>{u.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
         )}
       </View>
 
@@ -2350,7 +2398,7 @@ const goalTodos = [
           <Text style={{ color:T.sub, fontSize:11 }}>{tab==="feed"?"Novidades para você":tab==="explorar"?"Encontre sua universidade":tab==="notas"?"Notas de corte & suas provas":`${uType?.emoji||"👤"} ${uType?.label||"Meu Perfil"}`}</Text>
         </View>
       )}
-      {showExamsPage && selUni ? renderExamsPage() : showBooksPage ? renderBooksPage() : selUni ? renderUniDetail() : (
+      {showExamsPage && selUni ? renderExamsPage() : showBooksPage ? renderBooksPage() : showFollowingPage ? renderFollowingPage() : selUni ? renderUniDetail() : (
         <>
           {tab==="feed"     && renderFeed()}
           {tab==="explorar" && renderExplorar()}
