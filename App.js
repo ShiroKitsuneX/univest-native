@@ -604,6 +604,7 @@ function MainApp() {
   const [expandedYears, setExpandedYears] = useState({});
   const [examSearch, setExamSearch] = useState("");
   const [examSort, setExamSort] = useState("newest");
+  const [bookMenu, setBookMenu] = useState(null);
   const [mGr,   setMgr]   = useState(false);
   const [mShr,  setMshr]  = useState(null);
   const [mDisc, setMdisc] = useState(false);
@@ -661,28 +662,22 @@ function MainApp() {
   const getIcon = (id, fallback) => fbIcons[id] || fallback;
 
   const updateBookStatus = (bookKey, status) => {
-    const isReading = readingBooks.includes(bookKey);
-    const isRead = readBooks.includes(bookKey);
-    let newRead = [...readBooks];
-    let newReading = [...readingBooks];
+    const isReading = readBooks[bookKey] === "reading";
+    const isRead = readBooks[bookKey] === "read";
+    let newRead = {...readBooks};
     
     if (status === "reading") {
-      newRead = newRead.filter(b => b !== bookKey);
-      if (!isReading) newReading = [...newReading, bookKey];
+      newRead[bookKey] = "reading";
     } else if (status === "read") {
-      newReading = newReading.filter(b => b !== bookKey);
-      if (!isRead) newRead = [...newRead, bookKey];
+      newRead[bookKey] = "read";
     } else if (status === "none") {
-      newRead = newRead.filter(b => b !== bookKey);
-      newReading = newReading.filter(b => b !== bookKey);
+      delete newRead[bookKey];
     }
     
     setReadBooks(newRead);
-    setReadingBooks(newReading);
-    const data = {readBooks: newRead, readingBooks: newReading};
-    saveLocalUserData({...currentData(), ...data});
+    saveLocalUserData({...currentData(), readBooks: newRead});
     if (currentUser) {
-      setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+      setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
     }
   };
 
@@ -1443,8 +1438,8 @@ function MainApp() {
       b.uni.name.toLowerCase().includes(booksSearch.toLowerCase())
     );
 
-    const readCount = readBooks.length;
-    const totalCount = allBooks.length;
+    const readCount = Object.values(readBooks).filter(s => s === "read").length;
+    const readingCount = Object.values(readBooks).filter(s => s === "reading").length;
 
     return (
       <View style={{ flex:1, backgroundColor:T.bg }}>
@@ -1456,8 +1451,10 @@ function MainApp() {
         </View>
 
         <ScrollView style={{ flex:1, paddingHorizontal:16, paddingTop:16 }}>
-          {readCount > 0 && (
-            <Text style={{ color:T.sub, fontSize:12, marginBottom:12 }}>Você já leu {readCount} {readCount === 1 ? "livro" : "livros"}</Text>
+          {(readCount > 0 || readingCount > 0) && (
+            <Text style={{ color:T.sub, fontSize:12, marginBottom:12 }}>
+              {readingCount > 0 ? `Lendo ${readingCount} · ` : ""}Lidos: {readCount}
+            </Text>
           )}
 
           <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:13, paddingHorizontal:14, paddingVertical:11, borderWidth:1, borderColor:T.inpB, marginBottom:16 }}>
@@ -1474,34 +1471,42 @@ function MainApp() {
           ) : (
             <View style={{ gap:8, marginBottom:40 }}>
               {filteredBooks.map(item => {
-                const isRead = readBooks.includes(item.id);
+                const status = readBooks[item.id] || "none";
+                const isRead = status === "read";
+                const isReading = status === "reading";
+                const showMenu = bookMenu === item.id;
                 return (
-                  <TouchableOpacity key={item.id} onPress={() => {
-                    if (isRead) {
-                      const newBooks = readBooks.filter(b => b !== item.id);
-                      setReadBooks(newBooks);
-                      saveLocalUserData({...currentData(), readBooks: newBooks});
-                      if (currentUser) {
-                        setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newBooks,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-                      }
-                    } else {
-                      const newBooks = [...readBooks, item.id];
-                      setReadBooks(newBooks);
-                      saveLocalUserData({...currentData(), readBooks: newBooks});
-                      if (currentUser) {
-                        setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newBooks,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-                      }
-                    }
-                  }} style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:14, backgroundColor:isRead ? T.accent+"15" : T.card2, borderWidth:1, borderColor:isRead ? T.accent+"40" : T.border }}>
-                    <View style={{ width:32, height:32, borderRadius:16, backgroundColor:isRead ? T.accent : item.uni.color, alignItems:"center", justifyContent:"center", marginRight:12 }}>
-                      {isRead ? <Text style={{ color:AT, fontSize:14, fontWeight:"800" }}>✓</Text> : <Text style={{ color:"#fff", fontSize:10, fontWeight:"800" }}>{item.uni.name.slice(0,2)}</Text>}
-                    </View>
-                    <View style={{ flex:1 }}>
-                      <Text style={{ color:isRead ? T.muted : T.text, fontSize:13, fontWeight:"600", textDecorationLine:isRead?"line-through":"none" }} numberOfLines={2}>{item.book}</Text>
-                      <Text style={{ color:T.sub, fontSize:11 }}>{item.uni.name}</Text>
-                    </View>
-                    <Text style={{ fontSize:20 }}>{isRead ? "📕" : "📗"}</Text>
-                  </TouchableOpacity>
+                  <View key={item.id}>
+                    <TouchableOpacity onPress={() => setBookMenu(showMenu ? null : item.id)} activeOpacity={0.7}>
+                      <View style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:14, backgroundColor:isRead ? T.accent+"15" : isReading ? "#f59e0b15" : T.card2, borderWidth:1, borderColor:isRead ? T.accent+"40" : isReading ? "#f59e0b40" : T.border }}>
+                        {showMenu ? (
+                          <View style={{ flexDirection:"row", flex:1, gap:6 }}>
+                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks}; delete newRead[item.id]; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:10, borderRadius:10, backgroundColor:T.card, borderWidth:1, borderColor:T.border }}>
+                              <Text style={{ color:T.muted, fontSize:12, fontWeight:"700", textAlign:"center" }}>○ Nenhum</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [item.id]: "reading"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:10, borderRadius:10, backgroundColor:"#f59e0b30", borderWidth:1, borderColor:"#f59e0b" }}>
+                              <Text style={{ color:"#f59e0b", fontSize:12, fontWeight:"700", textAlign:"center" }}>📖 Lendo</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [item.id]: "read"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:10, borderRadius:10, backgroundColor:T.accent+"20", borderWidth:1, borderColor:T.accent }}>
+                              <Text style={{ color:T.accent, fontSize:12, fontWeight:"700", textAlign:"center" }}>✓ Lido</Text>
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <View style={{ flexDirection:"row", alignItems:"center", flex:1 }}>
+                            <View style={{ width:32, height:32, borderRadius:16, backgroundColor:item.uni.color, alignItems:"center", justifyContent:"center", marginRight:12 }}>
+                              <Text style={{ color:"#fff", fontSize:10, fontWeight:"800" }}>{item.uni.name.slice(0,2)}</Text>
+                            </View>
+                            <View style={{ flex:1 }}>
+                              <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }} numberOfLines={2}>{item.book}</Text>
+                              <Text style={{ color:T.sub, fontSize:11 }}>{item.uni.name}</Text>
+                            </View>
+                            {isReading && <Text style={{ fontSize:16 }}>📖</Text>}
+                            {isRead && <Text style={{ color:T.accent, fontSize:16 }}>✓</Text>}
+                          </View>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  </View>
                 );
               })}
             </View>
@@ -1581,27 +1586,37 @@ function MainApp() {
               <View>
                 {selUni.books?.slice(0, 8).map((book, i) => {
                   const bookKey = `${selUni.id}-${book}`;
-                  const isRead = readBooks[bookKey] === "read";
-                  const isReading = readBooks[bookKey] === "reading";
                   const status = readBooks[bookKey] || "none";
+                  const isRead = status === "read";
+                  const isReading = status === "reading";
+                  const showMenu = bookMenu === bookKey;
                   return (
-                    <TouchableOpacity key={i} onPress={() => {
-                      const nextStatus = status === "none" ? "reading" : status === "reading" ? "read" : "none";
-                      const newRead = {...readBooks};
-                      if (nextStatus === "none") delete newRead[bookKey];
-                      else newRead[bookKey] = nextStatus;
-                      setReadBooks(newRead);
-                      saveLocalUserData({...currentData(), readBooks: newRead});
-                      if (currentUser) {
-                        setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-                      }
-                    }} style={{ flexDirection:"row", alignItems:"center", paddingVertical:8, borderBottomWidth:i<Math.min(selUni.books.length, 8)-1?1:0, borderColor:T.border }}>
-                      <View style={{ width:24, height:24, borderRadius:12, backgroundColor:isRead ? T.accent : isReading ? "#f59e0b" : T.card2, borderWidth:2, borderColor:isRead ? T.accent : isReading ? "#f59e0b" : T.border, alignItems:"center", justifyContent:"center", marginRight:10 }}>
-                        {isRead && <Text style={{ color:AT, fontSize:12, fontWeight:"800" }}>✓</Text>}
-                        {isReading && <Text style={{ color:"#fff", fontSize:10 }}>📖</Text>}
-                      </View>
-                      <Text style={{ color:isRead?T.muted:T.text, fontSize:12, flex:1, textDecorationLine:isRead?"line-through":"none" }}>{book}</Text>
-                    </TouchableOpacity>
+                    <View key={i}>
+                      <TouchableOpacity onPress={() => setBookMenu(showMenu ? null : bookKey)} activeOpacity={0.7} style={{ paddingVertical:8, paddingHorizontal: isRead || isReading ? 8 : 0, marginHorizontal: isRead || isReading ? -8 : 0, borderRadius: isRead || isReading ? 8 : 0, backgroundColor: isRead ? T.accent+"10" : isReading ? "#f59e0b10" : "transparent", borderBottomWidth:i<Math.min(selUni.books.length, 8)-1?1:0, borderColor:T.border }}>
+                        {showMenu ? (
+                          <View style={{ flexDirection:"row", flex:1, gap:4 }}>
+                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks}; delete newRead[bookKey]; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:6, borderRadius:6, backgroundColor:T.card, borderWidth:1, borderColor:T.border }}>
+                              <Text style={{ color:T.muted, fontSize:10, fontWeight:"700", textAlign:"center" }}>○</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [bookKey]: "reading"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:6, borderRadius:6, backgroundColor:"#f59e0b30", borderWidth:1, borderColor:"#f59e0b" }}>
+                              <Text style={{ color:"#f59e0b", fontSize:10, fontWeight:"700", textAlign:"center" }}>📖</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [bookKey]: "read"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:6, borderRadius:6, backgroundColor:T.accent+"20", borderWidth:1, borderColor:T.accent }}>
+                              <Text style={{ color:T.accent, fontSize:10, fontWeight:"700", textAlign:"center" }}>✓</Text>
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <View style={{ flexDirection:"row", alignItems:"center" }}>
+                            <View style={{ width:24, height:24, borderRadius:12, backgroundColor:isRead ? T.accent : isReading ? "#f59e0b" : T.card2, borderWidth:2, borderColor:isRead ? T.accent : isReading ? "#f59e0b" : T.border, alignItems:"center", justifyContent:"center", marginRight:10 }}>
+                              {isRead && <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>✓</Text>}
+                              {isReading && <Text style={{ color:"#fff", fontSize:10 }}>📖</Text>}
+                              {!isRead && !isReading && <View style={{ width:8, height:8, borderRadius:4, backgroundColor:T.muted }} />}
+                            </View>
+                            <Text style={{ color:T.text, fontSize:12, flex:1 }}>{book}</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    </View>
                   );
                 })}
               </View>
@@ -2146,28 +2161,28 @@ function MainApp() {
 
       <View style={{ ...cd(), padding:15, marginBottom:12 }}>
         <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-          <Text style={lbl}>📚 Livros Lidos</Text>
-          {readBooks.length > 0 && <TouchableOpacity onPress={()=>setShowBooksPage(true)} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
+          <Text style={lbl}>📚 Livros</Text>
+          {Object.keys(readBooks).length > 0 && <TouchableOpacity onPress={()=>setShowBooksPage(true)} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
             <Text style={{ color:T.sub, fontSize:10, fontWeight:"700" }}>Ver todos</Text>
           </TouchableOpacity>}
         </View>
-        {readBooks.length === 0 ? (
+        {Object.keys(readBooks).length === 0 ? (
           <TouchableOpacity onPress={()=>setShowBooksPage(true)} style={{ flexDirection:"row", alignItems:"center", justifyContent:"center", gap:8, paddingVertical:12, backgroundColor:T.card2, borderRadius:12, borderWidth:1, borderColor:T.border }}>
             <Text style={{ color:T.sub, fontSize:12 }}>Adicione livros das universidades que você segue</Text>
           </TouchableOpacity>
         ) : (
-          <View style={{ flexDirection:"row", flexWrap:"wrap", gap:6 }}>
-            {readBooks.slice(0,6).map(bk => {
-              const [uniId, ...bookParts] = bk.split("-");
-              const bookName = bookParts.join("-");
-              const uni = unis.find(u => String(u.id) === uniId);
+          <View style={{ flexDirection:"row", alignItems:"center", gap:8 }}>
+            {(() => {
+              const lendo = Object.values(readBooks).filter(s => s === "reading").length;
+              const lido = Object.values(readBooks).filter(s => s === "read").length;
               return (
-                <View key={bk} style={{ flexDirection:"row", alignItems:"center", gap:6, paddingHorizontal:10, paddingVertical:6, backgroundColor:T.card2, borderRadius:20, borderWidth:1, borderColor:T.border }}>
-                  <Text style={{ fontSize:12 }}>✓</Text>
-                  <Text style={{ color:T.sub, fontSize:11 }} numberOfLines={1}>{bookName.slice(0,15)}{bookName.length>15?"...":""}</Text>
-                </View>
+                <>
+                  {lendo > 0 && <View style={{ flexDirection:"row", alignItems:"center", gap:4, paddingHorizontal:10, paddingVertical:6, backgroundColor:"#f59e0b20", borderRadius:16, borderWidth:1, borderColor:"#f59e0b40" }}><Text style={{ fontSize:11 }}>📖</Text><Text style={{ color:"#f59e0b", fontSize:11, fontWeight:"700" }}>{lendo}</Text></View>}
+                  {lido > 0 && <View style={{ flexDirection:"row", alignItems:"center", gap:4, paddingHorizontal:10, paddingVertical:6, backgroundColor:T.accent+"20", borderRadius:16, borderWidth:1, borderColor:T.accent+"40" }}><Text style={{ fontSize:11 }}>✓</Text><Text style={{ color:T.accent, fontSize:11, fontWeight:"700" }}>{lido}</Text></View>}
+                  {lendo === 0 && lido === 0 && <Text style={{ color:T.sub, fontSize:12 }}>Adicione livros das universidades que você segue</Text>}
+                </>
               );
-            })}
+            })()}
           </View>
         )}
       </View>
@@ -2196,7 +2211,7 @@ function MainApp() {
                  { id: `${goal.id}-inscricao`, text: "Fazer inscrição", type: "inscricao" },
                  { id: `${goal.id}-taxa`, text: "Pagar taxa de inscrição", type: "taxa" },
                ];
-               const completedCount = goalTodos.filter(t => t.type === "book" ? readBooks.includes(t.bookKey) : completedTodos[t.id]).length;
+               const completedCount = goalTodos.filter(t => t.type === "book" ? readBooks[t.bookKey] === "read" : completedTodos[t.id]).length;
                
                return (
                  <View key={goal.id} style={{ marginBottom:10 }}>
@@ -2214,43 +2229,52 @@ function MainApp() {
                        </View>
                      )}
                    </TouchableOpacity>
-                   <View style={{ backgroundColor:T.card, borderRadius:8, marginTop:6, padding:8, borderWidth:1, borderColor:T.border }}>
-                     {goalTodos.map(todo => {
-                       const isCompleted = todo.type === "book" ? readBooks.includes(todo.bookKey) : completedTodos[todo.id];
-                       return (
-                         <TouchableOpacity key={todo.id} onPress={() => {
-                           if (todo.type === "book") {
-                             if (isCompleted) {
-                               const newBooks = readBooks.filter(b => b !== todo.bookKey);
-                               setReadBooks(newBooks);
-                               saveLocalUserData({...currentData(), readBooks: newBooks});
-                               if (currentUser) {
-                                 setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newBooks,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-                               }
-                             } else {
-                               const newBooks = [...readBooks, todo.bookKey];
-                               setReadBooks(newBooks);
-                               saveLocalUserData({...currentData(), readBooks: newBooks});
-                               if (currentUser) {
-                                 setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newBooks,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-                               }
-                             }
-                           } else {
-                             const newCompleted = {...completedTodos, [todo.id]: !isCompleted};
-                             setCompletedTodos(newCompleted);
-                             saveLocalUserData({...currentData(), goalsUnis, completedTodos: newCompleted});
-                             if (currentUser) {
-                               setDoc(doc(db,"usuarios",currentUser.uid),{completedTodos:newCompleted,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-                             }
-                           }
-                         }} style={{ flexDirection:"row", alignItems:"center", gap:8, paddingVertical:6 }}>
-                           <View style={{ width:20, height:20, borderRadius:10, backgroundColor:isCompleted?T.accent:T.card2, borderWidth:2, borderColor:isCompleted?T.accent:T.border, alignItems:"center", justifyContent:"center" }}>
-                             {isCompleted && <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>✓</Text>}
-                           </View>
-                           <Text style={{ color:isCompleted?T.muted:T.text, fontSize:11, textDecorationLine:isCompleted?"line-through":"none", flex:1 }}>{todo.type === "book" ? "📚" : todo.type === "inscricao" ? "📝" : "💳"} {todo.text}</Text>
-                         </TouchableOpacity>
-                      );
-                    })}
+<View style={{ backgroundColor:T.card, borderRadius:8, marginTop:6, padding:8, borderWidth:1, borderColor:T.border }}>
+                      {goalTodos.map(todo => {
+                        const status = todo.type === "book" ? readBooks[todo.bookKey] || "none" : "none";
+                        const isCompleted = todo.type === "book" ? status === "read" : completedTodos[todo.id];
+                        const isReading = todo.type === "book" && status === "reading";
+                        const showMenu = todo.type === "book" && bookMenu === todo.bookKey;
+                        return (
+                          <View key={todo.id}>
+                            <TouchableOpacity onPress={() => {
+                              if (todo.type === "book") {
+                                setBookMenu(showMenu ? null : todo.bookKey);
+                              } else {
+                                const newCompleted = {...completedTodos, [todo.id]: !completedTodos[todo.id]};
+                                setCompletedTodos(newCompleted);
+                                saveLocalUserData({...currentData(), goalsUnis, completedTodos: newCompleted});
+                                if (currentUser) {
+                                  setDoc(doc(db,"usuarios",currentUser.uid),{completedTodos:newCompleted,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
+                                }
+                              }
+                            }} activeOpacity={0.7} style={{ paddingVertical:6 }}>
+                              {showMenu ? (
+                                <View style={{ flexDirection:"row", gap:4 }}>
+                                  <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks}; delete newRead[todo.bookKey]; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:4, borderRadius:6, backgroundColor:T.card, borderWidth:1, borderColor:T.border }}>
+                                    <Text style={{ color:T.muted, fontSize:9, fontWeight:"700", textAlign:"center" }}>○</Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [todo.bookKey]: "reading"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:4, borderRadius:6, backgroundColor:"#f59e0b30", borderWidth:1, borderColor:"#f59e0b" }}>
+                                    <Text style={{ color:"#f59e0b", fontSize:9, fontWeight:"700", textAlign:"center" }}>📖</Text>
+                                  </TouchableOpacity>
+                                  <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [todo.bookKey]: "read"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:4, borderRadius:6, backgroundColor:T.accent+"20", borderWidth:1, borderColor:T.accent }}>
+                                    <Text style={{ color:T.accent, fontSize:9, fontWeight:"700", textAlign:"center" }}>✓</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              ) : (
+                                <View style={{ flexDirection:"row", alignItems:"center", gap:8 }}>
+                                  <View style={{ width:20, height:20, borderRadius:10, backgroundColor:isCompleted ? T.accent : isReading ? "#f59e0b" : T.card2, borderWidth:2, borderColor:isCompleted ? T.accent : isReading ? "#f59e0b" : T.border, alignItems:"center", justifyContent:"center" }}>
+                                    {isCompleted && <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>✓</Text>}
+                                    {isReading && <Text style={{ color:"#fff", fontSize:8 }}>📖</Text>}
+                                    {!isCompleted && !isReading && <View style={{ width:6, height:6, borderRadius:3, backgroundColor:T.muted }} />}
+                                  </View>
+                                  <Text style={{ color:T.text, fontSize:11, flex:1 }}>{todo.type === "book" ? "📚" : todo.type === "inscricao" ? "📝" : "💳"} {todo.text}</Text>
+                                </View>
+                              )}
+                            </TouchableOpacity>
+                          </View>
+                        );
+                      })}
                     <View style={{ flexDirection:"row", justifyContent:"space-between", marginTop:4, paddingTop:6, borderTopWidth:1, borderTopColor:T.border }}>
                       <Text style={{ color:T.sub, fontSize:10 }}>{completedCount}/{goalTodos.length} tarefas</Text>
                       <Text style={{ color:T.accent, fontSize:10, fontWeight:"700" }}>{Math.round(completedCount/goalTodos.length*100)}%</Text>
