@@ -1082,7 +1082,7 @@ function MainApp() {
               </View>
             ))}
           </View>
-          <TouchableOpacity onPress={() => { Animated.spring(loginBtnScale, { toValue: 0.9, useNativeDriver: true }).start(); setTimeout(() => { Animated.spring(loginBtnScale, { toValue: 1, useNativeDriver: true }).start(); setShowLogin(true); }, 100); }} activeOpacity={0.9}>
+<TouchableOpacity onPress={() => { Animated.spring(loginBtnScale, { toValue: 0.9, useNativeDriver: true }).start(); setTimeout(() => { Animated.spring(loginBtnScale, { toValue: 1, useNativeDriver: true }).start(); setLoginMode("login"); setShowLogin(true); }, 100); }} activeOpacity={0.9}>
             <Animated.View style={{ padding:16, borderRadius:18, backgroundColor:T.accent, alignItems:"center", transform: [{ scale: loginBtnScale }], shadowColor:T.accent, shadowOffset:{width:0,height:4}, shadowOpacity:0.3, shadowRadius:8 }}>
               <Text style={{ color:AT, fontSize:16, fontWeight:"800" }}>Entrar ou criar conta</Text>
             </Animated.View>
@@ -1104,8 +1104,8 @@ function MainApp() {
                           LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                           if(m==="login"){setAuthConfirmPassword("");setAuthBirthdate("");setAuthAcceptTerms(false);}
                           setLoginMode(m); 
-                        }} activeOpacity={0.8} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:loginMode===m?T.card2:T.accent, alignItems:"center" }}>
-                          <Text style={{ color:loginMode===m?T.sub:AT, fontWeight:"700", fontSize:13 }}>{l}</Text>
+                        }} activeOpacity={0.8} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:loginMode===m?T.accent:T.card2, alignItems:"center" }}>
+                          <Text style={{ color:loginMode===m?AT:T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -1951,7 +1951,7 @@ Data da última atualização: ${new Date().toLocaleDateString("pt-BR")}`}</Text
           </TouchableOpacity>
         ))}
       </View>
-      <TouchableOpacity onPress={() => { Animated.spring(loginBtnScale, { toValue: 0.9, useNativeDriver: true }).start(); setTimeout(() => { Animated.spring(loginBtnScale, { toValue: 1, useNativeDriver: true }).start(); setShowLogin(true); }, 100); }} activeOpacity={0.9}>
+      <TouchableOpacity onPress={() => { Animated.spring(loginBtnScale, { toValue: 0.9, useNativeDriver: true }).start(); setTimeout(() => { Animated.spring(loginBtnScale, { toValue: 1, useNativeDriver: true }).start(); setLoginMode("login"); setShowLogin(true); }, 100); }} activeOpacity={0.9}>
         <Animated.View style={{ padding:16, borderRadius:18, backgroundColor:T.accent, alignItems:"center", transform: [{ scale: loginBtnScale }], shadowColor:T.accent, shadowOffset:{width:0,height:4}, shadowOpacity:0.3, shadowRadius:8 }}>
           <Text style={{ color:AT, fontSize:16, fontWeight:"800" }}>Entrar ou criar conta</Text>
         </Animated.View>
