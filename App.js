@@ -1177,6 +1177,7 @@ function MainApp() {
               </View>
             </View>
           </KeyboardAvoidingView>
+        </View>
         </Modal>
         <Modal visible={showTerms} transparent animationType="slide" onRequestClose={()=>setShowTerms(false)}>
           <View style={{ flex:1, backgroundColor:"rgba(0,0,0,0.5)", justifyContent:"center", padding:20 }}>
