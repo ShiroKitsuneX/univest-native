@@ -1138,7 +1138,7 @@ function MainApp() {
                           </View>
                           <Text style={{ color:T.sub, fontSize:12, flex:1 }}>Li e aceito os </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={()=>setShowTerms(true)}><Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline", marginBottom:16 }}>Termos e Condições</Text></TouchableOpacity>
+                        <TouchableOpacity onPress={()=>setShowTerms(true)} activeOpacity={0.7}><Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline", marginBottom:16 }}>Termos e Condições</Text></TouchableOpacity>
                       </>
                     )}
                     {!!authError && <Text style={{ color:"#f87171", fontSize:12, marginBottom:8, textAlign:"center" }}>{authError}</Text>}
