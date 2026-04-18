@@ -1106,8 +1106,8 @@ function MainApp() {
                           LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                           if(m==="login"){setAuthConfirmPassword("");setAuthBirthdate("");setAuthAcceptTerms(false);}
                           setLoginMode(m); 
-                        }} activeOpacity={0.8} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:isSelected?"#00E5A0":T.card2, alignItems:"center" }}>
-                          <Text style={{ color:isSelected?"#000":T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
+                        }} activeOpacity={0.8} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:isSelected?T.accent:T.card2, alignItems:"center", shadowColor:isSelected?T.accent:"transparent", shadowOffset:{width:0,height:4}, shadowOpacity:isSelected?0.3:0, shadowRadius:8 }}>
+                          <Text style={{ color:isSelected?AT:T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
                         </TouchableOpacity>
                       );})}
                     </View>
