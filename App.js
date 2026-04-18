@@ -1091,7 +1091,7 @@ function MainApp() {
 
         <Modal visible={showLogin} transparent animationType="slide" animationDuration={200} onRequestClose={()=>setShowLogin(false)}>
           <KeyboardAvoidingView behavior={Platform.OS==="ios"?"padding":"height"} style={{ flex:1 }}>
-            <ScrollView contentContainerStyle={{ flexGrow:1, justifyContent:"center", backgroundColor:T.bg, padding:20, paddingTop:insets.top+20, paddingBottom:insets.bottom+20 }} keyboardShouldPersistTaps="handled">
+            <ScrollView contentContainerStyle={{ flexGrow:1, justifyContent:"center", backgroundColor:T.bg, padding:20, paddingTop:insets.top+20, paddingBottom:insets.bottom+20 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <View style={{ backgroundColor:T.card, borderRadius:20, padding:24, width:"100%", maxWidth:360, alignSelf:"center" }}>
                 <Text style={{ fontSize:44, textAlign:"center", marginBottom:8 }}>🎓</Text>
                 <Text style={{ color:T.text, fontSize:22, fontWeight:"800", textAlign:"center", marginBottom:20 }}>UniVest</Text>
@@ -1138,7 +1138,7 @@ function MainApp() {
                           </View>
                           <Text style={{ color:T.sub, fontSize:12, flex:1 }}>Li e aceito os </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={()=>setShowTerms(true)} activeOpacity={0.7}><Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline", marginBottom:16 }}>Termos e Condições</Text></TouchableOpacity>
+                        <Pressable onPress={()=>setShowTerms(true)}><Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline", marginBottom:16 }}>Termos e Condições</Text></Pressable>
                       </>
                     )}
                     {!!authError && <Text style={{ color:"#f87171", fontSize:12, marginBottom:8, textAlign:"center" }}>{authError}</Text>}
@@ -1209,10 +1209,10 @@ Para dúvidas sobre estes termos, entre em contato pelo aplicativo.
 
 Data da última atualização: ${new Date().toLocaleDateString("pt-BR")}`}</Text>
               </ScrollView>
-              <TouchableOpacity onPress={()=>{setShowTerms(false);setAuthAcceptTerms(true);}} style={{ padding:14, borderRadius:14, backgroundColor:T.accent, alignItems:"center" }}>
+              <TouchableOpacity onPress={()=>{setShowTerms(false);setAuthAcceptTerms(true);setShowLogin(true);}} style={{ padding:14, borderRadius:14, backgroundColor:T.accent, alignItems:"center" }}>
                 <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Aceitar</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={()=>{setShowTerms(false);setAuthAcceptTerms(false);}} style={{ padding:14, alignItems:"center", marginTop:8 }}>
+              <TouchableOpacity onPress={()=>{setShowTerms(false);setAuthAcceptTerms(false);setShowLogin(true);}} style={{ padding:14, alignItems:"center", marginTop:8 }}>
                 <Text style={{ color:T.sub, fontSize:13 }}>Recusar</Text>
               </TouchableOpacity>
             </View>
