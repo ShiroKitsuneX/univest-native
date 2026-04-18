@@ -543,6 +543,7 @@ function MainApp() {
   const [forgotMode, setForgotMode] = useState(false);
   const [passwordSent, setPasswordSent] = useState(false);
   const [showLoginPwd, setShowLoginPwd] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [userData, setUserData] = useState(null);
 
   const [step, setStep] = useState(0);
@@ -1130,13 +1131,14 @@ function MainApp() {
                           <TextInput value={authConfirmPassword} onChangeText={setAuthConfirmPassword} placeholder="••••••••" placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
                         </View>
                         <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Data de Nascimento</Text>
-                        <TextInput value={authBirthdate} onChangeText={setAuthBirthdate} placeholder="DD/MM/AAAA" placeholderTextColor={T.muted} keyboardType="numeric" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:16 }} />
-                        <TouchableOpacity onPress={()=>setAuthAcceptTerms(!authAcceptTerms)} style={{ flexDirection:"row", alignItems:"center", marginBottom:16 }}>
+                        <TextInput value={authBirthdate} onChangeText={(text)=>{let t=text.replace(/\D/g,"").slice(0,8);if(t.length>4)t=t.slice(0,2)+"/"+t.slice(2,4)+"/"+t.slice(4);else if(t.length>2)t=t.slice(0,2)+"/"+t.slice(2);setAuthBirthdate(t);}} placeholder="DD/MM/AAAA" placeholderTextColor={T.muted} keyboardType="numeric" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:16 }} />
+                        <TouchableOpacity onPress={()=>setAuthAcceptTerms(!authAcceptTerms)} style={{ flexDirection:"row", alignItems:"center", marginBottom:4 }}>
                           <View style={{ width:22, height:22, borderRadius:6, backgroundColor:authAcceptTerms?T.accent:T.inp, borderWidth:1, borderColor:authAcceptTerms?T.accent:T.border, alignItems:"center", justifyContent:"center", marginRight:10 }}>
                             {authAcceptTerms && <Text style={{ color:AT, fontSize:14, fontWeight:"700" }}>✓</Text>}
                           </View>
-                          <Text style={{ color:T.sub, fontSize:12, flex:1 }}>Aceito os <Text style={{ color:T.accent, textDecorationLine:"underline" }}>Termos e Condições</Text></Text>
+                          <Text style={{ color:T.sub, fontSize:12, flex:1 }}>Li e aceito os </Text>
                         </TouchableOpacity>
+                        <TouchableOpacity onPress={()=>setShowTerms(true)}><Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline", marginBottom:16 }}>Termos e Condições</Text></TouchableOpacity>
                       </>
                     )}
                     {!!authError && <Text style={{ color:"#f87171", fontSize:12, marginBottom:8, textAlign:"center" }}>{authError}</Text>}
@@ -1174,6 +1176,47 @@ function MainApp() {
               </View>
             </ScrollView>
           </KeyboardAvoidingView>
+        </Modal>
+        <Modal visible={showTerms} transparent animationType="slide" onRequestClose={()=>setShowTerms(false)}>
+          <View style={{ flex:1, backgroundColor:"rgba(0,0,0,0.5)", justifyContent:"center", padding:20 }}>
+            <View style={{ backgroundColor:T.card, borderRadius:20, padding:24, maxHeight:"80%" }}>
+              <Text style={{ color:T.text, fontSize:20, fontWeight:"800", textAlign:"center", marginBottom:16 }}>Termos e Condições</Text>
+              <ScrollView style={{ marginBottom:16 }}>
+                <Text style={{ color:T.sub, fontSize:13, lineHeight:22 }}>{`TERMOS E CONDIÇÕES DE USO DO UNIVEST
+
+Bienvenido ao UniVest! Estes Termos e Condições regem o uso do aplicativo UniVest e todos os serviços relacionados.
+
+1. Aceitação dos Termos
+Ao usar o UniVest, você concorda em estar vinculados a estes termos. Se você não concordar com qualquer parte destes termos, não use nosso aplicativo.
+
+2. Uso do Aplicativo
+O UniVest é fornecido para ajudá-lo na preparação para vestibulares, ENEM e outros exames brasileiros. Você concorda em usar o aplicativo de acordo com todas as leis e regulamentos aplicáveis.
+
+3. Privacidade
+Seus dados pessoais, incluindo nome, e-mail, data de nascimento e informações de progresso, serão armazenados de forma segura e usados apenas para melhorar sua experiência no aplicativo.
+
+4. Conteúdo do Usuário
+Você é responsável por qualquer conteúdo que publicar no aplicativo e garante que tem o direito de postar tal conteúdo.
+
+5. Limitação de Responsabilidade
+O UniVest não garante a aprovação em qualquer exame ou vestibular. O conteúdo fornecido é para fins educacionais e informativos.
+
+6. Modificações
+Reservamo-nos o direito de modificar estes termos a qualquer momento. O uso continuado do aplicativo após alterações constitui aceitação dos novos termos.
+
+7. Contato
+Para dúvidas sobre estes termos, entre em contato pelo aplicativo.
+
+Data da última atualização: ${new Date().toLocaleDateString("pt-BR")}`}</Text>
+              </ScrollView>
+              <TouchableOpacity onPress={()=>{setShowTerms(false);setAuthAcceptTerms(true);}} style={{ padding:14, borderRadius:14, backgroundColor:T.accent, alignItems:"center" }}>
+                <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Aceitar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={()=>{setShowTerms(false);setAuthAcceptTerms(false);}} style={{ padding:14, alignItems:"center", marginTop:8 }}>
+                <Text style={{ color:T.sub, fontSize:13 }}>Recusar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </Modal>
       </View>
     );
