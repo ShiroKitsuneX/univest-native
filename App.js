@@ -1099,15 +1099,17 @@ function MainApp() {
                 {!forgotMode && !passwordSent && (
                   <>
                     <View style={{ flexDirection:"row", gap:8, marginBottom:20 }}>
-                      {[["login","Entrar"],["signup","Criar conta"]].map(([m,l])=>(
+                      {[["login","Entrar"],["signup","Criar conta"]].map(([m,l])=>{
+                        const isSelected = loginMode === m;
+                        return (
                         <TouchableOpacity key={m} onPress={() => { 
                           LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                           if(m==="login"){setAuthConfirmPassword("");setAuthBirthdate("");setAuthAcceptTerms(false);}
                           setLoginMode(m); 
-                        }} activeOpacity={0.8} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:loginMode===m?T.accent:T.card2, alignItems:"center" }}>
-                          <Text style={{ color:loginMode===m?AT:T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
+                        }} activeOpacity={0.8} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:isSelected?"#00E5A0":T.card2, alignItems:"center" }}>
+                          <Text style={{ color:isSelected?"#000":T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
                         </TouchableOpacity>
-                      ))}
+                      );})}
                     </View>
                     <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>E-mail</Text>
                     <TextInput value={authEmail} onChangeText={setAuthEmail} placeholder="seu@email.com" placeholderTextColor={T.muted} autoCapitalize="none" keyboardType="email-address" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:16 }} />
