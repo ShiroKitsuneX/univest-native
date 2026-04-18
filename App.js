@@ -1103,10 +1103,8 @@ function MainApp() {
                         const isSelected = loginMode === m;
                         return (
                         <TouchableOpacity key={m} onPress={() => { 
-                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                          if(m==="login"){setAuthConfirmPassword("");setAuthBirthdate("");setAuthAcceptTerms(false);}
                           setLoginMode(m); 
-                        }} activeOpacity={0.8} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:isSelected?T.accent:T.card2, alignItems:"center", shadowColor:isSelected?T.accent:"transparent", shadowOffset:{width:0,height:4}, shadowOpacity:isSelected?0.3:0, shadowRadius:8 }}>
+                        }} activeOpacity={0.85} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:isSelected?T.accent:T.card2, alignItems:"center" }}>
                           <Text style={{ color:isSelected?AT:T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
                         </TouchableOpacity>
                       );})}
