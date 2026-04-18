@@ -1103,6 +1103,7 @@ function MainApp() {
                         const isSelected = loginMode === m;
                         return (
                         <TouchableOpacity key={m} onPress={() => { 
+                          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                           setLoginMode(m); 
                         }} activeOpacity={0.85} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:isSelected?T.accent:T.card2, alignItems:"center" }}>
                           <Text style={{ color:isSelected?AT:T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
