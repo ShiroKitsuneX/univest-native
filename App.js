@@ -1090,9 +1090,10 @@ function MainApp() {
         </ScrollView>
 
         <Modal visible={showLogin} transparent animationType="slide" animationDuration={200} onRequestClose={()=>setShowLogin(false)}>
-          <KeyboardAvoidingView behavior={Platform.OS==="ios"?"padding":"height"} style={{ flex:1 }}>
-            <ScrollView contentContainerStyle={{ flexGrow:1, justifyContent:"center", backgroundColor:T.bg, padding:20, paddingTop:insets.top+20, paddingBottom:insets.bottom+20 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <View style={{ backgroundColor:T.card, borderRadius:20, padding:24, width:"100%", maxWidth:360, alignSelf:"center" }}>
+          <View style={{ flex:1, backgroundColor:T.bg }}>
+            <KeyboardAvoidingView behavior={Platform.OS==="ios"?"padding":"height"} style={{ flex:1 }}>
+              <View style={{ flex:1, justifyContent:"center", padding:20, paddingTop:insets.top+20, paddingBottom:insets.bottom+20 }}>
+                <View style={{ backgroundColor:T.card, borderRadius:20, padding:24, width:"100%", maxWidth:360, alignSelf:"center" }}>
                 <Text style={{ fontSize:44, textAlign:"center", marginBottom:8 }}>🎓</Text>
                 <Text style={{ color:T.text, fontSize:22, fontWeight:"800", textAlign:"center", marginBottom:20 }}>UniVest</Text>
                 {!forgotMode && !passwordSent && (
@@ -1174,7 +1175,7 @@ function MainApp() {
                   <Text style={{ color:T.muted, fontSize:13 }}>Fechar</Text>
                 </TouchableOpacity>
               </View>
-            </ScrollView>
+            </View>
           </KeyboardAvoidingView>
         </Modal>
         <Modal visible={showTerms} transparent animationType="slide" onRequestClose={()=>setShowTerms(false)}>
