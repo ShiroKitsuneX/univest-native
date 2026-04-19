@@ -1,0 +1,244 @@
+import { useRef, useState } from "react";
+import {
+  View, Text, TextInput, TouchableOpacity, ScrollView,
+  Modal, Appearance, Platform, StatusBar, KeyboardAvoidingView,
+  Animated, LayoutAnimation,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DK, LT } from "../../theme/palette";
+import { validatePassword } from "../../utils/validation";
+import { signIn, signUp, resetPassword, getAuthErrorMessage } from "../../services/auth";
+import { useProfileStore } from "../../stores/profileStore";
+import { useCoursesStore } from "../../stores/coursesStore";
+
+const INITIAL_TOUCHED = { email:false, nome:false, sobrenome:false, senha:false, confirmarSenha:false, nascimento:false };
+
+export function WelcomeScreen() {
+  const insets = useSafeAreaInsets();
+  const colorScheme = Appearance.getColorScheme();
+  const theme = useProfileStore(s => s.theme);
+  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
+  const T = isDark ? DK : LT;
+  const AT = isDark ? "#000" : "#fff";
+  const getIcon = (id, fallback) => useCoursesStore.getState().getIcon(id, fallback);
+
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginMode, setLoginMode] = useState("login");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
+  const [authBirthdate, setAuthBirthdate] = useState("");
+  const [authAcceptTerms, setAuthAcceptTerms] = useState(false);
+  const [authName, setAuthName] = useState("");
+  const [authSobrenome, setAuthSobrenome] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [passwordSent, setPasswordSent] = useState(false);
+  const [showLoginPwd, setShowLoginPwd] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [authTouched, setAuthTouched] = useState(INITIAL_TOUCHED);
+
+  const loginBtnScale = useRef(new Animated.Value(1)).current;
+
+  const handleLogin = async () => {
+    if (!authEmail || !authPassword) { setAuthError("Preencha e-mail e senha"); return; }
+    setAuthSubmitting(true); setAuthError("");
+    try { await signIn(authEmail, authPassword); setShowLogin(false); setAuthEmail(""); setAuthPassword(""); }
+    catch (err) { setAuthError(getAuthErrorMessage(err, "login")); }
+    setAuthSubmitting(false);
+  };
+
+  const handleSignup = async () => {
+    setAuthTouched({ email:true, nome:true, sobrenome:true, senha:true, confirmarSenha:true, nascimento:true });
+    const pwdErr = validatePassword(authPassword);
+    if (!authEmail || !authPassword || !authName.trim() || !authSobrenome.trim() || pwdErr || authPassword !== authConfirmPassword || !authBirthdate.trim() || !authAcceptTerms) return;
+    setAuthSubmitting(true); setAuthError("");
+    try {
+      await signUp({ email: authEmail, password: authPassword, nome: authName, sobrenome: authSobrenome, dataNascimento: authBirthdate });
+      setAuthEmail(""); setAuthPassword(""); setAuthName(""); setAuthSobrenome(""); setAuthConfirmPassword(""); setAuthBirthdate(""); setAuthAcceptTerms(false);
+      setAuthTouched(INITIAL_TOUCHED);
+    } catch (err) { setAuthError(getAuthErrorMessage(err, "signup")); }
+    setAuthSubmitting(false);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!authEmail) { setAuthError("Preencha seu e-mail"); return; }
+    setAuthSubmitting(true); setAuthError("");
+    try { await resetPassword(authEmail); setPasswordSent(true); }
+    catch (err) { setAuthError(err.code === "auth/user-not-found" ? "E-mail não cadastrado" : "Erro ao enviar e-mail."); }
+    setAuthSubmitting(false);
+  };
+
+  return (
+    <View style={{ flex:1, backgroundColor:T.bg }}>
+      <StatusBar barStyle={isDark?"light-content":"dark-content"} />
+      <ScrollView contentContainerStyle={{ flexGrow:1, justifyContent:"center", padding:28, paddingTop:insets.top+28, paddingBottom:insets.bottom+28 }}>
+        <Text style={{ fontSize:64, textAlign:"center", marginBottom:14 }}>🎓</Text>
+        <Text style={{ fontSize:34, fontWeight:"800", color:T.text, textAlign:"center", marginBottom:8 }}>Uni<Text style={{ color:T.accent }}>Vest</Text></Text>
+        <Text style={{ color:T.sub, fontSize:14, textAlign:"center", lineHeight:24, marginBottom:32 }}>Seu portal inteligente para toda a jornada acadêmica</Text>
+        <View style={{ gap:10, marginBottom:32 }}>
+          {[["vestibular","🎯","Vestibulares & ENEM","#e11d48"],["graduacao","🎓","Graduação & Pós-graduação","#7c3aed"],["mestrado","🔬","Mestrado & Doutorado","#2563eb"],["tecnico","📚","Ensino Médio & Técnico","#059669"],["cursos","📖","Cursos e outros","#f59e0b"]].map(([id,ic,l,cor])=>(
+            <View key={id} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card, borderRadius:16, padding:14, borderWidth:1, borderColor:T.border, gap:14 }}>
+              <View style={{ width:44, height:44, borderRadius:22, backgroundColor:cor+"22", alignItems:"center", justifyContent:"center" }}>
+                <Text style={{ fontSize:22 }}>{getIcon(id,ic)}</Text>
+              </View>
+              <Text style={{ color:T.text, fontSize:14, fontWeight:"600", flex:1 }}>{l}</Text>
+            </View>
+          ))}
+        </View>
+        <TouchableOpacity onPress={() => { Animated.spring(loginBtnScale, { toValue: 0.9, useNativeDriver: true }).start(); setTimeout(() => { Animated.spring(loginBtnScale, { toValue: 1, useNativeDriver: true }).start(); setLoginMode("login"); setShowLogin(true); setAuthTouched(INITIAL_TOUCHED); }, 100); }} activeOpacity={0.9}>
+          <Animated.View style={{ padding:16, borderRadius:18, backgroundColor:T.accent, alignItems:"center", transform: [{ scale: loginBtnScale }], shadowColor:T.accent, shadowOffset:{width:0,height:4}, shadowOpacity:0.3, shadowRadius:8 }}>
+            <Text style={{ color:AT, fontSize:16, fontWeight:"800" }}>Entrar ou criar conta</Text>
+          </Animated.View>
+        </TouchableOpacity>
+      </ScrollView>
+
+      <Modal visible={showLogin} transparent animationType="slide" animationDuration={200} onRequestClose={()=>setShowLogin(false)}>
+        <View style={{ flex:1, backgroundColor:T.bg }}>
+          <KeyboardAvoidingView behavior={Platform.OS==="ios"?"padding":"height"} style={{ flex:1 }}>
+            <View style={{ flex:1, justifyContent:"center", padding:20, paddingTop:insets.top+20, paddingBottom:insets.bottom+20 }}>
+              <View style={{ backgroundColor:T.card, borderRadius:20, padding:24, width:"100%", maxWidth:360, alignSelf:"center" }}>
+                <Text style={{ fontSize:44, textAlign:"center", marginBottom:8 }}>🎓</Text>
+                <Text style={{ color:T.text, fontSize:22, fontWeight:"800", textAlign:"center", marginBottom:20 }}>UniVest</Text>
+                {!forgotMode && !passwordSent && (
+                  <>
+                    <View style={{ flexDirection:"row", gap:8, marginBottom:20 }}>
+                      {[["login","Entrar"],["signup","Criar conta"]].map(([m,l])=>{
+                        const isSelected = loginMode === m;
+                        return (
+                          <TouchableOpacity key={m} onPress={() => {
+                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                            setLoginMode(m);
+                            setAuthTouched(INITIAL_TOUCHED);
+                          }} activeOpacity={0.85} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:isSelected?T.accent:T.card2, alignItems:"center" }}>
+                            <Text style={{ color:isSelected?AT:T.sub, fontWeight:"700", fontSize:13 }}>{l}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                    <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>E-mail</Text>
+                    <TextInput value={authEmail} onChangeText={(t)=>{setAuthEmail(t);setAuthTouched(p=>({...p,email:true}));}} placeholder="seu@email.com" placeholderTextColor={T.muted} autoCapitalize="none" keyboardType="email-address" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:authTouched.email&&!authEmail?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:16 }} />
+                    {loginMode==="signup" && (
+                      <Animated.View style={{ overflow: "hidden", marginBottom: 16 }}>
+                        <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Nome</Text>
+                        <View style={{ flexDirection:"row", gap:12 }}>
+                          <TextInput value={authName} onChangeText={(t)=>{setAuthName(t);setAuthTouched(p=>({...p,nome:true}));}} placeholder="Nome" placeholderTextColor={T.muted} autoCapitalize="words" style={{ flex:1, padding:12, borderRadius:12, borderWidth:1, borderColor:authTouched.nome&&!authName.trim()?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+                          <TextInput value={authSobrenome} onChangeText={(t)=>{setAuthSobrenome(t);setAuthTouched(p=>({...p,sobrenome:true}));}} placeholder="Sobrenome" placeholderTextColor={T.muted} autoCapitalize="words" style={{ flex:1, padding:12, borderRadius:12, borderWidth:1, borderColor:authTouched.sobrenome&&!authSobrenome.trim()?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+                        </View>
+                      </Animated.View>
+                    )}
+                    <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Senha</Text>
+                    <View style={{ marginBottom:8 }}>
+                      <TextInput value={authPassword} onChangeText={(t)=>{setAuthPassword(t);setAuthTouched(p=>({...p,senha:true}));}} placeholder={loginMode==="signup"?"Mínimo 8 caracteres":"••••••••"} placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} maxLength={64} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:loginMode==="signup"&&authTouched.senha&&validatePassword(authPassword)?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+                      <TouchableOpacity onPress={()=>setShowLoginPwd(!showLoginPwd)} style={{ position:"absolute", right:12, top:12 }}><Text style={{ fontSize:16 }}>{showLoginPwd?"👁️‍🗨️":"👁️"}</Text></TouchableOpacity>
+                    </View>
+                    {loginMode==="signup" && authTouched.senha && validatePassword(authPassword) && (
+                      <Text style={{ color:"#f87171", fontSize:11, marginBottom:4 }}>{validatePassword(authPassword)}</Text>
+                    )}
+                    {loginMode==="signup" && (
+                      <>
+                        <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Confirmar Senha</Text>
+                        <View style={{ marginBottom:8 }}>
+                          <TextInput value={authConfirmPassword} onChangeText={(t)=>{setAuthConfirmPassword(t);setAuthTouched(p=>({...p,confirmarSenha:true}));}} placeholder="••••••••" placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} maxLength={64} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:authTouched.confirmarSenha&&(authConfirmPassword!==authPassword||validatePassword(authPassword))?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+                          <TouchableOpacity onPress={()=>setShowLoginPwd(!showLoginPwd)} style={{ position:"absolute", right:12, top:12 }}><Text style={{ fontSize:16 }}>{showLoginPwd?"👁️‍🗨️":"👁️"}</Text></TouchableOpacity>
+                        </View>
+                        {loginMode==="signup" && authTouched.confirmarSenha && authConfirmPassword!==authPassword && (
+                          <Text style={{ color:"#f87171", fontSize:11, marginBottom:12 }}>As senhas não coincidem</Text>
+                        )}
+                        <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Data de Nascimento</Text>
+                        <TextInput value={authBirthdate} onChangeText={(text)=>{let t=text.replace(/\D/g,"").slice(0,10);if(t.length>4){if(t.length>4&&t.length<=6)t=t.slice(0,2)+"/"+t.slice(2,4)+"/"+t.slice(4);else if(t.length>6)t=t.slice(0,2)+"/"+t.slice(2,4)+"/"+t.slice(4,8);}else if(t.length>2)t=t.slice(0,2)+"/"+t.slice(2);setAuthBirthdate(t);const d=parseInt(t.slice(0,2))||0,m=parseInt(t.slice(3,5))||0,y=parseInt(t.slice(6,10))||0;const invalid=!t||d<1||d>31||m<1||m>12||y<1900||y>2100;setAuthTouched(p=>({...p,nascimento:invalid}));}} placeholder="DD/MM/AAAA" placeholderTextColor={T.muted} keyboardType="numeric" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:authTouched.nascimento?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:4 }} />
+                        {authTouched.nascimento && <Text style={{ color:"#f87171", fontSize:11, marginBottom:12 }}>Data inválida (DD/MM/AAAA)</Text>}
+                        <TouchableOpacity onPress={()=>setAuthAcceptTerms(!authAcceptTerms)} style={{ flexDirection:"row", alignItems:"center", marginBottom:16 }}>
+                          <View style={{ width:22, height:22, borderRadius:6, backgroundColor:authAcceptTerms?T.accent:T.inp, borderWidth:1, borderColor:authAcceptTerms?T.accent:T.border, alignItems:"center", justifyContent:"center", marginRight:10 }}>
+                            {authAcceptTerms && <Text style={{ color:AT, fontSize:14, fontWeight:"700" }}>✓</Text>}
+                          </View>
+                          <Text style={{ color:T.sub, fontSize:12 }}>Li e aceito os </Text>
+                          <TouchableOpacity onPress={()=>{setShowLogin(false);setTimeout(()=>setShowTerms(true),300);}} activeOpacity={0.7} style={{ paddingHorizontal:4 }}>
+                            <Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline" }}>Termos e Condições</Text>
+                          </TouchableOpacity>
+                        </TouchableOpacity>
+                      </>
+                    )}
+                    {!!authError && <Text style={{ color:"#f87171", fontSize:12, marginBottom:8, textAlign:"center" }}>{authError}</Text>}
+                    <TouchableOpacity onPress={loginMode==="login"?handleLogin:handleSignup} disabled={authSubmitting} style={{ padding:14, borderRadius:14, backgroundColor:T.accent, alignItems:"center", marginTop:8 }}>
+                      <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>{authSubmitting?"Aguarde...":loginMode==="login"?"Entrar":"Criar conta"}</Text>
+                    </TouchableOpacity>
+                    {loginMode==="login" && <TouchableOpacity onPress={()=>{setForgotMode(true);setAuthError("");}} style={{ padding:10, alignItems:"center", marginTop:8 }}><Text style={{ color:T.accent, fontSize:13, fontWeight:"600" }}>Esqueceu a senha?</Text></TouchableOpacity>}
+                  </>
+                )}
+                {forgotMode && !passwordSent && (
+                  <>
+                    <TouchableOpacity onPress={()=>{setForgotMode(false);setAuthError("");}} style={{ marginBottom:16 }}><Text style={{ color:T.sub, fontSize:13 }}>← Voltar</Text></TouchableOpacity>
+                    <Text style={{ color:T.text, fontSize:18, fontWeight:"800", textAlign:"center", marginBottom:4 }}>Esqueceu a senha?</Text>
+                    <Text style={{ color:T.sub, fontSize:13, textAlign:"center", marginBottom:16 }}>Enviaremos um link para redefinir</Text>
+                    <TextInput value={authEmail} onChangeText={setAuthEmail} placeholder="seu@email.com" placeholderTextColor={T.muted} autoCapitalize="none" keyboardType="email-address" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:8 }} />
+                    {!!authError && <Text style={{ color:"#f87171", fontSize:12, marginBottom:8, textAlign:"center" }}>{authError}</Text>}
+                    <TouchableOpacity onPress={handleForgotPassword} disabled={authSubmitting} style={{ padding:14, borderRadius:14, backgroundColor:T.accent, alignItems:"center", marginTop:8 }}>
+                      <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>{authSubmitting?"Enviando...":"Enviar link"}</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                {passwordSent && (
+                  <>
+                    <Text style={{ fontSize:48, textAlign:"center", marginBottom:12 }}>📧</Text>
+                    <Text style={{ color:T.text, fontSize:18, fontWeight:"800", textAlign:"center", marginBottom:8 }}>E-mail enviado!</Text>
+                    <Text style={{ color:T.sub, fontSize:13, textAlign:"center", lineHeight:20, marginBottom:16 }}>Verifique sua caixa de entrada.</Text>
+                    <TouchableOpacity onPress={()=>{setPasswordSent(false);setForgotMode(false);setLoginMode("login");}} style={{ padding:14, borderRadius:14, backgroundColor:T.accent, alignItems:"center" }}>
+                      <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Entendi</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                <TouchableOpacity onPress={()=>{setShowLogin(false);setLoginMode("login");setForgotMode(false);setPasswordSent(false);setAuthError("");setAuthConfirmPassword("");setAuthBirthdate("");setAuthAcceptTerms(false);setAuthTouched(INITIAL_TOUCHED);}} style={{ padding:10, alignItems:"center", marginTop:12 }}>
+                  <Text style={{ color:T.muted, fontSize:13 }}>Fechar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
+
+      <Modal visible={showTerms} transparent animationType="slide" onRequestClose={()=>setShowTerms(false)}>
+        <View style={{ flex:1, backgroundColor:"rgba(0,0,0,0.5)", justifyContent:"center", padding:20 }}>
+          <View style={{ backgroundColor:T.card, borderRadius:20, padding:24, maxHeight:"80%" }}>
+            <Text style={{ color:T.text, fontSize:20, fontWeight:"800", textAlign:"center", marginBottom:16 }}>Termos e Condições</Text>
+            <ScrollView style={{ marginBottom:16 }}>
+              <Text style={{ color:T.sub, fontSize:13, lineHeight:22 }}>{`TERMOS E CONDIÇÕES DE USO DO UNIVEST
+
+Bienvenido ao UniVest! Estes Termos e Condições regem o uso do aplicativo UniVest e todos os serviços relacionados.
+
+1. Aceitação dos Termos
+Ao usar o UniVest, você concorda em estar vinculados a estes termos. Se você não concordar com qualquer parte destes termos, não use nosso aplicativo.
+
+2. Uso do Aplicativo
+O UniVest é fornecido para ajudá-lo na preparação para vestibulares, ENEM e outros exames brasileiros. Você concorda em usar o aplicativo de acordo com todas as leis e regulamentos aplicáveis.
+
+3. Privacidade
+Seus dados pessoais, incluindo nome, e-mail, data de nascimento e informações de progresso, serão armazenados de forma segura e usados apenas para melhorar sua experiência no aplicativo.
+
+4. Conteúdo do Usuário
+Você é responsável por qualquer conteúdo que publicar no aplicativo e garante que tem o direito de postar tal conteúdo.
+
+5. Limitação de Responsabilidade
+O UniVest não garante a aprovação em qualquer exame ou vestibular. O conteúdo fornecido é para fins educacionais e informativos.
+
+6. Modificações
+Reservamo-nos o direito de modificar estes termos a qualquer momento. O uso continuado do aplicativo após alterações constitui aceitação dos novos termos.
+
+7. Contato
+Para dúvidas sobre estes termos, entre em contato pelo aplicativo.
+
+Data da última atualização: ${new Date().toLocaleDateString("pt-BR")}`}</Text>
+            </ScrollView>
+            <TouchableOpacity onPress={()=>{setShowTerms(false);setAuthAcceptTerms(true);setShowLogin(true);}} style={{ padding:14, borderRadius:14, backgroundColor:T.accent, alignItems:"center" }}>
+              <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Aceitar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={()=>{setShowTerms(false);setAuthAcceptTerms(false);setShowLogin(true);}} style={{ padding:14, alignItems:"center", marginTop:8 }}>
+              <Text style={{ color:T.sub, fontSize:13 }}>Recusar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}

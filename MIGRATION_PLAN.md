@@ -6,13 +6,13 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 
 ## 0. Current State
 
-| | Before | After Phases 1–4 | After Phase A |
-|---|---|---|---|
-| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines |
-| `MainApp` `useState` sites | ~80 | ~80 | 57 (modals/forms/temp) |
-| Modules under `src/` | 1 (firebase config) | 16 | 24 |
-| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites |
-| UI/behavior changes | — | **None** | **None** |
+| | Before | After Phases 1–4 | After Phase A | After Phase B | After Phase C (Auth) |
+|---|---|---|---|---|---|
+| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines | ~2,551 lines | 2,325 lines |
+| `MainApp` `useState` sites | ~80 | ~80 | 57 | 57 | 40 |
+| Modules under `src/` | 1 (firebase config) | 16 | 24 | 26 | 27 |
+| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites | ~10 sites | ~10 sites |
+| UI/behavior changes | — | **None** | **None** | **None** | **None** |
 
 `App.js` still contains a god-component `MainApp` and the full screen tree as a giant `tab === "..."` switch. Cross-screen state is now in Zustand stores; remaining `useState` calls are modal toggles, form fields, temporary pickers, and search strings. Splitting the screen tree is the next target.
 
@@ -40,6 +40,30 @@ Everything above is pure cut-and-paste. Zero behavioral risk.
 **Not yet done (deferred to keep behavior identical in Phase A):**
 - `syncUserData` / `currentData()` / `saveTimerRef` debounce still live in `MainApp`. The plan called for per-slice persistence middleware — safer to land that in a dedicated follow-up so the all-in-one write path isn't disturbed while screens are still being split.
 - The `onAuthChange` cascade still dispatches to each store inline. A `persistToUser` middleware + store-level `hydrateFromFb(fbData)` would be the clean final form; kept as-is for now to minimize behavior drift.
+
+### Phase B scaffolded (🟡)
+
+- ✅ `src/navigation/RootNavigator.js` — single-screen native-stack that renders `MainApp`
+- ✅ `src/navigation/linking.js` — deep-link placeholder for Phase D
+- ✅ `App.js` — wrapped in `<NavigationContainer><RootNavigator Main={MainApp} /></NavigationContainer>` inside `SafeAreaProvider`
+
+**Why only scaffolding:** the plan's "each tab renders `<MainApp section='X'/>`" shim doesn't work in this codebase — `MainApp` holds ~57 local `useState` hooks (modals, searches, pickers), so mounting it four times inside `Tab.Screen`s would quadruple state and break scroll/modal persistence across tab switches. The meaningful navigator split has to happen in lock-step with Phase C screen extraction, not before.
+
+**Deferred to Phase B+C (done together once screens exist):**
+- `AuthStack` / `OnboardingStack` / `MainTabs` / `ExplorarStack` / `PerfilStack` — not created; would be empty shells today.
+- Replacing `tab` / `showExamsPage` / `showBooksPage` / `showFollowingPage` / `selUni` booleans with navigator routes.
+- Moving the `authLoading` spinner and `!currentUser` welcome gate from `MainApp` into `RootNavigator`.
+- Removing `MainApp`'s custom bottom tab bar in favor of `MainTabs.screenOptions`.
+
+### Phase C in progress (🟡)
+
+- ✅ `src/screens/auth/WelcomeScreen.js` (245 lines) — self-contained: welcome card, login/signup modal, forgot-password flow, Terms modal. Owns all 16 auth-form `useState` hooks + `handleLogin`/`handleSignup`/`handleForgotPassword`. Consumes `useProfileStore` for theme and `useCoursesStore` for icons.
+- ✅ `App.js`: `if (!currentUser) return <WelcomeScreen />;` — auth state, handlers, refs, and 172 lines of JSX removed. Dropped unused imports: `validatePassword`, `signIn`, `signUp`, `resetPassword`, `getAuthErrorMessage`, `LayoutAnimation`. **−228 lines** net.
+- 🐛 **Fix:** a stray "Entrar ou criar conta" `TouchableOpacity` inside `renderExplorar` was referencing removed auth state (`loginBtnScale`, `setShowLogin`, `setLoginMode`, `setAuthTouched`) and crashing the Explorar tab on render. It was dead code (Explorar only renders for logged-in users) — deleted. **Lesson:** after removing state, grep every identifier across the whole file, not just obviously-related render blocks.
+
+**Next screen targets (per plan order):** Onboarding → Feed → Notas → Explorar → Perfil.
+
+### Remaining phases
 
 ---
 
