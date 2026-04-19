@@ -9,3 +9,6 @@ export {
   createUserWithEmailAndPassword, signOut,
   sendEmailVerification, sendPasswordResetEmail,
 } from "firebase/auth";
+
+export { default as authService } from "./auth";
+export { default as firestoreService } from "./firestore";
