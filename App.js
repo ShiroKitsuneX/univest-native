@@ -7,491 +7,33 @@ import {
 } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { BarChart } from "react-native-chart-kit";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { db, auth } from "./src/firebase/config";
+import { db } from "./src/firebase/config";
 import {
-  collection, getDocs, doc, setDoc, getDoc, deleteDoc,
+  collection, doc, setDoc, deleteDoc,
   updateDoc, increment, addDoc, serverTimestamp, arrayUnion, arrayRemove,
-  writeBatch,
 } from "firebase/firestore";
+
+import { USER_TYPES } from "./src/data/userTypes";
+import { AREAS, ALL_COURSES } from "./src/data/areas";
+import { UNIVERSITIES } from "./src/data/universities";
+import { FEED } from "./src/data/feed";
+import { NOTAS_CORTE } from "./src/data/notasCorte";
+import { EVENTS } from "./src/data/events";
+import { GEO_DATA } from "./src/data/geo";
+import { DK, LT, TAG_D, TAG_L } from "./src/theme/palette";
+import { AVATAR_PRESETS, AVATAR_COLORS } from "./src/theme/avatar";
+import { timeAgo, fmtCount } from "./src/utils/format";
+import { removeAccents } from "./src/utils/string";
+import { validatePassword } from "./src/utils/validation";
+import { loadLocalUserData, saveLocalUserData } from "./src/services/storage";
 import {
-  onAuthStateChanged, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, signOut,
-  sendEmailVerification, sendPasswordResetEmail,
-} from "firebase/auth";
-
-// ─── DATA ────────────────────────────────────────────────────────────────────
-const USER_TYPES = [
-  { id:"medio",     emoji:"📚", label:"Ensino Médio",         sub:"Cursando o ensino médio regular" },
-  { id:"tecnico",   emoji:"🔧", label:"Ensino Médio Técnico", sub:"Ex: COTUCA, ETEC, SENAI, IFSP" },
-  { id:"prevestu",  emoji:"🎯", label:"Pré-vestibulando",     sub:"Me preparando para vestibulares" },
-  { id:"preenem",   emoji:"📝", label:"Foco no ENEM",         sub:"Estudando para o ENEM / SISU" },
-  { id:"graduando", emoji:"🎓", label:"Graduando",            sub:"Cursando uma graduação" },
-  { id:"premestre", emoji:"🔬", label:"Pré-mestrado",         sub:"Buscando uma vaga em mestrado" },
-  { id:"mestrando", emoji:"🧪", label:"Mestrando",            sub:"Cursando o mestrado" },
-  { id:"predouto",  emoji:"🏛️", label:"Pré-doutorado",        sub:"Buscando uma vaga em doutorado" },
-  { id:"doutorando",emoji:"⚗️", label:"Doutorando",           sub:"Cursando o doutorado" },
-  { id:"posdouto",  emoji:"🌟", label:"Pós-doutorando",       sub:"Realizando pesquisa pós-doutoral" },
-  { id:"continuo",  emoji:"💼", label:"Educação Continuada",  sub:"Cursos livres, MBAs, especializações" },
-];
-
-const AREAS = [
-  { id:"saude",     emoji:"🏥", label:"Saúde",          cor:"#e11d48", bg:"#fff1f2", darkBg:"#2d0814", courses:["Medicina","Enfermagem","Odontologia","Farmácia","Fisioterapia","Nutrição","Biomedicina","Veterinária"] },
-  { id:"exatas",    emoji:"📐", label:"Exatas",         cor:"#2563eb", bg:"#eff6ff", darkBg:"#0c1a3a", courses:["Matemática","Física","Química","Engenharia Civil","Engenharia Elétrica","Engenharia Mecânica","Engenharia Química"] },
-  { id:"tecnologia",emoji:"💻", label:"Tecnologia",    cor:"#7c3aed", bg:"#f5f3ff", darkBg:"#1a0d33", courses:["Ciências da Computação","Engenharia de Computação","Sistemas de Informação","Design"] },
-  { id:"humanas",   emoji:"📖", label:"Humanas",        cor:"#d97706", bg:"#fffbeb", darkBg:"#2a1800", courses:["Direito","História","Filosofia","Sociologia","Letras","Pedagogia","Psicologia","Jornalismo"] },
-  { id:"negocios",  emoji:"💼", label:"Negócios",       cor:"#059669", bg:"#ecfdf5", darkBg:"#0a2018", courses:["Administração","Economia","Contabilidade","Publicidade","Relações Internacionais"] },
-  { id:"artes",     emoji:"🎨", label:"Artes & Design", cor:"#db2777", bg:"#fdf2f8", darkBg:"#2a0820", courses:["Arquitetura","Design","Música","Artes Visuais"] },
-  { id:"agrarias",  emoji:"🌱", label:"Agrárias",       cor:"#65a30d", bg:"#f7fee7", darkBg:"#142010", courses:["Agronomia","Medicina Veterinária","Engenharia Florestal","Biologia"] },
-];
-
-const ALL_COURSES = [...new Set(AREAS.flatMap(a=>a.courses))].sort();
-
-const UNIVERSITIES = [
-  { id:"enem", name:"ENEM", fullName:"Exame Nacional do Ensino Médio", city:"Nacional", state:"BR", color:"#1a3a5c", followers:"890k", type:"Nacional", description:"O maior exame educacional do Brasil. Usado para admissão em universidades públicas via SISU, Prouni e FIES.", courses:["Todos os cursos via SISU"], vestibular:"ENEM 2025", inscricao:"Mai–Jun/2025", prova:"Nov/2025", site:"https://enem.inep.gov.br", followed:false, books:["Dom Casmurro - Machado de Assis","Vidas Secas - Graciliano Ramos","O Cortiço - Aluísio Azevedo","Grande Sertão: Veredas - João Guimarães Rosa","Cem Anos de Solidão - Gabriel García Márquez","A Hora da Estrela - Clarice Lispector","Auto da Compadecida - Ariano Suassuna","Memórias Póstumas de Brás Cubas - Machado de Assis"],
-    exams:[
-      {id:"enem1",year:2025,phase:"1º dia",subject:"Linguagens e Humanas",date:"2025-11-09",status:"upcoming",pdfUrl:"",sourceUrl:"https://enem.inep.gov.br",description:"Prova dia 1 - Linguagens, Ciências Humanas e Redação",duration:"5h30",questions:90},
-      {id:"enem2",year:2025,phase:"2º dia",subject:"Natureza e Matemática",date:"2025-11-16",status:"upcoming",pdfUrl:"",sourceUrl:"https://enem.inep.gov.br",description:"Prova dia 2 - Ciências da Natureza e Matemática",duration:"5h",questions:90},
-    ],
-  },
-  { id:"1",  name:"USP",     fullName:"Universidade de São Paulo",             city:"São Paulo",       state:"SP", color:"#003366", followers:"142k", type:"Estadual", description:"A maior universidade da América Latina, referência em pesquisa e inovação.",  courses:["Medicina","Direito","Engenharia Civil","Arquitetura","Psicologia"],     vestibular:"FUVEST 2026",        inscricao:"Ago–Set/2025", prova:"Jan/2026", site:"https://fuvest.br",          followed:false, books:["Dom Casmurro - Machado de Assis","Vidas Secas - Graciliano Ramos","Memórias Póstulas de Brás Cubas - Machado de Assis","O Cortiço - Aluísio Azevedo","Quarto de Despejo - Carolina Maria de Jesus","A Hora da Estrela - Clarice Lispector","O Mundo de Sofia - Jostein Gaarden","Auto da Compadecida - Ariano Suassuna"],
-    exams:[
-      {id:"e1",year:2026,phase:"1ª fase",subject:"Prova Comum",date:"2026-01-12",status:"upcoming",pdfUrl:"",sourceUrl:"https://fuvest.br",description:"Primeira fase - 90 questões de múltipla escolha",duration:"5h",questions:90},
-      {id:"e2",year:2026,phase:"2ª fase",subject:"Prova de Português",date:"2026-01-19",status:"upcoming",pdfUrl:"",sourceUrl:"https://fuvest.br",description:"Redação + Questões de Português",duration:"4h",questions:60},
-      {id:"e3",year:2025,phase:"1ª fase",subject:"Prova Comum",date:"2025-01-12",status:"past",pdfUrl:"https://fuvest.br/2025/fase1.pdf",sourceUrl:"https://fuvest.br/provas/2025",description:"Primeira fase - 90 questões",duration:"5h",questions:90},
-      {id:"e4",year:2025,phase:"2ª fase",subject:"Prova de Português",date:"2025-01-19",status:"past",pdfUrl:"https://fuvest.br/2025/fase2.pdf",sourceUrl:"https://fuvest.br/provas/2025",description:"Redação + Português",duration:"4h",questions:60},
-      {id:"e5",year:2025,phase:"3ª fase",subject:"Provas Específicas",date:"2025-01-22",status:"past",pdfUrl:"https://fuvest.br/2025/fase3.pdf",sourceUrl:"https://fuvest.br/provas/2025",description:"Provas por curso",duration:"4h",questions:30},
-      {id:"e6",year:2024,phase:"1ª fase",subject:"Prova Comum",date:"2024-01-14",status:"past",pdfUrl:"https://fuvest.br/2024/fase1.pdf",sourceUrl:"https://fuvest.br/provas/2024",description:"Primeira fase - 90 questões",duration:"5h",questions:90},
-    ]},
-  { id:"2",  name:"UNICAMP", fullName:"Universidade Estadual de Campinas",     city:"Campinas",        state:"SP", color:"#004d2c", followers:"98k",  type:"Estadual", description:"Excelência em ciência, tecnologia e inovação no interior Paulista.",       courses:["Medicina","Engenharia de Computação","Ciências da Computação","Física"], vestibular:"COMVEST 2026",       inscricao:"Ago/2025",     prova:"Dez/2025", site:"https://comvest.unicamp.br", followed:false, books:["Mrs. Dalloway - Virginia Woolf","A Metamorfose - Franz Kafka","A Piada Mortal - Milan Kundera","O Poço - José Saramago","O Inspetor Geral - Nikolai Gogol","Os Lusíadas - Luís de Camões","A Arte da Guerra - Sun Tzu","A República - Platão"],
-    exams:[
-      {id:"e1",year:2026,phase:"1ª fase",subject:"Prova Comum",date:"2026-11-16",status:"upcoming",pdfUrl:"",sourceUrl:"https://comvest.unicamp.br",description:"Primeira fase - 72 questões",duration:"4h",questions:72},
-      {id:"e2",year:2025,phase:"1ª fase",subject:"Prova Comum",date:"2025-11-17",status:"past",pdfUrl:"https://comvest.unicamp.br/2025/fase1.pdf",sourceUrl:"https://comvest.unicamp.br/provas",description:"72 questões de múltipla escolha",duration:"4h",questions:72},
-      {id:"e3",year:2024,phase:"1ª fase",subject:"Prova Comum",date:"2024-11-17",status:"past",pdfUrl:"https://comvest.unicamp.br/2024/fase1.pdf",sourceUrl:"https://comvest.unicamp.br/provas",description:"72 questões",duration:"4h",questions:72},
-    ]},
-  { id:"3",  name:"UNESP",   fullName:"Universidade Estadual Paulista",        city:"São Paulo",       state:"SP", color:"#8B0000", followers:"76k",  type:"Estadual", description:"Presente em todo SP com campi em 24 cidades.",                            courses:["Medicina","Odontologia","Veterinária","Agronomia","Direito"],          vestibular:"VUNESP 2026",        inscricao:"Set/2025",     prova:"Jan/2026", site:"https://vunesp.com.br",       followed:false, books:["O Alienista - Machado de Assis","Sagarana - João Guimarães Rosa","Tereza de Ângelos - Rachel de Queiroz","A Barca dos Am排除dos - Gil Vicente","Os Meninos da Rua Larga - Emilio Salgari","Mayombe - Pepetela","O Seminarista - Bernardo Élis","O Tempo e o Vento - Érico Veríssimo"],
-    exams:[
-      {id:"e1",year:2026,phase:"1ª fase",subject:"Prova Objetiva",date:"2026-10-05",status:"upcoming",pdfUrl:"",sourceUrl:"https://vunesp.com.br",description:"100 questões de múltipla escolha",duration:"5h",questions:100},
-      {id:"e2",year:2025,phase:"1ª fase",subject:"Prova Objetiva",date:"2025-10-05",status:"past",pdfUrl:"https://vunesp.com.br/2025/fase1.pdf",sourceUrl:"https://vunesp.com.br/provas",description:"100 questões",duration:"5h",questions:100},
-    ]},
-  { id:"4",  name:"UNIFESP", fullName:"Universidade Federal de São Paulo",     city:"São Paulo",       state:"SP", color:"#4B0082", followers:"54k",  type:"Federal",  description:"Referência nacional em saúde, com cursos de medicina de alto nível.",     courses:["Medicina","Enfermagem","Farmácia","Biomedicina"],                      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://unifesp.br",          followed:false, books:[], exams:[] },
-  { id:"5",  name:"UFMG",    fullName:"Universidade Federal de Minas Gerais",  city:"Belo Horizonte",  state:"MG", color:"#1a3a5c", followers:"89k",  type:"Federal",  description:"Uma das melhores federais do Brasil, destaque em diversas áreas.",        courses:["Medicina","Direito","Arquitetura","Engenharia Civil","Letras"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufmg.br",             followed:false, books:["Grande Sertão: Veredas - João Guimarães Rosa","Cem Anos de Solidão - Gabriel García Márquez","O Seminarista - Bernardo Élis","Angústia - Graciliano Ramos","Trezentos Réis - Afonso Arinos"], exams:[] },
-  { id:"6",  name:"UFRJ",    fullName:"Universidade Federal do Rio de Janeiro", city:"Rio de Janeiro", state:"RJ", color:"#003580", followers:"110k", type:"Federal",  description:"A maior universidade federal do Brasil, com tradição centenária.",        courses:["Medicina","Engenharia Civil","Arquitetura","Economia"],                vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufrj.br",             followed:false, books:["O Crime do Padre Amaro - Eça de Queirós","Os Bruzundangas - Lima Barreto","Lição de Coisas - Caio Fernando Abreu","A Noite da Espera - Ferreira Gullar"], exams:[] },
-  { id:"7",  name:"COTUCA",  fullName:"Colégio Técnico da UNICAMP",            city:"Campinas",        state:"SP", color:"#1a4a3a", followers:"18k",  type:"Técnico",  description:"Escola técnica de nível médio vinculada à UNICAMP.",                      courses:["Mecânica","Eletrônica","Informática","Edificações"],                   vestibular:"Proc. Seletivo 2026",inscricao:"Out/2025",    prova:"Dez/2025", site:"https://cotuca.unicamp.br",   followed:false, books:[], exams:[] },
-  { id:"8",  name:"ETEC",    fullName:"Escola Técnica Estadual de SP",         city:"São Paulo",       state:"SP", color:"#2d4a7a", followers:"32k",  type:"Técnico",  description:"Rede de escolas técnicas estaduais com cursos gratuitos.",               courses:["Administração","Informática","Enfermagem","Logística"],                vestibular:"Vestibulinho 2026",  inscricao:"Set/2025",     prova:"Nov/2025", site:"https://etec.sp.gov.br",      followed:false, books:[], exams:[] },
-
-  { id:"9",  name:"UFPR",    fullName:"Universidade Federal do Paraná",           city:"Curitiba",       state:"PR", color:"#1a5c3a", followers:"95k",  type:"Federal",  description:"A maior universidade do Sul do Brasil, referência em pesquisa.",              courses:["Medicina","Direito","Engenharia Civil","Arquitetura","Letras"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufpr.br",            followed:false, books:["Vidas Secas - Graciliano Ramos","Grande Sertão: Veredas - João Guimarães Rosa","O Primo Basílio - Eça de Queirós"], exams:[] },
-  { id:"10", name:"UFBA",    fullName:"Universidade Federal da Bahia",            city:"Salvador",        state:"BA", color:"#0d47a1", followers:"78k",  type:"Federal",  description:"A maior universidade da região Nordeste.",                            courses:["Medicina","Direito","Engenharia","Arquitetura","Farmácia"],        vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufba.br",            followed:false, books:["Tereza de Ângelos - Rachel de Queiroz","Vidas Secas - Graciliano Ramos","O Seminarista - Bernardo Élis"], exams:[] },
-  { id:"11", name:"UFPE",    fullName:"Universidade Federal de Pernambuco",      city:"Recife",         state:"PE", color:"#00695c", followers:"65k",  type:"Federal",  description:"Excelência em ensino e pesquisa no Nordeste.",                       courses:["Medicina","Engenharia","Direito","Odontologia","Computação"],      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufpe.br",            followed:false, books:["A Biografia de Lima Barreto","Vidas Secas - Graciliano Ramos","O Mundo de Sofia - Jostein Gaarden"], exams:[] },
-  { id:"12", name:"UFSC",    fullName:"Universidade Federal de Santa Catarina",    city:"Florianópolis",  state:"SC", color:"#1565c0", followers:"72k",  type:"Federal",  description:"Referência em tecnologia e ciências no Sul do Brasil.",                  courses:["Engenharia","Medicina","Direito","Computação","Oceanografia"],      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufsc.br",            followed:false, books:["O Tempo e o Vento - Érico Veríssimo","Vidas Secas - Graciliano Ramos","A Moreninha - Joaquim Manuel de Macedo"], exams:[] },
-  { id:"13", name:"UFRGS",   fullName:"Universidade Federal do Rio Grande do Sul", city:"Porto Alegre",   state:"RS", color:"#004d40", followers:"88k",  type:"Federal",  description:"A mais importante universidade do Sul, tradição e excelência.",           courses:["Medicina","Direito","Engenharia","Computação","Letras"],          vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufrgs.br",           followed:false, books:["O Tempo e o Vento - Érico Veríssimo","Vidas Secas - Graciliano Ramos","Grande Sertão: Veredas - João Guimarães Rosa"], exams:[] },
-  { id:"14", name:"UFC",     fullName:"Universidade Federal do Ceará",            city:"Fortaleza",       state:"CE", color:"#f57c00", followers:"58k",  type:"Federal",  description:"Principal universidade do Ceará e região.",                                courses:["Medicina","Engenharia","Direito","Computação","Nutrição"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufc.br",             followed:false, books:["Vidas Secas - Graciliano Ramos","A Bagagem do Viajante - Rubem Alves","O Seminarista - Bernardo Élis"], exams:[] },
-  { id:"15", name:"UFG",     fullName:"Universidade Federal de Goiás",             city:"Goiânia",         state:"GO", color:"#7b1fa2", followers:"52k",  type:"Federal",  description:"Referência em pesquisa e extensão no Centro-Oeste.",                     courses:["Medicina","Engenharia","Direito","Agronomia","Veterinária"],      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufg.br",             followed:false, books:["O Primeiro Homem - Albert Camus","Vidas Secas - Graciliano Ramos","Grande Sertão: Veredas - João Guimarães Rosa"], exams:[] },
-  { id:"16", name:"UnB",     fullName:"Universidade de Brasília",                  city:"Brasília",        state:"DF", color:"#2e7d32", followers:"82k",  type:"Federal",  description:"A principal universidade do Distrito Federal.",                           courses:["Medicina","Direito","Engenharia","Arquitetura","Letras"],          vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://unb.br",             followed:false, books:["Grande Sertão: Veredas - João Guimarães Rosa","Vidas Secas - Graciliano Ramos","O Primo Basílio - Eça de Queirós"], exams:[] },
-  { id:"17", name:"UFPA",    fullName:"Universidade Federal do Pará",              city:"Belém",          state:"PA", color:"#6a1b9a", followers:"45k",  type:"Federal",  description:"A maior universidade da Amazônia.",                                      courses:["Medicina","Engenharia","Direito","Biologia","Agronomia"],         vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufpa.br",            followed:false, books:["Vidas Secas - Graciliano Ramos","O Mundo de Sofia - Jostein Gaarden","A Bagagem do Viajante - Rubem Alves"], exams:[] },
-  { id:"18", name:"UFAM",    fullName:"Universidade Federal do Amazonas",          city:"Manaus",          state:"AM", color:"#00838f", followers:"38k",  type:"Federal",  description:"Centro de excelência na Amazônia.",                                       courses:["Medicina","Engenharia","Computação","Biologia","Química"],        vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://ufam.edu.br",        followed:false, books:["Vidas Secas - Graciliano Ramos","A Hora da Estrela - Clarice Lispector","A Bagagem do Viajante - Rubem Alves"], exams:[] },
-  { id:"19", name:"UFF",     fullName:"Universidade Federal Fluminense",          city:"Niterói",         state:"RJ", color:"#c62828", followers:"76k",  type:"Federal",  description:"Uma das maiores universidades do Rio de Janeiro.",                     courses:["Medicina","Direito","Engenharia","Computação","Odontologia"],      vestibular:"ENEM (SISU)",        inscricao:"Nov/2025",     prova:"Nov/2025", site:"https://uff.br",             followed:false, books:["Os Bruzundangas - Lima Barreto","O Crime do Padre Amaro - Eça de Queirós","Lição de Coisas - Caio Fernando Abreu"], exams:[] },
-  { id:"20", name:"UNICAMP", fullName:"Universidade Estadual de Campinas (SP)",     city:"Campinas",        state:"SP", color:"#004d2c", followers:"98k",  type:"Estadual", description:"Excelência em ciência e tecnologia.",                                    courses:["Medicina","Engenharia de Computação","Ciências da Computação","Física","Química"], vestibular:"COMVEST 2026",       inscricao:"Ago/2025",     prova:"Nov/2025", site:"https://comvest.unicamp.br", followed:false, books:["Mrs. Dalloway - Virginia Woolf","A Metamorfose - Franz Kafka","A Piada Mortal - Milan Kundera","O Poço - José Saramago","O Inspetor Geral - Nikolai Gogol","Os Lusíadas - Luís de Camões"], exams:[] },
-];
-
-const FEED = [
-  { id:"f1", uniId:"1", uni:"USP",     type:"alert",    icon:"📋", tag:"Inscrições",    title:"FUVEST 2026 — Inscrições abertas!",               body:"As inscrições para a FUVEST 2026 estão abertas. Período: 01/08 a 15/09/2025. Taxa: R$ 190,00.", time:"2h atrás",    likes:2341  },
-  { id:"f2", uniId:"1", uni:"USP",     type:"lista",    icon:"📚", tag:"Lista de Obras", title:"Lista de obras literárias FUVEST 2026 divulgada", body:"A USP divulgou as 8 obras obrigatórias: Dom Casmurro, Vidas Secas, Morte e Vida Severina e outras 5.", time:"1d atrás",    likes:5820  },
-  { id:"f3", uniId:"2", uni:"UNICAMP", type:"nota",     icon:"📊", tag:"Notas de Corte", title:"Notas de corte Medicina UNICAMP 2025",            body:"A nota de corte para Medicina na UNICAMP em 2025 foi de 87,3 pontos. Confira o histórico.", time:"3d atrás",    likes:8910  },
-  { id:"f4", uniId:"2", uni:"UNICAMP", type:"simulado", icon:"✍️", tag:"Simulado",       title:"Simulado COMVEST 2025 disponível para download",  body:"A UNICAMP disponibilizou o simulado oficial com gabarito. Treine com a prova real!", time:"5d atrás",    likes:12400 },
-  { id:"f5", uniId:"1", uni:"USP",     type:"news",     icon:"📰", tag:"Notícia",        title:"USP sobe no ranking mundial de universidades",    body:"A USP subiu 15 posições no QS World University Rankings 2025, mantendo-se a melhor da América Latina.", time:"1 sem atrás", likes:19200 },
-];
-
-const NOTAS_CORTE = [
-  { curso:"Medicina",               uni:"USP (SP)",     nota:88.4, vagas:150, cor:"#003366", site:"https://fuvest.br"          },
-  { curso:"Medicina",               uni:"UNICAMP (SP)", nota:87.3, vagas:80,  cor:"#004d2c", site:"https://comvest.unicamp.br" },
-  { curso:"Medicina",               uni:"UNESP (SP)",   nota:84.1, vagas:160, cor:"#8B0000", site:"https://vunesp.com.br"      },
-  { curso:"Medicina",               uni:"UNIFESP (SP)", nota:89.1, vagas:80,  cor:"#4B0082", site:"https://unifesp.br"         },
-  { curso:"Direito",                uni:"USP (SP)",     nota:79.2, vagas:240, cor:"#003366", site:"https://fuvest.br"          },
-  { curso:"Engenharia Civil",       uni:"USP (SP)",     nota:73.5, vagas:180, cor:"#003366", site:"https://fuvest.br"          },
-  { curso:"Ciências da Computação", uni:"UNICAMP (SP)", nota:74.8, vagas:120, cor:"#004d2c", site:"https://comvest.unicamp.br" },
-  { curso:"Engenharia de Computação",uni:"UNICAMP (SP)",nota:72.1, vagas:100, cor:"#004d2c", site:"https://comvest.unicamp.br" },
-  { curso:"Odontologia",            uni:"USP (SP)",     nota:76.3, vagas:100, cor:"#003366", site:"https://fuvest.br"          },
-  { curso:"Psicologia",             uni:"USP (SP)",     nota:71.8, vagas:80,  cor:"#003366", site:"https://fuvest.br"          },
-  { curso:"Arquitetura",            uni:"USP (SP)",     nota:74.2, vagas:60,  cor:"#003366", site:"https://fuvest.br"          },
-  { curso:"Farmácia",               uni:"UNIFESP (SP)", nota:68.4, vagas:80,  cor:"#4B0082", site:"https://unifesp.br"         },
-  { curso:"Administração",          uni:"USP (SP)",     nota:66.1, vagas:240, cor:"#003366", site:"https://fuvest.br"          },
-  { curso:"Agronomia",              uni:"UNESP (SP)",   nota:61.2, vagas:80,  cor:"#8B0000", site:"https://vunesp.com.br"      },
-];
-
-const EVENTS = [
-  { id:"e1", dayLabel:"01", month:"AGO", year:"2025", event:"Abertura inscrições FUVEST 2026", uni:"USP",      site:"https://fuvest.br",          cor:"#003366", desc:"Início das inscrições para a FUVEST 2026. Taxa de R$190. Prazo final: 15/09/2025." },
-  { id:"e2", dayLabel:"—",  month:"NOV", year:"2025", event:"ENEM 2025 — 1ª fase",             uni:"Nacional", site:"https://enem.inep.gov.br",   cor:"#1a3a5c", desc:"Exame Nacional do Ensino Médio 2025. Provas de Linguagens, Humanas, Natureza, Matemática e Redação." },
-  { id:"e3", dayLabel:"—",  month:"JAN", year:"2026", event:"FUVEST 2026 — 1ª fase",           uni:"USP",      site:"https://fuvest.br",          cor:"#003366", desc:"Primeira fase da FUVEST 2026: 90 questões objetivas. Aprovados seguem para a 2ª fase." },
-  { id:"e4", dayLabel:"—",  month:"DEZ", year:"2025", event:"COMVEST 2026 — 1ª fase",          uni:"UNICAMP",  site:"https://comvest.unicamp.br", cor:"#004d2c", desc:"Primeira fase do vestibular da UNICAMP. 72 questões objetivas sobre o ensino médio." },
-];
-
-const AVATAR_PRESETS = ["🧑‍🎓","👩‍🔬","👨‍💻","👩‍⚕️","👨‍🏫","👩‍🎨","🦊","🐬","🌟","🍀","⚡","🔥","🌙","🎯","🚀","🧠"];
-const AVATAR_COLORS = [
-  ["#00E5A0","#0099ff"],["#e11d48","#f97316"],["#8b5cf6","#ec4899"],["#3b82f6","#06b6d4"],
-  ["#f59e0b","#ef4444"],["#10b981","#14b8a6"],["#6366f1","#8b5cf6"],["#f43f5e","#f97316"],
-];
-
-const TAG_D = { alert:{bg:"#2a1800",tx:"#fbbf24",b:"#78350f"}, lista:{bg:"#052e16",tx:"#4ade80",b:"#166534"}, nota:{bg:"#0c1f3a",tx:"#60a5fa",b:"#1e40af"}, simulado:{bg:"#1f0a33",tx:"#c084fc",b:"#6b21a8"}, news:{bg:"#2d0a18",tx:"#f9a8d4",b:"#9f1239"} };
-const TAG_L = { alert:{bg:"#fff7ed",tx:"#c2410c",b:"#fed7aa"}, lista:{bg:"#f0fdf4",tx:"#15803d",b:"#bbf7d0"}, nota:{bg:"#eff6ff",tx:"#1d4ed8",b:"#bfdbfe"}, simulado:{bg:"#faf5ff",tx:"#7c3aed",b:"#e9d5ff"}, news:{bg:"#fff1f2",tx:"#be123c",b:"#fecdd3"} };
-const DK = { bg:"#0d1117",card:"#161b27",card2:"#1c2333",border:"#21293d",text:"#e6edf3",sub:"#8b949e",muted:"#484f58",accent:"#00E5A0",acBg:"rgba(0,229,160,.1)",nav:"#0d1117",inp:"#1c2333",inpB:"#21293d" };
-const LT = { bg:"#f0f4fb",card:"#ffffff",card2:"#f0f4ff",border:"#dde3ef",text:"#1a1f2e",sub:"#5a6478",muted:"#9aa0ad",accent:"#0077cc",acBg:"rgba(0,119,204,.08)",nav:"#ffffff",inp:"#ffffff",inpB:"#dde3ef" };
-
-const timeAgo = (timestamp) => {
-  if (!timestamp) return "";
-  const now = Date.now();
-  const ms = typeof timestamp === "number" ? timestamp : timestamp?.toMillis?.() || timestamp?.seconds ? timestamp.seconds*1000 : new Date(timestamp).getTime();
-  if (!ms || isNaN(ms)) return "";
-  const diff = now - ms;
-  const mins = Math.floor(diff/60000);
-  if (mins < 1) return "agora";
-  if (mins < 60) return `${mins}min atrás`;
-  const hrs = Math.floor(mins/60);
-  if (hrs < 24) return `${hrs}h atrás`;
-  const days = Math.floor(hrs/24);
-  if (days < 2) return `${days}d atrás`;
-  const d = new Date(ms);
-  const pad = n => n.toString().padStart(2,"0");
-  return `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
-
-const fmtCount = (n) => {
-  if (typeof n === "string") return n;
-  if (!n || isNaN(n)) return "0";
-  if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"")+"M";
-  if (n >= 1000) return (n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,"")+"k";
-  return n.toString();
-};
-
-const removeAccents = (str) => {
-  if (!str) return "";
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-};
-
-const STORAGE_KEY = "univest_user";
-const loadLocalUserData = async () => {
-  try {
-    const saved = await AsyncStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch {}
-  return null;
-};
-const saveLocalUserData = async (data) => {
-  try { await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
-};
-
-const GEO_DATA = {
-  countries: [
-    { id: "BR", name: "Brasil" },
-  ],
-  states: [
-    { id: "AC", countryId: "BR", name: "Acre" },
-    { id: "AL", countryId: "BR", name: "Alagoas" },
-    { id: "AP", countryId: "BR", name: "Amapá" },
-    { id: "AM", countryId: "BR", name: "Amazonas" },
-    { id: "BA", countryId: "BR", name: "Bahia" },
-    { id: "CE", countryId: "BR", name: "Ceará" },
-    { id: "DF", countryId: "BR", name: "Distrito Federal" },
-    { id: "ES", countryId: "BR", name: "Espírito Santo" },
-    { id: "GO", countryId: "BR", name: "Goiás" },
-    { id: "MA", countryId: "BR", name: "Maranhão" },
-    { id: "MT", countryId: "BR", name: "Mato Grosso" },
-    { id: "MS", countryId: "BR", name: "Mato Grosso do Sul" },
-    { id: "MG", countryId: "BR", name: "Minas Gerais" },
-    { id: "PA", countryId: "BR", name: "Pará" },
-    { id: "PB", countryId: "BR", name: "Paraíba" },
-    { id: "PR", countryId: "BR", name: "Paraná" },
-    { id: "PE", countryId: "BR", name: "Pernambuco" },
-    { id: "PI", countryId: "BR", name: "Piauí" },
-    { id: "RJ", countryId: "BR", name: "Rio de Janeiro" },
-    { id: "RN", countryId: "BR", name: "Rio Grande do Norte" },
-    { id: "RS", countryId: "BR", name: "Rio Grande do Sul" },
-    { id: "RO", countryId: "BR", name: "Rondônia" },
-    { id: "RR", countryId: "BR", name: "Roraima" },
-    { id: "SC", countryId: "BR", name: "Santa Catarina" },
-    { id: "SP", countryId: "BR", name: "São Paulo" },
-    { id: "SE", countryId: "BR", name: "Sergipe" },
-    { id: "TO", countryId: "BR", name: "Tocantins" },
-  ],
-  cities: [
-    { id: "rio-branco-ac", stateId: "AC", name: "Rio Branco" },
-    { id: "cruzeiro-do-sul-ac", stateId: "AC", name: "Cruzeiro do Sul" },
-    { id: "maceio-al", stateId: "AL", name: "Maceió" },
-    { id: "arapiraca-al", stateId: "AL", name: "Arapiraca" },
-    { id: "palmeira-dos-indios-al", stateId: "AL", name: "Palmeira dos Índios" },
-    { id: "macapa-ap", stateId: "AP", name: "Macapá" },
-    { id: "santana-ap", stateId: "AP", name: "Santana" },
-    { id: "laranjal-do-jari-ap", stateId: "AP", name: "Laranjal do Jari" },
-    { id: "manaus-am", stateId: "AM", name: "Manaus" },
-    { id: "parintins-am", stateId: "AM", name: "Parintins" },
-    { id: "itacoatiara-am", stateId: "AM", name: "Itacoatiara" },
-    { id: "coari-am", stateId: "AM", name: "Coari" },
-    { id: "humbiatas-am", stateId: "AM", name: "Humaitá" },
-    { id: "salvador-ba", stateId: "BA", name: "Salvador" },
-    { id: "feira-de-santana-ba", stateId: "BA", name: "Feira de Santana" },
-    { id: "vitoria-da-conquista-ba", stateId: "BA", name: "Vitória da Conquista" },
-    { id: "camacari-ba", stateId: "BA", name: "Camaçari" },
-    { id: "itabuna-ba", stateId: "BA", name: "Itabuna" },
-    { id: "juazeiro-ba", stateId: "BA", name: "Juazeiro" },
-    { id: "lauro-de-freitas-ba", stateId: "BA", name: "Lauro de Freitas" },
-    { id: "teixeira-de-freitas-ba", stateId: "BA", name: "Teixeira de Freitas" },
-    { id: "barreiras-ba", stateId: "BA", name: "Barreiras" },
-    { id: "alagoinhas-ba", stateId: "BA", name: "Alagoinhas" },
-    { id: "porto-seguro-ba", stateId: "BA", name: "Porto Seguro" },
-    { id: "fortaleza-ce", stateId: "CE", name: "Fortaleza" },
-    { id: "caucaia-ce", stateId: "CE", name: "Caucaia" },
-    { id: "juazeiro-do-norte-ce", stateId: "CE", name: "Juazeiro do Norte" },
-    { id: "maracanau-ce", stateId: "CE", name: "Maracanaú" },
-    { id: "sobral-ce", stateId: "CE", name: "Sobral" },
-    { id: "crateus-ce", stateId: "CE", name: "Crateús" },
-    { id: "quixada-ce", stateId: "CE", name: "Quixadá" },
-    { id: "tiangue-ce", stateId: "CE", name: "Tiangua" },
-    { id: "brasilia-df", stateId: "DF", name: "Brasília" },
-    { id: "taguatinga-df", stateId: "DF", name: "Taguatinga" },
-    { id: "ceilandia-df", stateId: "DF", name: "Ceilândia" },
-    { id: "samambaia-df", stateId: "DF", name: "Samambaia" },
-    { id: "planaltina-df", stateId: "DF", name: "Planaltina" },
-    { id: "vitoria-es", stateId: "ES", name: "Vitória" },
-    { id: "serra-es", stateId: "ES", name: "Serra" },
-    { id: "vila-velha-es", stateId: "ES", name: "Vila Velha" },
-    { id: "cachoeiro-de-itapemirim-es", stateId: "ES", name: "Cachoeiro de Itapemirim" },
-    { id: "guarapari-es", stateId: "ES", name: "Guarapari" },
-    { id: "linhares-es", stateId: "ES", name: "Linhares" },
-    { id: "sao-mateus-es", stateId: "ES", name: "São Mateus" },
-    { id: "goiania-go", stateId: "GO", name: "Goiânia" },
-    { id: "aparecida-de-goiania-go", stateId: "GO", name: "Aparecida de Goiânia" },
-    { id: "anapolis-go", stateId: "GO", name: "Anápolis" },
-    { id: "rio-verde-go", stateId: "GO", name: "Rio Verde" },
-    { id: "luziania-go", stateId: "GO", name: "Luziânia" },
-    { id: "aguas-lindas-de-goias-go", stateId: "GO", name: "Águas Lindas de Goiás" },
-    { id: "valparaiso-de-goias-go", stateId: "GO", name: "Valparaíso de Goiás" },
-    { id: "catalao-go", stateId: "GO", name: "Catalão" },
-    { id: "cristalina-go", stateId: "GO", name: "Cristalina" },
-    { id: "senador-canedo-go", stateId: "GO", name: "Senador Canedo" },
-    { id: "sao-luis-ma", stateId: "MA", name: "São Luís" },
-    { id: "imperatriz-ma", stateId: "MA", name: "Imperatriz" },
-    { id: "sao-jose-de-ribamar-ma", stateId: "MA", name: "São José de Ribamar" },
-    { id: "timon-ma", stateId: "MA", name: "Timon" },
-    { id: "caxias-ma", stateId: "MA", name: "Caxias" },
-    { id: "codo-ma", stateId: "MA", name: "Codó" },
-    { id: "paco-do-lumiar-ma", stateId: "MA", name: "Paço do Lumiar" },
-    { id: "acailandia-ma", stateId: "MA", name: "Açailândia" },
-    { id: "cuiaba-mt", stateId: "MT", name: "Cuiabá" },
-    { id: "varzea-grande-mt", stateId: "MT", name: "Várzea Grande" },
-    { id: "rondonopolis-mt", stateId: "MT", name: "Rondonópolis" },
-    { id: "sinop-mt", stateId: "MT", name: "Sinop" },
-    { id: "tangara-da-serra-mt", stateId: "MT", name: "Tangará da Serra" },
-    { id: "caceres-mt", stateId: "MT", name: "Cáceres" },
-    { id: "sorriso-mt", stateId: "MT", name: "Sorriso" },
-    { id: "primavera-do-leste-mt", stateId: "MT", name: "Primavera do Leste" },
-    { id: "barra-do-garcas-mt", stateId: "MT", name: "Barra do Garças" },
-    { id: "campo-grande-ms", stateId: "MS", name: "Campo Grande" },
-    { id: "dourados-ms", stateId: "MS", name: "Dourados" },
-    { id: "tres-lagoas-ms", stateId: "MS", name: "Três Lagoas" },
-    { id: "corumba-ms", stateId: "MS", name: "Corumbá" },
-    { id: "ponta-pora-ms", stateId: "MS", name: "Ponta Porã" },
-    { id: "aquidauana-ms", stateId: "MS", name: "Aquidauana" },
-    { id: "navirai-ms", stateId: "MS", name: "Naviraí" },
-    { id: "belo-horizonte-mg", stateId: "MG", name: "Belo Horizonte" },
-    { id: "uberlandia-mg", stateId: "MG", name: "Uberlândia" },
-    { id: "contagem-mg", stateId: "MG", name: "Contagem" },
-    { id: "juiz-de-fora-mg", stateId: "MG", name: "Juiz de Fora" },
-    { id: "betim-mg", stateId: "MG", name: "Betim" },
-    { id: "montes-claros-mg", stateId: "MG", name: "Montes Claros" },
-    { id: "uberaba-mg", stateId: "MG", name: "Uberaba" },
-    { id: "governador-valadares-mg", stateId: "MG", name: "Governador Valadares" },
-    { id: "ipatinga-mg", stateId: "MG", name: "Ipatinga" },
-    { id: "sete-lagoas-mg", stateId: "MG", name: "Sete Lagoas" },
-    { id: "divinopolis-mg", stateId: "MG", name: "Divinópolis" },
-    { id: "santana-do-jacarandaba-mg", stateId: "MG", name: "Santana do Jacaré" },
-    { id: "pouso-alegre-mg", stateId: "MG", name: "Pouso Alegre" },
-    { id: "araxa-mg", stateId: "MG", name: "Araxá" },
-    { id: "ribeirao-das-neves-mg", stateId: "MG", name: "Ribeirão das Neves" },
-    { id: "uba-mg", stateId: "MG", name: "Ubá" },
-    { id: "passos-mg", stateId: "MG", name: "Passos" },
-    { id: "varzea-da-palma-mg", stateId: "MG", name: "Várzea da Palma" },
-    { id: "belem-pa", stateId: "PA", name: "Belém" },
-    { id: "ananindeua-pa", stateId: "PA", name: "Ananindeua" },
-    { id: "santarem-pa", stateId: "PA", name: "Santarém" },
-    { id: "maraba-pa", stateId: "PA", name: "Marabá" },
-    { id: "parauapebas-pa", stateId: "PA", name: "Parauapebas" },
-    { id: "castanhal-pa", stateId: "PA", name: "Castanhal" },
-    { id: "itaituba-pa", stateId: "PA", name: "Itaituba" },
-    { id: "braganca-pa", stateId: "PA", name: "Bragança" },
-    { id: "altamira-pa", stateId: "PA", name: "Altamira" },
-    { id: "paragominas-pa", stateId: "PA", name: "Paragominas" },
-    { id: "joao-pessoa-pb", stateId: "PB", name: "João Pessoa" },
-    { id: "campina-grande-pb", stateId: "PB", name: "Campina Grande" },
-    { id: "santa-rita-pb", stateId: "PB", name: "Santa Rita" },
-    { id: "patos-pb", stateId: "PB", name: "Patos" },
-    { id: "bayeux-pb", stateId: "PB", name: "Bayeux" },
-    { id: "sousa-pb", stateId: "PB", name: "Sousa" },
-    { id: "cajazeiras-pb", stateId: "PB", name: "Cajazeiras" },
-    { id: "monteiro-pb", stateId: "PB", name: "Monteiro" },
-    { id: "curitiba-pr", stateId: "PR", name: "Curitiba" },
-    { id: "londrina-pr", stateId: "PR", name: "Londrina" },
-    { id: "maringa-pr", stateId: "PR", name: "Maringá" },
-    { id: "ponta-grossa-pr", stateId: "PR", name: "Ponta Grossa" },
-    { id: "cascavel-pr", stateId: "PR", name: "Cascavel" },
-    { id: "sao-jose-dos-pinhais-pr", stateId: "PR", name: "São José dos Pinhais" },
-    { id: "foz-do-iguacu-pr", stateId: "PR", name: "Foz do Iguaçu" },
-    { id: "colombo-pr", stateId: "PR", name: "Colombo" },
-    { id: "guarapuava-pr", stateId: "PR", name: "Guarapuava" },
-    { id: "paranagua-pr", stateId: "PR", name: "Paranaguá" },
-    { id: "arapongas-pr", stateId: "PR", name: "Arapongas" },
-    { id: "apucarana-pr", stateId: "PR", name: "Apucarana" },
-    { id: "toledo-pr", stateId: "PR", name: "Toledo" },
-    { id: "pinhais-pr", stateId: "PR", name: "Pinhais" },
-    { id: "recife-pe", stateId: "PE", name: "Recife" },
-    { id: "jaboatao-dos-guararapes-pe", stateId: "PE", name: "Jaboatão dos Guararapes" },
-    { id: "olinda-pe", stateId: "PE", name: "Olinda" },
-    { id: "caruaru-pe", stateId: "PE", name: "Caruaru" },
-    { id: "petrolina-pe", stateId: "PE", name: "Petrolina" },
-    { id: "paulista-pe", stateId: "PE", name: "Paulista" },
-    { id: "cabo-de-santo-agostinho-pe", stateId: "PE", name: "Cabo de Santo Agostinho" },
-    { id: "camaragibe-pe", stateId: "PE", name: "Camaragibe" },
-    { id: "garanhuns-pe", stateId: "PE", name: "Garanhuns" },
-    { id: "vitoria-de-santo-antao-pe", stateId: "PE", name: "Vitória de Santo Antão" },
-    { id: "teresina-pi", stateId: "PI", name: "Teresina" },
-    { id: "parnaiba-pi", stateId: "PI", name: "Parnaíba" },
-    { id: "picos-pi", stateId: "PI", name: "Picos" },
-    { id: "floriano-pi", stateId: "PI", name: "Floriano" },
-    { id: "piripiri-pi", stateId: "PI", name: "Piripiri" },
-    { id: "barra-pi", stateId: "PI", name: "Barras" },
-    { id: "campo-maior-pi", stateId: "PI", name: "Campo Maior" },
-    { id: "rio-de-janeiro-rj", stateId: "RJ", name: "Rio de Janeiro" },
-    { id: "sao-goncalo-rj", stateId: "RJ", name: "São Gonçalo" },
-    { id: "duque-de-caxias-rj", stateId: "RJ", name: "Duque de Caxias" },
-    { id: "nova-iguacu-rj", stateId: "RJ", name: "Nova Iguaçu" },
-    { id: "niteroi-rj", stateId: "RJ", name: "Niterói" },
-    { id: "belford-roxo-rj", stateId: "RJ", name: "Belford Roxo" },
-    { id: "sao-joao-de-meriti-rj", stateId: "RJ", name: "São João de Meriti" },
-    { id: "petropolis-rj", stateId: "RJ", name: "Petrópolis" },
-    { id: "volta-redonda-rj", stateId: "RJ", name: "Volta Redonda" },
-    { id: "macae-rj", stateId: "RJ", name: "Macaé" },
-    { id: "campos-dos-goytacazes-rj", stateId: "RJ", name: "Campos dos Goytacazes" },
-    { id: "angra-dos-reis-rj", stateId: "RJ", name: "Angra dos Reis" },
-    { id: "teresopolis-rj", stateId: "RJ", name: "Teresópolis" },
-    { id: "cabofrio-rj", stateId: "RJ", name: "Cabo Frio" },
-    { id: "natal-rn", stateId: "RN", name: "Natal" },
-    { id: "mossoro-rn", stateId: "RN", name: "Mossoró" },
-    { id: "parnamirim-rn", stateId: "RN", name: "Parnamirim" },
-    { id: "sao-goncalo-do-amarante-rn", stateId: "RN", name: "São Gonçalo do Amarante" },
-    { id: "macaiba-rn", stateId: "RN", name: "Macaíba" },
-    { id: "caico-rn", stateId: "RN", name: "Caicó" },
-    { id: "currais-novos-rn", stateId: "RN", name: "Currais Novos" },
-    { id: "porto-alegre-rs", stateId: "RS", name: "Porto Alegre" },
-    { id: "caxias-do-sul-rs", stateId: "RS", name: "Caxias do Sul" },
-    { id: "pelotas-rs", stateId: "RS", name: "Pelotas" },
-    { id: "canoas-rs", stateId: "RS", name: "Canoas" },
-    { id: "santa-maria-rs", stateId: "RS", name: "Santa Maria" },
-    { id: "gravatai-rs", stateId: "RS", name: "Gravataí" },
-    { id: "viamao-rs", stateId: "RS", name: "Viamão" },
-    { id: "novo-hamburgo-rs", stateId: "RS", name: "Novo Hamburgo" },
-    { id: "sao-leopoldo-rs", stateId: "RS", name: "São Leopoldo" },
-    { id: "rio-grande-rs", stateId: "RS", name: "Rio Grande" },
-    { id: "alvorada-rs", stateId: "RS", name: "Alvorada" },
-    { id: "uruguaiana-rs", stateId: "RS", name: "Uruguaiana" },
-    { id: "passo-fundo-rs", stateId: "RS", name: "Passo Fundo" },
-    { id: "sapucaia-do-sul-rs", stateId: "RS", name: "Sapucaia do Sul" },
-    { id: "santo-angelo-rs", stateId: "RS", name: "Santo Ângelo" },
-    { id: "porto-velho-ro", stateId: "RO", name: "Porto Velho" },
-    { id: "ji-parana-ro", stateId: "RO", name: "Ji-Paraná" },
-    { id: "ariquemes-ro", stateId: "RO", name: "Ariquemes" },
-    { id: "cacoal-ro", stateId: "RO", name: "Cacoal" },
-    { id: "rolim-de-moura-ro", stateId: "RO", name: "Rolim de Moura" },
-    { id: "jaru-ro", stateId: "RO", name: "Jaru" },
-    { id: "guajara-mirim-ro", stateId: "RO", name: "Guajará-Mirim" },
-    { id: "boa-vista-rr", stateId: "RR", name: "Boa Vista" },
-    { id: "rorainopolis-rr", stateId: "RR", name: "Rorainópolis" },
-    { id: "caroebe-rr", stateId: "RR", name: "Caroebe" },
-    { id: "alto-alegre-rr", stateId: "RR", name: "Alto Alegre" },
-    { id: "florianopolis-sc", stateId: "SC", name: "Florianópolis" },
-    { id: "joinville-sc", stateId: "SC", name: "Joinville" },
-    { id: "blumenau-sc", stateId: "SC", name: "Blumenau" },
-    { id: "sao-jose-sc", stateId: "SC", name: "São José" },
-    { id: "criciuma-sc", stateId: "SC", name: "Criciúma" },
-    { id: "palhoca-sc", stateId: "SC", name: "Palhoça" },
-    { id: "balneario-camboriu-sc", stateId: "SC", name: "Balneário Camboriú" },
-    { id: "chapeco-sc", stateId: "SC", name: "Chapecó" },
-    { id: "itajai-sc", stateId: "SC", name: "Itajaí" },
-    { id: "jaragua-do-sul-sc", stateId: "SC", name: "Jaraguá do Sul" },
-    { id: "lages-sc", stateId: "SC", name: "Lages" },
-    { id: "brusque-sc", stateId: "SC", name: "Brusque" },
-    { id: "rio-do-sul-sc", stateId: "SC", name: "Rio do Sul" },
-    { id: "sao-paulo-sp", stateId: "SP", name: "São Paulo" },
-    { id: "guarulhos-sp", stateId: "SP", name: "Guarulhos" },
-    { id: "campinas-sp", stateId: "SP", name: "Campinas" },
-    { id: "sao-bernardo-do-campo-sp", stateId: "SP", name: "São Bernardo do Campo" },
-    { id: "santo-andre-sp", stateId: "SP", name: "Santo André" },
-    { id: "osasco-sp", stateId: "SP", name: "Osasco" },
-    { id: "ribeirao-preto-sp", stateId: "SP", name: "Ribeirão Preto" },
-    { id: "sorocaba-sp", stateId: "SP", name: "Sorocaba" },
-    { id: "santos-sp", stateId: "SP", name: "Santos" },
-    { id: "maua-sp", stateId: "SP", name: "Mauá" },
-    { id: "sao-jose-dos-campos-sp", stateId: "SP", name: "São José dos Campos" },
-    { id: "diadema-sp", stateId: "SP", name: "Diadema" },
-    { id: "mogi-das-cruzes-sp", stateId: "SP", name: "Mogi das Cruzes" },
-    { id: "jundiai-sp", stateId: "SP", name: "Jundiaí" },
-    { id: "piracicaba-sp", stateId: "SP", name: "Piracicaba" },
-    { id: "carapicuiba-sp", stateId: "SP", name: "Carapicuíba" },
-    { id: "bauru-sp", stateId: "SP", name: "Bauru" },
-    { id: "sao-vicente-sp", stateId: "SP", name: "São Vicente" },
-    { id: "franca-sp", stateId: "SP", name: "Franca" },
-    { id: "itaquaquecetuba-sp", stateId: "SP", name: "Itaquaquecetuba" },
-    { id: "limeira-sp", stateId: "SP", name: "Limeira" },
-    { id: "suzano-sp", stateId: "SP", name: "Suzano" },
-    { id: "taubate-sp", stateId: "SP", name: "Taubaté" },
-    { id: "guaruja-sp", stateId: "SP", name: "Guarujá" },
-    { id: "praia-grande-sp", stateId: "SP", name: "Praia Grande" },
-    { id: "aracatuba-sp", stateId: "SP", name: "Araçatuba" },
-    { id: "marilia-sp", stateId: "SP", name: "Marília" },
-    { id: "presidente-prudente-sp", stateId: "SP", name: "Presidente Prudente" },
-    { id: "sao-caetano-do-sul-sp", stateId: "SP", name: "São Caetano do Sul" },
-    { id: "hortolandia-sp", stateId: "SP", name: "Hortolândia" },
-    { id: "aracaju-se", stateId: "SE", name: "Aracaju" },
-    { id: "nossa-senhora-do-socorro-se", stateId: "SE", name: "Nossa Senhora do Socorro" },
-    { id: "lagarto-se", stateId: "SE", name: "Lagarto" },
-    { id: "itabaiana-se", stateId: "SE", name: "Itabaiana" },
-    { id: "sao-cristovao-se", stateId: "SE", name: "São Cristóvão" },
-    { id: "estancia-se", stateId: "SE", name: "Estância" },
-    { id: "tobias-barreto-se", stateId: "SE", name: "Tobias Barreto" },
-    { id: "palmas-to", stateId: "TO", name: "Palmas" },
-    { id: "araguaina-to", stateId: "TO", name: "Araguaína" },
-    { id: "gurupi-to", stateId: "TO", name: "Gurupi" },
-    { id: "porto-nacional-to", stateId: "TO", name: "Porto Nacional" },
-    { id: "paraiso-do-tocantins-to", stateId: "TO", name: "Paraíba do Tocantins" },
-    { id: "wanderlandia-to", stateId: "TO", name: "Wanderlândia" },
-    { id: "araguatins-to", stateId: "TO", name: "Araguatins" },
-    { id: "colinas-do-tocantins-to", stateId: "TO", name: "Colinas do Tocantins" },
-  ],
-};
-
-const seedGeoData = async () => {
-  try {
-    const countriesSnap = await getDocs(collection(db, "countries"));
-    if (!countriesSnap.empty) return;
-
-    const batch = writeBatch(db);
-
-    GEO_DATA.countries.forEach(c => {
-      batch.set(doc(db, "countries", c.id), c);
-    });
-
-    GEO_DATA.states.forEach(s => {
-      batch.set(doc(db, "states", s.id), s);
-    });
-
-    GEO_DATA.cities.forEach(c => {
-      batch.set(doc(db, "cities", c.id), c);
-    });
-
-    await batch.commit();
-    console.log("Geo data seeded successfully!");
-  } catch (e) {
-    console.log("Error seeding geo data:", e.message);
-  }
-};
+  onAuthChange, signIn, signUp, resetPassword, logout, getAuthErrorMessage,
+} from "./src/services/auth";
+import { seedGeoData, fetchGeoCollections } from "./src/services/geo";
+import {
+  fetchUserDoc, fetchUniversities, fetchCourses, fetchIcons,
+  fetchPosts, fetchPostLikes,
+} from "./src/services/firestore";
 
 function SBox({ val, set, ph, T }) {
   return (
@@ -740,13 +282,12 @@ function MainApp() {
   const hC2 = (v) => { setC2(v); syncUserData({ c2:v }); };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    const unsub = onAuthChange(async (user) => {
       if (user) {
         setCurrentUser(user);
         try {
-          const snap = await getDoc(doc(db,"usuarios",user.uid));
-          if (snap.exists()) {
-            const fbData = snap.data(); 
+          const fbData = await fetchUserDoc(user.uid);
+          if (fbData) {
             await saveLocalUserData(fbData);
             setUserData(fbData);
             if (fbData.done===true) {
@@ -788,18 +329,20 @@ function MainApp() {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const [unisSnap, coursesSnap, iconsSnap] = await Promise.all([getDocs(collection(db,"universidades")),getDocs(collection(db,"cursos")),getDocs(collection(db,"icones"))]);
-        if (!unisSnap.empty) { 
-          const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); 
-          const u=[...new Map(f.map(u=>[u.name,u])).values()];
-          const withBooksAndExams = u.map(fbU => {
+        const [unisList, courses, icons] = await Promise.all([
+          fetchUniversities(),
+          fetchCourses(),
+          fetchIcons(),
+        ]);
+        if (unisList.length) {
+          const withBooksAndExams = unisList.map(fbU => {
             const localU = UNIVERSITIES.find(lU => lU.name === fbU.name);
             return localU ? { ...fbU, books: localU.books || [], exams: localU.exams || [] } : fbU;
           });
-          setFbUnis(withBooksAndExams); setUnis(withBooksAndExams); 
+          setFbUnis(withBooksAndExams); setUnis(withBooksAndExams);
         }
-        if (!coursesSnap.empty) setFbCourses([...new Set(coursesSnap.docs.map(d=>d.data().name))].sort());
-        if (!iconsSnap.empty) { const m={}; iconsSnap.docs.forEach(d=>{const x=d.data();m[x.id]=x.emoji;}); setFbIcons(m); }
+        if (courses.length) setFbCourses(courses);
+        if (Object.keys(icons).length) setFbIcons(icons);
       } catch {}
     };
     fetch();
@@ -809,14 +352,10 @@ function MainApp() {
     const loadGeoData = async () => {
       try {
         await seedGeoData();
-        const [countriesSnap, statesSnap, citiesSnap] = await Promise.all([
-          getDocs(collection(db, "countries")),
-          getDocs(collection(db, "states")),
-          getDocs(collection(db, "cities")),
-        ]);
-        if (!countriesSnap.empty) setCountries(countriesSnap.docs.map(d => ({id: d.id, ...d.data()})));
-        if (!statesSnap.empty) setStates(statesSnap.docs.map(d => ({id: d.id, ...d.data()})));
-        if (!citiesSnap.empty) setCities(citiesSnap.docs.map(d => ({id: d.id, ...d.data()})));
+        const { countries: c, states: s, cities: ci } = await fetchGeoCollections();
+        if (c.length) setCountries(c);
+        if (s.length) setStates(s);
+        if (ci.length) setCities(ci);
       } catch (e) { console.log("Error loading geo data:", e.message); }
     };
     loadGeoData();
@@ -828,56 +367,41 @@ function MainApp() {
   }, [fbUnis, userData]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const loadPosts = async () => {
       let displayed = FEED;
       try {
-        const snap = await getDocs(collection(db,"posts"));
-        const f = snap.docs.map(d=>({id:d.id,...d.data()}));
-        f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
+        const f = await fetchPosts();
         if (f.length) { setPosts(f); displayed = f; }
         else setPosts(FEED);
       } catch { setPosts(FEED); }
       if (currentUser && displayed.length) {
         try {
-          const likeChecks = await Promise.all(
-            displayed.map(p => getDoc(doc(db,"posts",String(p.id),"likes",currentUser.uid)))
-          );
-          const lk={};
-          likeChecks.forEach((snap,i) => { if(snap.exists()) lk[displayed[i].id]=true; });
+          const lk = await fetchPostLikes(displayed, currentUser.uid);
           setLiked(lk);
         } catch {}
       }
     };
-    fetchPosts();
+    loadPosts();
   }, [currentUser]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [unisSnap, postsSnap] = await Promise.all([
-        getDocs(collection(db,"universidades")),
-        getDocs(collection(db,"posts")),
+      const [unisList, postsList] = await Promise.all([
+        fetchUniversities(),
+        fetchPosts(),
       ]);
-      if (!unisSnap.empty) { 
-        const f=unisSnap.docs.map(d=>({id:d.id,...d.data()})); 
-        const u=[...new Map(f.map(u=>[u.name,u])).values()];
-        const withBooksAndExams = u.map(fbU => {
+      if (unisList.length) {
+        const withBooksAndExams = unisList.map(fbU => {
           const localU = UNIVERSITIES.find(lU => lU.name === fbU.name);
           return localU ? { ...fbU, books: localU.books || [], exams: localU.exams || [] } : fbU;
         });
-        setFbUnis(withBooksAndExams); 
+        setFbUnis(withBooksAndExams);
       }
-      if (!postsSnap.empty) {
-        const f=postsSnap.docs.map(d=>({id:d.id,...d.data()}));
-        f.sort((a,b)=>(b.createdAt?.toMillis?.()||0)-(a.createdAt?.toMillis?.()||0));
-        setPosts(f);
-        // Refresh like state
-        if (currentUser && f.length) {
-          const likeChecks = await Promise.all(
-            f.map(p => getDoc(doc(db,"posts",p.id,"likes",currentUser.uid)))
-          );
-          const lk={};
-          likeChecks.forEach((snap,i) => { if(snap.exists()) lk[f[i].id]=true; });
+      if (postsList.length) {
+        setPosts(postsList);
+        if (currentUser) {
+          const lk = await fetchPostLikes(postsList, currentUser.uid);
           setLiked(lk);
         }
       }
@@ -885,33 +409,12 @@ function MainApp() {
     setRefreshing(false);
   }, [currentUser]);
 
-  const getAuthError = (err, mode) => {
-    const code = err.code || "";
-    if (code.includes("user-not-found") || code.includes("wrong-password")) return "E-mail ou senha incorretos";
-    if (code.includes("email-already-in-use")) return "E-mail já cadastrado";
-    if (code.includes("invalid-email")) return "E-mail inválido";
-    if (code.includes("weak-password")) return "Senha muito fraca";
-    if (code.includes("network")) return "Erro de conexão. Verifique sua internet.";
-    if (code.includes("too-many-requests")) return "Muitas tentativas. Tente novamente mais tarde.";
-    return mode === "login" ? "Erro ao fazer login. Verifique sua conexão." : "Erro ao criar conta. Verifique sua conexão.";
-  };
-
   const handleLogin = async () => {
     if (!authEmail||!authPassword){setAuthError("Preencha e-mail e senha");return;}
     setAuthSubmitting(true); setAuthError("");
-    try { await signInWithEmailAndPassword(auth,authEmail,authPassword); setShowLogin(false); setAuthEmail(""); setAuthPassword(""); }
-    catch(err){ setAuthError(getAuthError(err, "login")); }
+    try { await signIn(authEmail, authPassword); setShowLogin(false); setAuthEmail(""); setAuthPassword(""); }
+    catch(err){ setAuthError(getAuthErrorMessage(err, "login")); }
     setAuthSubmitting(false);
-  };
-
-  const validatePassword = (pwd) => {
-    if (!pwd) return "Senha é obrigatória";
-    if (pwd.length < 8) return "Mínimo 8 caracteres";
-    if (pwd.length > 64) return "Máximo 64 caracteres";
-    if (!/\d/.test(pwd)) return "Pelo menos 1 número";
-    if (!/[a-z]/.test(pwd) || !/[A-Z]/.test(pwd)) return "Maiúscula e minúscula";
-    if (!/[!@#$%&*?,]/.test(pwd)) return "Caractere especial (!@#$%...)";
-    return "";
   };
 
   const handleSignup = async () => {
@@ -920,25 +423,29 @@ function MainApp() {
     if (!authEmail||!authPassword||!authName.trim()||!authSobrenome.trim()||pwdErr||authPassword!==authConfirmPassword||!authBirthdate.trim()||!authAcceptTerms){return;}
     setAuthSubmitting(true); setAuthError("");
     try {
-      const cred = await createUserWithEmailAndPassword(auth,authEmail,authPassword);
-      await setDoc(doc(db,"usuarios",cred.user.uid),{email:cred.user.email,nome:authName.trim(),sobrenome:authSobrenome?.trim()||"",dataNascimento:authBirthdate.trim(),tipo:"usuario",done:false,followedUnis:[],updatedAt:new Date().toISOString()});
-      await sendEmailVerification(cred.user);
+      await signUp({
+        email: authEmail,
+        password: authPassword,
+        nome: authName,
+        sobrenome: authSobrenome,
+        dataNascimento: authBirthdate,
+      });
       setAuthEmail(""); setAuthPassword(""); setAuthName(""); setAuthSobrenome(""); setAuthConfirmPassword(""); setAuthBirthdate(""); setAuthAcceptTerms(false);
       setAuthTouched({email:false,nome:false,sobrenome:false,senha:false,confirmarSenha:false,nascimento:false});
-    } catch(err){ setAuthError(getAuthError(err, "signup")); }
+    } catch(err){ setAuthError(getAuthErrorMessage(err, "signup")); }
     setAuthSubmitting(false);
   };
 
   const handleForgotPassword = async () => {
     if (!authEmail){setAuthError("Preencha seu e-mail");return;}
     setAuthSubmitting(true); setAuthError("");
-    try { await sendPasswordResetEmail(auth,authEmail); setPasswordSent(true); }
+    try { await resetPassword(authEmail); setPasswordSent(true); }
     catch(err){ setAuthError(err.code==="auth/user-not-found"?"E-mail não cadastrado":"Erro ao enviar e-mail."); }
     setAuthSubmitting(false);
   };
 
   const handleLogout = () => {
-    Alert.alert("Sair","Deseja sair da sua conta?",[{text:"Cancelar",style:"cancel"},{text:"Sair",style:"destructive",onPress:async()=>{await signOut(auth); hDone(false); hStep(0);}}]);
+    Alert.alert("Sair","Deseja sair da sua conta?",[{text:"Cancelar",style:"cancel"},{text:"Sair",style:"destructive",onPress:async()=>{await logout(); hDone(false); hStep(0);}}]);
   };
 
   // Single debounced sync — prevents 4 separate writes on login

@@ -1,0 +1,6 @@
+export const EVENTS = [
+  { id:"e1", dayLabel:"01", month:"AGO", year:"2025", event:"Abertura inscrições FUVEST 2026", uni:"USP",      site:"https://fuvest.br",          cor:"#003366", desc:"Início das inscrições para a FUVEST 2026. Taxa de R$190. Prazo final: 15/09/2025." },
+  { id:"e2", dayLabel:"—",  month:"NOV", year:"2025", event:"ENEM 2025 — 1ª fase",             uni:"Nacional", site:"https://enem.inep.gov.br",   cor:"#1a3a5c", desc:"Exame Nacional do Ensino Médio 2025. Provas de Linguagens, Humanas, Natureza, Matemática e Redação." },
+  { id:"e3", dayLabel:"—",  month:"JAN", year:"2026", event:"FUVEST 2026 — 1ª fase",           uni:"USP",      site:"https://fuvest.br",          cor:"#003366", desc:"Primeira fase da FUVEST 2026: 90 questões objetivas. Aprovados seguem para a 2ª fase." },
+  { id:"e4", dayLabel:"—",  month:"DEZ", year:"2025", event:"COMVEST 2026 — 1ª fase",          uni:"UNICAMP",  site:"https://comvest.unicamp.br", cor:"#004d2c", desc:"Primeira fase do vestibular da UNICAMP. 72 questões objetivas sobre o ensino médio." },
+];
