@@ -1,0 +1,2 @@
+export const DK = { bg:"#0d1117",card:"#161b27",card2:"#1c2333",border:"#21293d",text:"#e6edf3",sub:"#8b949e",muted:"#484f58",accent:"#00E5A0",acBg:"rgba(0,229,160,.1)",nav:"#0d1117",inp:"#1c2333",inpB:"#21293d" };
+export const LT = { bg:"#f0f4fb",card:"#ffffff",card2:"#f0f4ff",border:"#dde3ef",text:"#1a1f2e",sub:"#5a6478",muted:"#9aa0ad",accent:"#0077cc",acBg:"rgba(0,119,204,.08)",nav:"#ffffff",inp:"#ffffff",inpB:"#dde3ef" };
