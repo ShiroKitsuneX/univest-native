@@ -18,3 +18,11 @@ export const TAG_TYPES = {
   simulado:{bg:"#1f0a33",tx:"#c084fc",b:"#6b21a8"},
   news:{bg:"#2d0a18",tx:"#f9a8d4",b:"#9f1239"}
 };
+
+export const TAG_TYPES_LIGHT = {
+  alert:{bg:"#fff7ed",tx:"#c2410c",b:"#fed7aa"},
+  lista:{bg:"#f0fdf4",tx:"#15803d",b:"#bbf7d0"},
+  nota:{bg:"#eff6ff",tx:"#1d4ed8",b:"#bfdbfe"},
+  simulado:{bg:"#faf5ff",tx:"#7c3aed",b:"#e9d5ff"},
+  news:{bg:"#fff1f2",tx:"#be123c",b:"#fecdd3"}
+};
