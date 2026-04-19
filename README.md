@@ -72,6 +72,60 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 _____________________________________________
 
 *********************************************
+Two Ways to Run Your App
+Way 1: Development Mode (For coding/UI changes)
+┌─────────────────────────────────────────────┐
+│  TERMINAL 1                               │
+│  ─────────────────                        │
+│  $ npx expo start                          │
+│       ↓                                   │
+│  [Metro Server] ←→ Changes reload        │
+│       ↓          automatically            │
+│       i (press i)                         │
+│       ↓                                   │
+│  📱 iOS Simulator opens                  │
+│  with your app running                   │
+│                                           │
+│  ✅ Changes appear instantly             │
+│  ✅ No build needed                     │
+│  ❌ Must stay connected to Mac          │
+└─────────────────────────────────────────────┘
+Best for: Editing App.js, changing UI, fixing bugs
+---
+Way 2: Production Build (For final testing)
+┌─────────────────────────────────────────────┐
+│  TERMINAL 1                               │
+│  ─────────────────                        │
+│  $ ./build-and-run.sh                     │
+│       ↓                                   │
+│  [Full Build]                            │
+│  - Export JS bundle                       │
+│  - xcodebuild compile                   │
+│  - Create .app file                     │
+│       ↓                                   │
+│  📱 Installs & launches                 │
+│  standalone on simulator               │
+│                                           │
+│  ✅ Works standalone                    │
+│  ✅ No Mac needed after install         │
+│  ❌ Takes longer (minutes)             │
+└─────────────────────────────────────────────┘
+Best for: Testing native code, final QA, sharing .app file
+---
+🎯 Your Typical Workflow
+Day 1: Code change
+  → Run: npx expo start → press i → see changes instantly ✓
+  → Make more changes → Save → see changes instantly ✓
+  → Repeat
+Day 2: Done coding, want to test full build
+  → Run: ./build-and-run.sh → full standalone app ✓
+---
+Quick Reference
+What you're doing	Command
+Coding/editing UI	npx expo start then press i
+Full standalone build	./build-and-run.sh
+Just export bundle	npx expo export --platform ios
+---
 Now whenever you want to rebuild after changes, just run:
 ./build-and-run.sh
 Or from anywhere:
