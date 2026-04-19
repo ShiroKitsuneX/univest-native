@@ -29,13 +29,14 @@ import { loadLocalUserData, saveLocalUserData } from "./src/services/storage";
 import {
   onAuthChange, signIn, signUp, resetPassword, logout, getAuthErrorMessage,
 } from "./src/services/auth";
-import { seedGeoData, fetchGeoCollections } from "./src/services/geo";
 import {
-  fetchUserDoc, fetchUniversities, fetchCourses, fetchIcons,
+  fetchUserDoc, fetchUniversities,
   fetchPosts, fetchPostLikes,
 } from "./src/services/firestore";
 import { SBox } from "./src/components/SBox";
 import { BottomSheet } from "./src/components/BottomSheet";
+import { useGeoStore } from "./src/stores/geoStore";
+import { useCoursesStore } from "./src/stores/coursesStore";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -82,8 +83,8 @@ function MainApp() {
   const [unis, setUnis] = useState(UNIVERSITIES);
   const [posts, setPosts] = useState([]);
   const [fbUnis, setFbUnis] = useState([]);
-  const [fbCourses, setFbCourses] = useState([]);
-  const [fbIcons, setFbIcons] = useState({});
+  const fbCourses = useCoursesStore(s => s.fbCourses);
+  const fbIcons = useCoursesStore(s => s.fbIcons);
   const [selUni, setSU] = useState(null);
   const [selectedBookYear, setSelectedBookYear] = useState(null);
   const [goalsUnis, setGoalsUnis] = useState([]);
@@ -147,9 +148,9 @@ function MainApp() {
   const [mSaved, setMSaved] = useState(false);
   const [gradeFilter, setGradeFilter] = useState("all");
   const [compareMode, setCompareMode] = useState(false);
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
+  const countries = useGeoStore(s => s.countries);
+  const states = useGeoStore(s => s.states);
+  const cities = useGeoStore(s => s.cities);
   const [countryId, setCountryId] = useState("");
   const [stateId, setStateId] = useState("");
   const [cityId, setCityId] = useState("");
@@ -306,13 +307,11 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    const fetch = async () => {
+    useCoursesStore.getState().load();
+    useGeoStore.getState().load();
+    const fetchUnis = async () => {
       try {
-        const [unisList, courses, icons] = await Promise.all([
-          fetchUniversities(),
-          fetchCourses(),
-          fetchIcons(),
-        ]);
+        const unisList = await fetchUniversities();
         if (unisList.length) {
           const withBooksAndExams = unisList.map(fbU => {
             const localU = UNIVERSITIES.find(lU => lU.name === fbU.name);
@@ -320,24 +319,9 @@ function MainApp() {
           });
           setFbUnis(withBooksAndExams); setUnis(withBooksAndExams);
         }
-        if (courses.length) setFbCourses(courses);
-        if (Object.keys(icons).length) setFbIcons(icons);
       } catch {}
     };
-    fetch();
-  }, []);
-
-  useEffect(() => {
-    const loadGeoData = async () => {
-      try {
-        await seedGeoData();
-        const { countries: c, states: s, cities: ci } = await fetchGeoCollections();
-        if (c.length) setCountries(c);
-        if (s.length) setStates(s);
-        if (ci.length) setCities(ci);
-      } catch (e) { console.log("Error loading geo data:", e.message); }
-    };
-    loadGeoData();
+    fetchUnis();
   }, []);
 
   useEffect(() => {
