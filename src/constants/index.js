@@ -5,17 +5,3 @@ export { UNIVERSITIES } from "./universities";
 export { FEED } from "./feedData";
 export { NOTAS_CORTE } from "./notasCorte";
 export { EVENTS, AVATAR_PRESETS, AVATAR_COLORS, TAG_TYPES, TAG_TYPES_LIGHT } from "./events";
-
-export default {
-  USER_TYPES,
-  AREAS,
-  ALL_COURSES,
-  UNIVERSITIES,
-  FEED,
-  NOTAS_CORTE,
-  EVENTS,
-  AVATAR_PRESETS,
-  AVATAR_COLORS,
-  TAG_TYPES,
-  TAG_TYPES_LIGHT,
-};

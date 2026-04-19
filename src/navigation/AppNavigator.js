@@ -7,10 +7,11 @@ import FeedScreen from "../screens/FeedScreen";
 import ExplorarScreen from "../screens/ExplorarScreen";
 import NotasScreen from "../screens/NotasScreen";
 import PerfilScreen from "../screens/PerfilScreen";
+import { useTheme } from "../context/ThemeContext";
 
 const Tab = createBottomTabNavigator();
 
-const TabIcon = ({ name, focused, color }) => {
+const TabIcon = ({ name, focused }) => {
   const icons = {
     Feed: "📰",
     Explorar: "🔍",
@@ -26,57 +27,37 @@ const TabIcon = ({ name, focused, color }) => {
   );
 };
 
-const AppNavigator = ({ theme, isDark }) => {
-  const T = theme;
-  const activeColor = T.accent;
-  const inactiveColor = T.muted;
-  const backgroundColor = T.nav;
-  const borderColor = T.border;
-
+const AppNavigator = () => {
+  const { theme: T, isDark } = useTheme();
+  
   return (
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarStyle: {
-            backgroundColor,
-            borderTopColor: borderColor,
+            backgroundColor: T.nav,
+            borderTopColor: T.border,
             borderTopWidth: 1,
             height: 85,
             paddingBottom: 20,
             paddingTop: 8,
           },
-          tabBarActiveTintColor: activeColor,
-          tabBarInactiveTintColor: inactiveColor,
+          tabBarActiveTintColor: T.accent,
+          tabBarInactiveTintColor: T.muted,
           tabBarLabelStyle: {
             fontSize: 10,
             fontWeight: "600",
           },
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name={route.name} focused={focused} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={route.name} focused={focused} />
           ),
         })}
       >
-        <Tab.Screen
-          name="Feed"
-          component={FeedScreen}
-          options={{ tabBarLabel: "Feed" }}
-        />
-        <Tab.Screen
-          name="Explorar"
-          component={ExplorarScreen}
-          options={{ tabBarLabel: "Explorar" }}
-        />
-        <Tab.Screen
-          name="Notas"
-          component={NotasScreen}
-          options={{ tabBarLabel: "Notas" }}
-        />
-        <Tab.Screen
-          name="Perfil"
-          component={PerfilScreen}
-          options={{ tabBarLabel: "Perfil" }}
-        />
+        <Tab.Screen name="Feed" component={FeedScreen} />
+        <Tab.Screen name="Explorar" component={ExplorarScreen} />
+        <Tab.Screen name="Notas" component={NotasScreen} />
+        <Tab.Screen name="Perfil" component={PerfilScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
