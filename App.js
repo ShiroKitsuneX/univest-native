@@ -34,29 +34,8 @@ import {
   fetchUserDoc, fetchUniversities, fetchCourses, fetchIcons,
   fetchPosts, fetchPostLikes,
 } from "./src/services/firestore";
-
-function SBox({ val, set, ph, T }) {
-  return (
-    <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:13, paddingHorizontal:14, paddingVertical:11, borderWidth:1, borderColor:T.inpB }}>
-      <Text style={{ fontSize:14, marginRight:10 }}>🔍</Text>
-      <TextInput value={val} onChangeText={set} placeholder={ph} placeholderTextColor={T.muted} style={{ flex:1, color:T.text, fontSize:14, padding:0 }} />
-      {!!val && <TouchableOpacity onPress={()=>set("")}><Text style={{ color:T.muted, fontSize:13 }}>✕</Text></TouchableOpacity>}
-    </View>
-  );
-}
-
-function BottomSheet({ visible, onClose, children, T }) {
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex:1, backgroundColor:"rgba(0,0,0,.72)", justifyContent:"flex-end" }}>
-        <TouchableOpacity activeOpacity={1} style={{ backgroundColor:T.card, borderTopLeftRadius:24, borderTopRightRadius:24, minHeight:"85%", maxHeight:"95%", borderTopWidth:1, borderColor:T.border }}>
-          <View style={{ width:36, height:4, backgroundColor:T.border, borderRadius:2, alignSelf:"center", marginTop:12, marginBottom:4 }} />
-          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ flex:1 }}>{children}</ScrollView>
-        </TouchableOpacity>
-      </View>
-    </Modal>
-  );
-}
+import { SBox } from "./src/components/SBox";
+import { BottomSheet } from "./src/components/BottomSheet";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
