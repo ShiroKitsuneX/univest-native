@@ -6,14 +6,14 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 
 ## 0. Current State
 
-| | Before | After Phases 1–4 |
-|---|---|---|
-| `App.js` | 3,084 lines | ~2,570 lines |
-| Modules under `src/` | 1 (firebase config) | 16 |
-| Firebase calls inline in App | ~25 sites | ~15 sites (auth + simple reads extracted) |
-| UI/behavior changes | — | **None** |
+| | Before | After Phases 1–4 | After Phase A (partial) |
+|---|---|---|---|
+| `App.js` | 3,084 lines | ~2,570 lines | ~2,543 lines |
+| Modules under `src/` | 1 (firebase config) | 16 | 19 |
+| Firebase calls inline in App | ~25 sites | ~15 sites | ~11 sites |
+| UI/behavior changes | — | **None** | **None** |
 
-`App.js` still contains a god-component `MainApp` with ~80 `useState` hooks and the full screen tree as a giant `tab === "..."` switch. This is the next target.
+`App.js` still contains a god-component `MainApp` with ~75 `useState` hooks and the full screen tree as a giant `tab === "..."` switch. This is the next target.
 
 ### Phases completed (✅)
 
@@ -23,6 +23,14 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 4. **Standalone presentational components** → `src/components/{SBox,BottomSheet}.js`
 
 Everything above is pure cut-and-paste. Zero behavioral risk.
+
+### Phase A in progress (🟡)
+
+- ✅ `src/stores/geoStore.js` — countries/states/cities + selectors
+- ✅ `src/stores/coursesStore.js` — fbCourses/fbIcons + getIcon
+- ✅ `src/stores/postsStore.js` — posts + load/loadLikesFor/like+share deltas
+- ⏳ authStore, onboardingStore, universitiesStore, profileStore, progressStore remaining
+- ❌ `uiStore` deleted from the plan — see rationale in Phase A below
 
 ---
 

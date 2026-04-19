@@ -31,12 +31,12 @@ import {
 } from "./src/services/auth";
 import {
   fetchUserDoc, fetchUniversities,
-  fetchPosts, fetchPostLikes,
 } from "./src/services/firestore";
 import { SBox } from "./src/components/SBox";
 import { BottomSheet } from "./src/components/BottomSheet";
 import { useGeoStore } from "./src/stores/geoStore";
 import { useCoursesStore } from "./src/stores/coursesStore";
+import { usePostsStore } from "./src/stores/postsStore";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -81,7 +81,7 @@ function MainApp() {
 
   const [tab, setTab] = useState("feed");
   const [unis, setUnis] = useState(UNIVERSITIES);
-  const [posts, setPosts] = useState([]);
+  const posts = usePostsStore(s => s.posts);
   const [fbUnis, setFbUnis] = useState([]);
   const fbCourses = useCoursesStore(s => s.fbCourses);
   const fbIcons = useCoursesStore(s => s.fbIcons);
@@ -330,29 +330,21 @@ function MainApp() {
   }, [fbUnis, userData]);
 
   useEffect(() => {
-    const loadPosts = async () => {
-      let displayed = FEED;
-      try {
-        const f = await fetchPosts();
-        if (f.length) { setPosts(f); displayed = f; }
-        else setPosts(FEED);
-      } catch { setPosts(FEED); }
-      if (currentUser && displayed.length) {
-        try {
-          const lk = await fetchPostLikes(displayed, currentUser.uid);
-          setLiked(lk);
-        } catch {}
+    (async () => {
+      await usePostsStore.getState().load();
+      if (currentUser) {
+        const lk = await usePostsStore.getState().loadLikesFor(currentUser.uid);
+        if (Object.keys(lk).length) setLiked(lk);
       }
-    };
-    loadPosts();
+    })();
   }, [currentUser]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [unisList, postsList] = await Promise.all([
+      const [unisList] = await Promise.all([
         fetchUniversities(),
-        fetchPosts(),
+        usePostsStore.getState().load(),
       ]);
       if (unisList.length) {
         const withBooksAndExams = unisList.map(fbU => {
@@ -361,12 +353,9 @@ function MainApp() {
         });
         setFbUnis(withBooksAndExams);
       }
-      if (postsList.length) {
-        setPosts(postsList);
-        if (currentUser) {
-          const lk = await fetchPostLikes(postsList, currentUser.uid);
-          setLiked(lk);
-        }
+      if (currentUser) {
+        const lk = await usePostsStore.getState().loadLikesFor(currentUser.uid);
+        if (Object.keys(lk).length) setLiked(lk);
       }
     } catch {}
     setRefreshing(false);
@@ -1325,7 +1314,7 @@ Data da última atualização: ${new Date().toLocaleDateString("pt-BR")}`}</Text
                   if(!currentUser){Alert.alert("Atenção","Faça login para curtir");return;}
                   const newLiked=!liked[item.id];
                   setLiked(p=>({...p,[item.id]:newLiked}));
-                  setPosts(prev=>prev.map(p=>p.id===item.id?{...p,likesCount:(p.likesCount??p.likes??0)+(newLiked?1:-1)}:p));
+                  usePostsStore.getState().setLikeDelta(item.id, newLiked?1:-1);
                   saveLocalUserData(currentData());
                   (async()=>{
                     try{
@@ -1341,7 +1330,7 @@ Data da última atualização: ${new Date().toLocaleDateString("pt-BR")}`}</Text
                 <TouchableOpacity onPress={()=>{
                   setMshr(item);
                   // Increment share count optimistically + in Firebase
-                  setPosts(prev=>prev.map(p=>p.id===item.id?{...p,sharesCount:(p.sharesCount||0)+1}:p));
+                  usePostsStore.getState().setShareDelta(item.id, 1);
                   updateDoc(doc(db,"posts",item.id),{sharesCount:increment(1)}).catch(()=>{});
                 }} style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:7, paddingVertical:4, marginRight:2 }}>
                   <Text style={{ fontSize:14, marginRight:4 }}>📤</Text>
