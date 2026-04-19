@@ -904,9 +904,20 @@ function MainApp() {
     setAuthSubmitting(false);
   };
 
+  const validatePassword = (pwd) => {
+    if (!pwd) return "Senha é obrigatória";
+    if (pwd.length < 8) return "Mínimo 8 caracteres";
+    if (pwd.length > 64) return "Máximo 64 caracteres";
+    if (!/\d/.test(pwd)) return "Pelo menos 1 número";
+    if (!/[a-z]/.test(pwd) || !/[A-Z]/.test(pwd)) return "Maiúscula e minúscula";
+    if (!/[!@#$%&*?,]/.test(pwd)) return "Caractere especial (!@#$%...)";
+    return "";
+  };
+
   const handleSignup = async () => {
     setAuthTouched({email:true,nome:true,sobrenome:true,senha:true,confirmarSenha:true,nascimento:true});
-    if (!authEmail||!authPassword||!authName.trim()||!authSobrenome.trim()||authPassword.length<6||authPassword!==authConfirmPassword||!authBirthdate.trim()||!authAcceptTerms){return;}
+    const pwdErr = validatePassword(authPassword);
+    if (!authEmail||!authPassword||!authName.trim()||!authSobrenome.trim()||pwdErr||authPassword!==authConfirmPassword||!authBirthdate.trim()||!authAcceptTerms){return;}
     setAuthSubmitting(true); setAuthError("");
     try {
       const cred = await createUserWithEmailAndPassword(auth,authEmail,authPassword);
@@ -1121,17 +1132,23 @@ function MainApp() {
                       </Animated.View>
                     )}
                     <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Senha</Text>
-                    <View style={{ marginBottom:16 }}>
-                      <TextInput value={authPassword} onChangeText={(t)=>{setAuthPassword(t);setAuthTouched(p=>({...p,senha:true}));}} placeholder={loginMode==="signup"?"Mínimo 6 caracteres":"••••••••"} placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:loginMode==="signup"&&authTouched.senha&&authPassword.length>0&&authPassword.length<6?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+                    <View style={{ marginBottom:8 }}>
+                      <TextInput value={authPassword} onChangeText={(t)=>{setAuthPassword(t);setAuthTouched(p=>({...p,senha:true}));}} placeholder={loginMode==="signup"?"Mínimo 8 caracteres":"••••••••"} placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} maxLength={64} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:loginMode==="signup"&&authTouched.senha&&validatePassword(authPassword)?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
                       <TouchableOpacity onPress={()=>setShowLoginPwd(!showLoginPwd)} style={{ position:"absolute", right:12, top:12 }}><Text style={{ fontSize:16 }}>{showLoginPwd?"👁️‍🗨️":"👁️"}</Text></TouchableOpacity>
                     </View>
+                    {loginMode==="signup" && authTouched.senha && validatePassword(authPassword) && (
+                      <Text style={{ color:"#f87171", fontSize:11, marginBottom:4 }}>{validatePassword(authPassword)}</Text>
+                    )}
                     {loginMode==="signup" && (
                       <>
                         <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Confirmar Senha</Text>
-                        <View style={{ marginBottom:16 }}>
-                          <TextInput value={authConfirmPassword} onChangeText={(t)=>{setAuthConfirmPassword(t);setAuthTouched(p=>({...p,confirmarSenha:true}));}} placeholder="••••••••" placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:authTouched.confirmarSenha&&authConfirmPassword!==authPassword?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
+                        <View style={{ marginBottom:8 }}>
+                          <TextInput value={authConfirmPassword} onChangeText={(t)=>{setAuthConfirmPassword(t);setAuthTouched(p=>({...p,confirmarSenha:true}));}} placeholder="••••••••" placeholderTextColor={T.muted} secureTextEntry={!showLoginPwd} maxLength={64} style={{ padding:12, paddingRight:44, borderRadius:12, borderWidth:1, borderColor:authTouched.confirmarSenha&&(authConfirmPassword!==authPassword||validatePassword(authPassword))?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
                           <TouchableOpacity onPress={()=>setShowLoginPwd(!showLoginPwd)} style={{ position:"absolute", right:12, top:12 }}><Text style={{ fontSize:16 }}>{showLoginPwd?"👁️‍🗨️":"👁️"}</Text></TouchableOpacity>
                         </View>
+                        {loginMode==="signup" && authTouched.confirmarSenha && authConfirmPassword!==authPassword && (
+                          <Text style={{ color:"#f87171", fontSize:11, marginBottom:12 }}>As senhas não coincidem</Text>
+                        )}
                         <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Data de Nascimento</Text>
                         <TextInput value={authBirthdate} onChangeText={(text)=>{let t=text.replace(/\D/g,"").slice(0,10);if(t.length>4){if(t.length>4&&t.length<=6)t=t.slice(0,2)+"/"+t.slice(2,4)+"/"+t.slice(4);else if(t.length>6)t=t.slice(0,2)+"/"+t.slice(2,4)+"/"+t.slice(4,8);}else if(t.length>2)t=t.slice(0,2)+"/"+t.slice(2);setAuthBirthdate(t);const d=parseInt(t.slice(0,2))||0,m=parseInt(t.slice(3,5))||0,y=parseInt(t.slice(6,10))||0;const invalid=!t||d<1||d>31||m<1||m>12||y<1900||y>2100;setAuthTouched(p=>({...p,nascimento:invalid}));}} placeholder="DD/MM/AAAA" placeholderTextColor={T.muted} keyboardType="numeric" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:authTouched.nascimento?"#f87171":T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:4 }} />
                         {authTouched.nascimento && <Text style={{ color:"#f87171", fontSize:11, marginBottom:12 }}>Data inválida (DD/MM/AAAA)</Text>}
