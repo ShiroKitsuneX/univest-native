@@ -1134,13 +1134,13 @@ function MainApp() {
                         </View>
                         <Text style={{ color:T.sub, fontSize:12, marginBottom:6 }}>Data de Nascimento</Text>
                         <TextInput value={authBirthdate} onChangeText={(text)=>{let t=text.replace(/\D/g,"").slice(0,8);if(t.length>4)t=t.slice(0,2)+"/"+t.slice(2,4)+"/"+t.slice(4);else if(t.length>2)t=t.slice(0,2)+"/"+t.slice(2);setAuthBirthdate(t);}} placeholder="DD/MM/AAAA" placeholderTextColor={T.muted} keyboardType="numeric" style={{ padding:12, borderRadius:12, borderWidth:1, borderColor:T.border, backgroundColor:T.inp, color:T.text, fontSize:14, marginBottom:16 }} />
-                        <TouchableOpacity onPress={()=>setAuthAcceptTerms(!authAcceptTerms)} style={{ flexDirection:"row", alignItems:"center", marginBottom:4 }}>
+                        <TouchableOpacity onPress={()=>setAuthAcceptTerms(!authAcceptTerms)} style={{ flexDirection:"row", alignItems:"center", marginBottom:16 }}>
                           <View style={{ width:22, height:22, borderRadius:6, backgroundColor:authAcceptTerms?T.accent:T.inp, borderWidth:1, borderColor:authAcceptTerms?T.accent:T.border, alignItems:"center", justifyContent:"center", marginRight:10 }}>
                             {authAcceptTerms && <Text style={{ color:AT, fontSize:14, fontWeight:"700" }}>✓</Text>}
                           </View>
-                          <Text style={{ color:T.sub, fontSize:12, flex:1 }}>Li e aceito os </Text>
+                          <Text style={{ color:T.sub, fontSize:12 }}>Li e aceito os </Text>
+                          <Pressable onPress={()=>setShowTerms(true)}><Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline" }}>Termos e Condições</Text></Pressable>
                         </TouchableOpacity>
-                        <Pressable onPress={()=>setShowTerms(true)}><Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline", marginBottom:16 }}>Termos e Condições</Text></Pressable>
                       </>
                     )}
                     {!!authError && <Text style={{ color:"#f87171", fontSize:12, marginBottom:8, textAlign:"center" }}>{authError}</Text>}
