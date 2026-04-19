@@ -1,42 +1,180 @@
 # Univest - Feature Notes & Ideas
 
-This document contains all feature ideas, improvements, and planned enhancements for the Univest app.
+This document contains all feature ideas, improvements, and planned enhancements for the Univest app, organized by the app's navigation structure.
 
 ---
 
-## Profile (Modular Items)
+## TABLE OF CONTENTS
 
-Profile items should be modular, meaning users can customize which sections appear on their profile and in what order.
-
-**Proposed Profile Sections:**
-- Personal Info (name, location, study location)
-- Universities Following (with sorting options)
-- Exams Taken (real vs mock separation)
-- Saved Content
-- Goals / TODO
-- Calendar
-- Achievements / Gamification
-- Settings
+1. [Onboarding](#1-onboarding)
+2. [Auth](#2-auth)
+3. [Feed Tab](#3-feed-tab)
+4. [Explorar Tab](#4-explorar-tab)
+5. [Notas Tab](#5-notas-tab)
+6. [Perfil Tab](#6-perfil-tab)
+7. [Ongoing Screens](#7-ongoing-screens)
+8. [UI/UX Improvements](#8-uiux-improvements)
+9. [Tech Considerations](#9-tech-considerations)
+10. [Action Items](#10-action-items)
 
 ---
 
-## Exams ("Provas")
+## 1. ONBOARDING
 
-### Separation: Real Exams vs Mock Exams
-- "Real Exams" - official exams the user has taken (ENEM, FUVEST, UNICAMP, etc.)
-- "Mock Exams" / "Simulados" - practice tests the user has done
+### Welcome Screen
+- Slogan: "Seu portal inteligente para todos os momentos da sua jornada acadêmica"
+- Button: "Começar Jornada"
+- Remove ">" from selection cards
 
-### Charts & Analytics
-Display charts showing:
-- **Real Exams Taken** - count and history
-- **Mock Exams Taken** - count and history
+### Interests Selection (Page)
+Select one or more areas:
+- Ensino Médio e Técnico
+- Vestibulares e ENEM
+- Graduação
+- Mestrado
+- Doutorado
+- Pós-doutorado
+- Pesquisadores
 
-**Chart Views:**
-- By Month - how many exams per month
-- By Year - how many exams per year
-- All Time - since the first exam taken
+### User Profile Selection (Page)
+"O que melhor descreve você agora? (Você pode alterar depois)"
 
-**Implementation:**
+| Option | Description |
+|--------|-------------|
+| Ensino Médio | Cursando o ensino médio regular |
+| Ensino Médio Técnico | ex: COTUCA, ETEC, SENAI, IFSP |
+| Pré-vestibulando | Me preparando para vestibulares |
+| Foco no ENEM | Estudando para o ENEM / SISU |
+| Graduando | Cursando uma graduação |
+| Pré-mestrado | Buscando uma vaga em mestrado |
+| Mestrando | Cursando o mestrado |
+| Pré-doutorado | Buscando uma vaga em doutorado |
+| Doutorando | Cursando o doutorado |
+| Pós-doutorando | Realizando pesquisa pós-doutoral |
+| Educação Continuada | Cursos livres, MBA, Especializações |
+
+Each option needs its own screen (e.g., pré-vestibulando → list courses)
+
+### Follow Universities (Page)
+"Você verá as novidades delas no seu feed"
+
+- Filter based on user profile selection
+- Show universities user wants to follow
+
+---
+
+## 2. AUTH
+
+### Login / Signup (Page)
+- Make name mandatory during account creation
+- Terms and Conditions link
+  - Should open as Modal or Page
+  - Include basic placeholder content
+
+---
+
+## 3. FEED TAB
+
+### Current Features (Page)
+- Posts from followed universities
+- Academic news
+- Events
+- Opportunities (internships, scholarships)
+- Personalized feed by interest area
+
+### Proposed Improvements
+
+#### Calendar Summary (replace stories)
+- Show upcoming events
+- Quick tap to see details
+- Monthly summary view
+
+#### Quiz Mode (future - could be Modal or Page)
+- Subject-specific quizzes
+- General knowledge quizzes
+- Timed mode
+
+---
+
+## 4. EXPLORAR TAB
+
+### Current Features (Page)
+- Search universities
+- Search courses
+- Search vestibulares
+- Search events
+- Lists: Notas de Corte, University Rankings
+- My followed universities
+
+### Proposed Improvements
+
+#### Filters (Fields)
+- By location (city, state)
+- By course
+- By difficulty
+- By cost (free, paid)
+- By duration
+
+#### Past Exams
+- All past exams from all vestibulares (future)
+- Previous years exams
+- Answer keys
+- Mock exams history
+
+#### ENEM Profile (Page)
+Create as its own "university" profile with:
+- Exam dates
+- Requirements (ID, pen colors allowed)
+- Notes de corte history
+- Previous exams
+- Study tips
+- Registration dates
+
+#### University Details (Page)
+- **Verified Badge** ✓ - for accredited universities that control their pages
+  - Blue checkmark ✓ next to name
+  - "Verified" label
+  - Manual verification in database
+- All past exams per university
+- Previous mock exams
+- Previously required books
+- Historical notes de corte
+- Exam format changes over time
+- Requirements per exam (pen color, ID, food, documents, etc.)
+
+#### Tutor / Teacher Profiles (future - Page)
+Explore idea:
+- Private tutors listing
+- Subject specialists
+- Ratings and reviews
+- Contact information
+- Available for classes
+- Questions: Separate tab? Verify? Booking?
+
+---
+
+## 5. NOTAS TAB
+
+### Current Features (Page)
+- Register notes (ENEM, vestibulares, university grades)
+- Notes history
+- Compare with notes de corte
+- Simulate admission possibilities
+
+### Proposed Improvements
+
+#### Exams Separation (Card)
+- **Real Exams** - official exams user has taken (ENEM, FUVEST, UNICAMP, etc.)
+- **Mock Exams / Simulados** - practice tests done
+
+#### Charts (Card)
+Display counts: Real Exams vs Mock Exams
+
+**Chart Views (toggle):**
+- By Month - how many per month
+- By Year - how many per year
+- All Time - since first exam
+
 ```
 ┌─────────────────────────────────────┐
 │         EXAMS OVERVIEW              │
@@ -51,270 +189,192 @@ Display charts showing:
 └─────────────────────────────────────┘
 ```
 
+#### Filters (Fields)
+- Filter by subject/year/exam type
+
+#### Messaging (Change text)
+"Esta nota de corte..." → **"Os cursos selecionados guiam toda a análise abaixo"**
+
 ---
 
-## Saved Content
+## 6. PERFIL TAB
 
-Currently displays posts/links saved for later.
+### Current Features (Page)
+- Personal data
+- Edit profile
+- Goals
+- Settings
+- Discover new areas
+- Logout
 
+### Proposed Improvements
+
+#### Profile Items - Modular (Cards)
+Users customize which sections appear and order.
+
+**Proposed Order/Sections:**
+1. Personal Info (name, location, study location)
+2. Universities Following
+3. Exams Taken
+4. Saved Content
+5. Goals / TODO
+6. Calendar
+7. Achievements / Gamification
+8. Settings
+
+#### Home / Study Location (Fields in Profile)
+- Add current city/state
+- Add desired study city/location
+
+#### Universities Following ("Universidades que sigo")
+**Problem:** Icons too large, no sorting
+
+**Solution:**
+1. **Smaller Icons Grid** (Card)
+   - Small circular format
+   - 4-6 icons per row
+   - Clean grid layout
+
+2. **Sorting Options** (Fields)
+   - **By Date** - based on exam dates (soonest first)
+   - **By Preference** - rank by how much you want to get in
+
+3. **Edit Screen** (Page - accessible via link, not new tab)
+   - Drag and drop reordering
+   - Mark preference (1st choice, 2nd choice, etc.)
+   - Set exam date reminders
+
+#### Universities to Take Vestibular (New Page/Modal)
+Separate from "Following":
+- Universities user intends to take exam
+- Affects recommendations
+- Shows TODO like books to read
+
+#### TODO Based on Chosen Universities (Page)
+- "Read these books"
+- "Study this topic"
+- "Writing style: letter"
+- Auto-generate from university data (books in DB)
+
+#### Exams - Countdown (Card/Modal)
+- Add upcoming exams
+- **Countdown display**: "X days until [exam name]"
+- Show exam dates user is planning to take
+
+#### Calendar (Page in Profile)
+- Monthly view
+- Add exam dates
+- Add study sessions
+- Add important deadlines
+
+#### Saved Content (Page/Modal)
 **Improvements:**
 - Better organization (folders, tags, categories)
 - Quick access search bar
-- Add thumbnails for visual recognition
-- Create categories: "Universities", "Courses", "Exams", "Study Materials"
-- Option to add personal notes to saved items
+- Thumbnails for visual recognition
+- Categories: "Universities", "Courses", "Exams", "Study Materials"
+- Option to add personal notes
 
----
+#### Books Read (Page/Card)
+- Section for books read
+- Checkmark when completed
+- Compare with required books per university
 
-## Gamification
+#### Gamification
 
-### Ideas:
-
-1. **Exam Countdown**
-   - Show upcoming exams in profile/feed
+1. **Exam Countdown** (Card)
+   - Show upcoming exams
    - Display "X days until [exam name]"
    - Notifications as date approaches
 
-2. **Achievements / Badges**
+2. **Achievements / Badges** (Page/Card)
    - First exam taken
    - 10 mock exams completed
    - University followed milestone
    - Study streak (consecutive days)
 
-3. **Progress Tracking**
+3. **Progress Tracking** (Page)
    - Study hours logged
    - Books read
    - Topics mastered
 
-4. **Streaks**
+4. **Streaks** (Field/Card)
    - Daily login streak
    - Study streak
    - Notes updated streak
 
-5. **Leaderboard** (optional/future)
+5. **Leaderboard** (future)
    - Compare with friends
    - Study group rankings
 
----
-
-## Universities Following ("Universidades que sigo")
-
-### Current Issues:
-- Icons too large
-- Poor organization
-- No sorting options
-
-### Proposed Solution:
-
-**1. Smaller Icons Grid**
-- University crest/logo in small circular format
-- 4-6 icons per row
-- Clean grid layout
-
-**2. Sorting Options:**
-- **By Date** - based on exam dates (soonest first)
-- **By Preference** - rank universities by how much you want to get in
-
-**3. Edit Screen**
-- Accessible via link from profile (not new tab)
-- Drag and drop reordering
-- Mark preference (1st choice, 2nd choice, etc.)
-- Set exam date reminders
-
----
-
-## ENEM as "University" Profile
-
-Create ENEM as its own profile similar to universities:
-
-- Exam dates
-- Requirements (ID, pen colors allowed, etc.)
-- Notes de corte history
-- Previous exams
-- Study tips
-- Registration dates
-
----
-
-## Tutor / Teacher Profiles
-
-Explore this feature for:
-
-- Private tutors listing
-- Subject specialists
-- Ratings and reviews
-- Contact information
-- Availability for classes
-
-**Questions to explore:**
-- Should this be a separate tab?
-- How to verify tutors?
-- Allow booking through app?
-
----
-
-## Calendar
-
-### Profile Calendar
-- Monthly view
-- Add exam dates
-- Add study sessions
-- Add important deadlines (registration, documents)
-
-### Feed Calendar Summary
-- Replace "stories" area
-- Show upcoming events
-- Quick tap to see details
-
----
-
-## Verified Badge
-
-For universities that:
-- Are officially accredited
-- Control their own pages
-- Have verified accounts
-
-**Implementation:**
-- Blue checkmark ✓ next to university name
-- Show "Verified" label on profile
-- Manual verification in database
-
----
-
-## University Details
-
-Expand to include:
-- All past exams (years previous)
-- Previous mock exams
-- Previously required books
-- Exam format changes over time
-- Historical notes de corte
-
----
-
-## Opportunities (Future Features)
-
-### Job Openings
-- New section for job opportunities
-- Internship listings
-- Part-time work
-
-### Scholarships
-- General scholarships
-- Financial aid (FIES info)
-- Merit-based scholarships
-- Research grants
-
-### Scientific Initiation
-- Research opportunities
-- Monitoring positions
-- Extension projects
-
-### Companies
-Register companies that offer:
-- Internships
-- Scholarships
-- Training programs
-
----
-
-## Filters
-
-### Explore Filter
-- By location (city, state)
-- By course
-- By difficulty
-- By cost (free, paid)
-- By duration
-
-### Notes Filter
-- Filter by subject
-- Filter by year
-- Filter by exam type
-
----
-
-## Acceptance Celebration
-
-When user marks they got accepted into a university:
-
-**Features:**
+#### Acceptance Celebration (Modal)
+When user marks acceptance:
 - Confetti animation
-- Option to set university as profile background
-- Celebration for multiple acceptances
+- Option to set uni as profile background
+- Multiple acceptances celebration
 - Share option
 
 ---
 
-## UI/UX Improvements
+## 7. ONGOING SCREENS
+
+These are screens accessed from multiple places:
+
+- **University Detail** (Page) → from Explorar or Feed
+- **Course Detail** (Page) → from university or search
+- **Exam Detail** (Page) → from university
+- **Post Detail** (Page) → from Feed
+- **Saved Items** (Page) → from Profile
+- **Edit Universities** (Page) → from Profile (link, not tab)
+
+### Flashcard Mode (future - Page or Modal)
+- User creates own flashcards
+- Pre-made subject flashcards
+- Study mode
+
+---
+
+## 8. UI/UX IMPROVEMENTS
 
 ### Terminology Clarification
 
 | Term | Definition |
-|------|------------|
+|------|-------------|
 | **Page** | Full screen content (e.g., Feed, Profile) |
-| **Modal** | Overlay that covers part of screen (bottom sheets) |
+| **Modal** | Overlay covering part of screen (bottom sheets) |
 | **Popup** | Small overlay for confirmations/alerts |
 | **Field** | Input area for text/data |
 | **Card** | Container for content blocks |
 | **Tab** | Bottom navigation item |
 
-### Other UI Changes:
+### Other Changes
 - Remove ">" from selection boxes
-- Improve click animations
+- Improve tap animations
 - Better loading states
 - Empty states with helpful messages
+- Better animation on "Entrar ou criar conta"
 
 ---
 
-## Terms and Conditions
-
-Add terms accessible from signup:
-- Open as a modal or full page
-- Include basic terms placeholder
-- Link from signup form
-
----
-
-## Additional Ideas
-
-### Study Materials
-- Add section for books read
-- Checkmark system when book is completed
-- Compare with required books per university
-
-### Messaging
-- Replace "Esta nota de corte..." with "Os cursos selecionados guiam toda a análise abaixo"
-
-### Notes Section
-- TODO based on chosen universities
-  - "Read these books"
-  - "Study this topic"
-  - "Writing style: letter"
-
-### Flashcard Mode
-- User creates own flashcards
-- Pre-made subject flashcards
-- Study mode
-
-### Quiz
-- Subject-specific quizzes
-- General knowledge quizzes
-- Timed mode
-
----
-
-## Tech Considerations
+## 9. TECH CONSIDERATIONS
 
 ### Database Options
-- SQLite for local data (consider in future)
-- SQL DB for backend (explore)
+- **SQLite** for local data (future consideration)
+- **SQL DB** for backend (explore)
 - Current: Firebase Firestore
+
+### Opportunities Section (future - could be new Tab or Page)
+- **Job Openings** - new section
+- **Internships** - listings
+- **Scholarships** - general, FIES info
+- **Scientific Initiation** - research positions
+- **Monitoring** - positions
+- **Extension Projects** - programs
+- **Companies** - register to offer internships
 
 ---
 
-## Action Items (Priority Order)
+## 10. ACTION ITEMS
 
 ### High Priority
 - [ ] Make profile items modular
@@ -322,8 +382,11 @@ Add terms accessible from signup:
 - [ ] Add exam charts (month, year, all-time)
 - [ ] Add exam countdown
 - [ ] Improve University Following (smaller icons, sorting)
+- [ ] Add home/study location to profile
 - [ ] Create ENEM profile
-- [ ] Add exam registration dates to universities
+- [ ] Add exam requirements (pen color, documents, etc.)
+- [ ] Add "universities to take vestibular" section
+- [ ] Make name mandatory during signup
 
 ### Medium Priority
 - [ ] Add calendar to profile
@@ -331,13 +394,20 @@ Add terms accessible from signup:
 - [ ] Improve saved content organization
 - [ ] Add gamification elements
 - [ ] Add verified badges
-- [ ] Expand university details
+- [ ] Expand university details (past exams, books)
+- [ ] Add todo based on chosen universities
+- [ ] Add acceptance celebration
+- [ ] Add books read section
 
 ### Low Priority
+- [ ] Quiz mode
+- [ ] Flashcard mode
 - [ ] Tutor profiles
 - [ ] Job openings section
 - [ ] Scholarships section
 - [ ] FIES info
-- [ ] Acceptance celebration
-- [ ] Quiz mode
-- [ ] Flashcard mode
+- [ ] Flashcard by subject
+- [ ] Filter options in explore
+- [ ] Filter options in notes
+- [ ] All past exams database
+- [ ] Leaderboard

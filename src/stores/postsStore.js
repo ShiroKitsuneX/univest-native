@@ -35,13 +35,11 @@ export const usePostsStore = create((set, get) => ({
     }
   },
 
-  setLiked: (liked) => set({ liked }),
-  setSaved: (saved) => set({ saved }),
-  toggleSaved: (id) => set(state => ({
-    saved: { ...state.saved, [id]: !state.saved[id] },
+  setLiked: (v) => set(state => ({
+    liked: typeof v === "function" ? v(state.liked) : v,
   })),
-  setLikedOne: (id, value) => set(state => ({
-    liked: { ...state.liked, [id]: value },
+  setSaved: (v) => set(state => ({
+    saved: typeof v === "function" ? v(state.saved) : v,
   })),
 
   setLikeDelta: (id, delta) => set(state => ({

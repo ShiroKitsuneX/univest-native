@@ -6,14 +6,15 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 
 ## 0. Current State
 
-| | Before | After Phases 1–4 | After Phase A (partial) |
+| | Before | After Phases 1–4 | After Phase A |
 |---|---|---|---|
-| `App.js` | 3,084 lines | ~2,570 lines | ~2,543 lines |
-| Modules under `src/` | 1 (firebase config) | 16 | 19 |
-| Firebase calls inline in App | ~25 sites | ~15 sites | ~11 sites |
+| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines |
+| `MainApp` `useState` sites | ~80 | ~80 | 57 (modals/forms/temp) |
+| Modules under `src/` | 1 (firebase config) | 16 | 24 |
+| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites |
 | UI/behavior changes | — | **None** | **None** |
 
-`App.js` still contains a god-component `MainApp` with ~75 `useState` hooks and the full screen tree as a giant `tab === "..."` switch. This is the next target.
+`App.js` still contains a god-component `MainApp` and the full screen tree as a giant `tab === "..."` switch. Cross-screen state is now in Zustand stores; remaining `useState` calls are modal toggles, form fields, temporary pickers, and search strings. Splitting the screen tree is the next target.
 
 ### Phases completed (✅)
 
@@ -24,13 +25,21 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 
 Everything above is pure cut-and-paste. Zero behavioral risk.
 
-### Phase A in progress (🟡)
+### Phase A complete (✅)
 
 - ✅ `src/stores/geoStore.js` — countries/states/cities + selectors
 - ✅ `src/stores/coursesStore.js` — fbCourses/fbIcons + getIcon
-- ✅ `src/stores/postsStore.js` — posts + load/loadLikesFor/like+share deltas
-- ⏳ authStore, onboardingStore, universitiesStore, profileStore, progressStore remaining
-- ❌ `uiStore` deleted from the plan — see rationale in Phase A below
+- ✅ `src/stores/postsStore.js` — posts, liked, saved + load/loadLikesFor/like+share deltas
+- ✅ `src/stores/progressStore.js` — readBooks, readingBooks, completedTodos
+- ✅ `src/stores/universitiesStore.js` — unis, fbUnis, selUni, goalsUnis, uniPrefs, uniSort + load/applyFollowedUnis
+- ✅ `src/stores/onboardingStore.js` — step, done, uType, c1, c2
+- ✅ `src/stores/profileStore.js` — nome, sobrenome, theme, av, avBgIdx, gs, ng, home/study geo ids
+- ✅ `src/stores/authStore.js` — currentUser, userData, authLoading (+ subscribe action)
+- ❌ `uiStore` deleted from the plan — theme/avatar live in `profileStore` since they are user-profile data; transient UI state (modals, pickers, searches) stays local in `MainApp`.
+
+**Not yet done (deferred to keep behavior identical in Phase A):**
+- `syncUserData` / `currentData()` / `saveTimerRef` debounce still live in `MainApp`. The plan called for per-slice persistence middleware — safer to land that in a dedicated follow-up so the all-in-one write path isn't disturbed while screens are still being split.
+- The `onAuthChange` cascade still dispatches to each store inline. A `persistToUser` middleware + store-level `hydrateFromFb(fbData)` would be the clean final form; kept as-is for now to minimize behavior drift.
 
 ---
 

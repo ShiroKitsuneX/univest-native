@@ -15,7 +15,6 @@ import {
 
 import { USER_TYPES } from "./src/data/userTypes";
 import { AREAS, ALL_COURSES } from "./src/data/areas";
-import { UNIVERSITIES } from "./src/data/universities";
 import { FEED } from "./src/data/feed";
 import { NOTAS_CORTE } from "./src/data/notasCorte";
 import { EVENTS } from "./src/data/events";
@@ -29,26 +28,34 @@ import { loadLocalUserData, saveLocalUserData } from "./src/services/storage";
 import {
   onAuthChange, signIn, signUp, resetPassword, logout, getAuthErrorMessage,
 } from "./src/services/auth";
-import {
-  fetchUserDoc, fetchUniversities,
-} from "./src/services/firestore";
+import { fetchUserDoc } from "./src/services/firestore";
 import { SBox } from "./src/components/SBox";
 import { BottomSheet } from "./src/components/BottomSheet";
 import { useGeoStore } from "./src/stores/geoStore";
 import { useCoursesStore } from "./src/stores/coursesStore";
 import { usePostsStore } from "./src/stores/postsStore";
+import { useProgressStore } from "./src/stores/progressStore";
+import { useUniversitiesStore } from "./src/stores/universitiesStore";
+import { useOnboardingStore } from "./src/stores/onboardingStore";
+import { useProfileStore } from "./src/stores/profileStore";
+import { useAuthStore } from "./src/stores/authStore";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
   const colorScheme = Appearance.getColorScheme();
-  const [theme, setTheme] = useState("dark");
+  const theme = useProfileStore(s => s.theme);
+  const setTheme = useProfileStore(s => s.setTheme);
   const isDark = theme==="auto" ? colorScheme==="dark" : theme==="dark";
   const T = isDark ? DK : LT;
   const TG = isDark ? TAG_D : TAG_L;
   const AT = isDark ? "#000" : "#fff";
 
-  const [currentUser, setCurrentUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const currentUser = useAuthStore(s => s.currentUser);
+  const setCurrentUser = useAuthStore(s => s.setCurrentUser);
+  const authLoading = useAuthStore(s => s.authLoading);
+  const setAuthLoading = useAuthStore(s => s.setAuthLoading);
+  const userData = useAuthStore(s => s.userData);
+  const setUserData = useAuthStore(s => s.setUserData);
   const [showLogin, setShowLogin] = useState(false);
   const [loginMode, setLoginMode] = useState("login");
   const [authEmail, setAuthEmail] = useState("");
@@ -58,8 +65,10 @@ function MainApp() {
   const [authAcceptTerms, setAuthAcceptTerms] = useState(false);
   const [authName, setAuthName] = useState("");
   const [authSobrenome, setAuthSobrenome] = useState("");
-  const [nome, setNome] = useState("");
-  const [sobrenome, setSobrenome] = useState("");
+  const nome = useProfileStore(s => s.nome);
+  const setNome = useProfileStore(s => s.setNome);
+  const sobrenome = useProfileStore(s => s.sobrenome);
+  const setSobrenome = useProfileStore(s => s.setSobrenome);
   const [authError, setAuthError] = useState("");
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
@@ -67,54 +76,69 @@ function MainApp() {
   const [showLoginPwd, setShowLoginPwd] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [authTouched, setAuthTouched] = useState({email:false,nome:false,sobrenome:false,senha:false,confirmarSenha:false,nascimento:false});
-  const [userData, setUserData] = useState(null);
 
-  const [step, setStep] = useState(0);
-  const [done, setDone] = useState(false);
-  const [uType, setUType] = useState(null);
-  const [c1, setC1] = useState("");
-  const [c2, setC2] = useState("");
+  const step = useOnboardingStore(s => s.step);
+  const setStep = useOnboardingStore(s => s.setStep);
+  const done = useOnboardingStore(s => s.done);
+  const setDone = useOnboardingStore(s => s.setDone);
+  const uType = useOnboardingStore(s => s.uType);
+  const setUType = useOnboardingStore(s => s.setUType);
+  const c1 = useOnboardingStore(s => s.c1);
+  const setC1 = useOnboardingStore(s => s.setC1);
+  const c2 = useOnboardingStore(s => s.c2);
+  const setC2 = useOnboardingStore(s => s.setC2);
   const [cSrch, setCsrch] = useState("");
   const [uSrch, setUsrch] = useState("");
   const [picking, setPick] = useState(1);
   const [onboardingLoaded, setOnboardingLoaded] = useState(false);
 
   const [tab, setTab] = useState("feed");
-  const [unis, setUnis] = useState(UNIVERSITIES);
+  const unis = useUniversitiesStore(s => s.unis);
+  const setUnis = useUniversitiesStore(s => s.setUnis);
   const posts = usePostsStore(s => s.posts);
-  const [fbUnis, setFbUnis] = useState([]);
+  const fbUnis = useUniversitiesStore(s => s.fbUnis);
+  const setFbUnis = useUniversitiesStore(s => s.setFbUnis);
   const fbCourses = useCoursesStore(s => s.fbCourses);
   const fbIcons = useCoursesStore(s => s.fbIcons);
-  const [selUni, setSU] = useState(null);
+  const selUni = useUniversitiesStore(s => s.selUni);
+  const setSU = useUniversitiesStore(s => s.setSelUni);
   const [selectedBookYear, setSelectedBookYear] = useState(null);
-  const [goalsUnis, setGoalsUnis] = useState([]);
+  const goalsUnis = useUniversitiesStore(s => s.goalsUnis);
+  const setGoalsUnis = useUniversitiesStore(s => s.setGoalsUnis);
   const [goalsModal, setGoalsModal] = useState(false);
   const [goalsSearch, setGoalsSearch] = useState("");
-  const [completedTodos, setCompletedTodos] = useState({});
-  const [readBooks, setReadBooks] = useState({});
-  const [readingBooks, setReadingBooks] = useState([]);
+  const completedTodos = useProgressStore(s => s.completedTodos);
+  const setCompletedTodos = useProgressStore(s => s.setCompletedTodos);
+  const readBooks = useProgressStore(s => s.readBooks);
+  const setReadBooks = useProgressStore(s => s.setReadBooks);
+  const readingBooks = useProgressStore(s => s.readingBooks);
+  const setReadingBooks = useProgressStore(s => s.setReadingBooks);
   const [requirementsModal, setRequirementsModal] = useState(false);
   const [selectedRequirements, setSelectedRequirements] = useState(null);
   const [query, setQuery] = useState("");
   const [fSt, setFSt] = useState("Todos");
   const [nSrch, setNsrch] = useState("");
-  const [saved, setSaved] = useState({});
+  const saved = usePostsStore(s => s.saved);
+  const setSaved = usePostsStore(s => s.setSaved);
   const loginBtnScale = useRef(new Animated.Value(1)).current;
   const loginBtnOpacity = useRef(new Animated.Value(1)).current;
-  const [liked, setLiked] = useState({});
-  const [uniSort, setUniSort] = useState("date");
-  const [uniPrefs, setUniPrefs] = useState({});
+  const liked = usePostsStore(s => s.liked);
+  const setLiked = usePostsStore(s => s.setLiked);
+  const uniSort = useUniversitiesStore(s => s.uniSort);
+  const setUniSort = useUniversitiesStore(s => s.setUniSort);
+  const uniPrefs = useUniversitiesStore(s => s.uniPrefs);
+  const setUniPrefs = useUniversitiesStore(s => s.setUniPrefs);
   const [refreshing, setRefreshing] = useState(false);
 
-  const [gs, setGs] = useState([
-    { id:1, ex:"FUVEST Simulado 1", dt:"Mar/2025", type:"simulado", s:{l:62,h:70,n:58,m:55,r:680} },
-    { id:2, ex:"FUVEST Simulado 2", dt:"Abr/2025", type:"simulado", s:{l:68,h:74,n:65,m:60,r:720} },
-    { id:3, ex:"ENEM Prova",         dt:"Mai/2025", type:"prova", s:{l:72,h:78,n:69,m:64,r:760} },
-  ]);
-  const [ng, setNg] = useState({ ex:"",dt:"",l:"",h:"",n:"",m:"",r:"",type:"prova" });
+  const gs = useProfileStore(s => s.gs);
+  const setGs = useProfileStore(s => s.setGs);
+  const ng = useProfileStore(s => s.ng);
+  const setNg = useProfileStore(s => s.setNg);
 
-  const [av, setAv] = useState("🧑‍🎓");
-  const [avBgIdx, setAvBgIdx] = useState(0);
+  const av = useProfileStore(s => s.av);
+  const setAv = useProfileStore(s => s.setAv);
+  const avBgIdx = useProfileStore(s => s.avBgIdx);
+  const setAvBgIdx = useProfileStore(s => s.setAvBgIdx);
   const [tmpAv, setTmpAv] = useState("🧑‍🎓");
   const [tmpBgIdx, setTmpBgIdx] = useState(0);
 
@@ -151,12 +175,18 @@ function MainApp() {
   const countries = useGeoStore(s => s.countries);
   const states = useGeoStore(s => s.states);
   const cities = useGeoStore(s => s.cities);
-  const [countryId, setCountryId] = useState("");
-  const [stateId, setStateId] = useState("");
-  const [cityId, setCityId] = useState("");
-  const [studyCountryId, setStudyCountryId] = useState("");
-  const [studyStateId, setStudyStateId] = useState("");
-  const [studyCityId, setStudyCityId] = useState("");
+  const countryId = useProfileStore(s => s.countryId);
+  const setCountryId = useProfileStore(s => s.setCountryId);
+  const stateId = useProfileStore(s => s.stateId);
+  const setStateId = useProfileStore(s => s.setStateId);
+  const cityId = useProfileStore(s => s.cityId);
+  const setCityId = useProfileStore(s => s.setCityId);
+  const studyCountryId = useProfileStore(s => s.studyCountryId);
+  const setStudyCountryId = useProfileStore(s => s.setStudyCountryId);
+  const studyStateId = useProfileStore(s => s.studyStateId);
+  const setStudyStateId = useProfileStore(s => s.setStudyStateId);
+  const studyCityId = useProfileStore(s => s.studyCityId);
+  const setStudyCityId = useProfileStore(s => s.setStudyCityId);
   const [tmpCountryId, setTmpCountryId] = useState("");
   const [tmpStateId, setTmpStateId] = useState("");
   const [tmpCityId, setTmpCityId] = useState("");
@@ -309,53 +339,29 @@ function MainApp() {
   useEffect(() => {
     useCoursesStore.getState().load();
     useGeoStore.getState().load();
-    const fetchUnis = async () => {
-      try {
-        const unisList = await fetchUniversities();
-        if (unisList.length) {
-          const withBooksAndExams = unisList.map(fbU => {
-            const localU = UNIVERSITIES.find(lU => lU.name === fbU.name);
-            return localU ? { ...fbU, books: localU.books || [], exams: localU.exams || [] } : fbU;
-          });
-          setFbUnis(withBooksAndExams); setUnis(withBooksAndExams);
-        }
-      } catch {}
-    };
-    fetchUnis();
+    useUniversitiesStore.getState().load();
   }, []);
 
   useEffect(() => {
-    const source = fbUnis.length ? fbUnis : UNIVERSITIES;
-    setUnis(source.map(u=>({...u, followed:userData?.followedUnis?.includes(u.name)||false})));
+    useUniversitiesStore.getState().applyFollowedUnis(userData?.followedUnis);
   }, [fbUnis, userData]);
 
   useEffect(() => {
     (async () => {
       await usePostsStore.getState().load();
-      if (currentUser) {
-        const lk = await usePostsStore.getState().loadLikesFor(currentUser.uid);
-        if (Object.keys(lk).length) setLiked(lk);
-      }
+      if (currentUser) await usePostsStore.getState().loadLikesFor(currentUser.uid);
     })();
   }, [currentUser]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [unisList] = await Promise.all([
-        fetchUniversities(),
+      await Promise.all([
+        useUniversitiesStore.getState().load(),
         usePostsStore.getState().load(),
       ]);
-      if (unisList.length) {
-        const withBooksAndExams = unisList.map(fbU => {
-          const localU = UNIVERSITIES.find(lU => lU.name === fbU.name);
-          return localU ? { ...fbU, books: localU.books || [], exams: localU.exams || [] } : fbU;
-        });
-        setFbUnis(withBooksAndExams);
-      }
       if (currentUser) {
-        const lk = await usePostsStore.getState().loadLikesFor(currentUser.uid);
-        if (Object.keys(lk).length) setLiked(lk);
+        await usePostsStore.getState().loadLikesFor(currentUser.uid);
       }
     } catch {}
     setRefreshing(false);

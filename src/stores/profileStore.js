@@ -1,0 +1,41 @@
+import { create } from "zustand";
+
+const INITIAL_GRADES = [
+  { id: 1, ex: "FUVEST Simulado 1", dt: "Mar/2025", type: "simulado", s: { l: 62, h: 70, n: 58, m: 55, r: 680 } },
+  { id: 2, ex: "FUVEST Simulado 2", dt: "Abr/2025", type: "simulado", s: { l: 68, h: 74, n: 65, m: 60, r: 720 } },
+  { id: 3, ex: "ENEM Prova",         dt: "Mai/2025", type: "prova", s: { l: 72, h: 78, n: 69, m: 64, r: 760 } },
+];
+
+const INITIAL_NG = { ex: "", dt: "", l: "", h: "", n: "", m: "", r: "", type: "prova" };
+
+export const useProfileStore = create((set) => ({
+  nome: "",
+  sobrenome: "",
+  theme: "dark",
+  av: "🧑‍🎓",
+  avBgIdx: 0,
+  gs: INITIAL_GRADES,
+  ng: INITIAL_NG,
+
+  countryId: "",
+  stateId: "",
+  cityId: "",
+  studyCountryId: "",
+  studyStateId: "",
+  studyCityId: "",
+
+  setNome: (nome) => set({ nome }),
+  setSobrenome: (sobrenome) => set({ sobrenome }),
+  setTheme: (theme) => set({ theme }),
+  setAv: (av) => set({ av }),
+  setAvBgIdx: (avBgIdx) => set({ avBgIdx }),
+  setGs: (gs) => set(typeof gs === "function" ? state => ({ gs: gs(state.gs) }) : { gs }),
+  setNg: (ng) => set(typeof ng === "function" ? state => ({ ng: ng(state.ng) }) : { ng }),
+
+  setCountryId: (countryId) => set({ countryId }),
+  setStateId: (stateId) => set({ stateId }),
+  setCityId: (cityId) => set({ cityId }),
+  setStudyCountryId: (studyCountryId) => set({ studyCountryId }),
+  setStudyStateId: (studyStateId) => set({ studyStateId }),
+  setStudyCityId: (studyCityId) => set({ studyCityId }),
+}));

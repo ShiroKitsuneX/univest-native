@@ -5,9 +5,15 @@ export const useProgressStore = create((set) => ({
   readingBooks: [],
   completedTodos: {},
 
-  setReadBooks: (readBooks) => set({ readBooks }),
-  setReadingBooks: (readingBooks) => set({ readingBooks }),
-  setCompletedTodos: (completedTodos) => set({ completedTodos }),
+  setReadBooks: (v) => set(state => ({
+    readBooks: typeof v === "function" ? v(state.readBooks) : v,
+  })),
+  setReadingBooks: (v) => set(state => ({
+    readingBooks: typeof v === "function" ? v(state.readingBooks) : v,
+  })),
+  setCompletedTodos: (v) => set(state => ({
+    completedTodos: typeof v === "function" ? v(state.completedTodos) : v,
+  })),
 
   updateBookStatus: (bookKey, status) => set(state => {
     const next = { ...state.readBooks };
