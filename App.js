@@ -906,6 +906,7 @@ function MainApp() {
   const handleSignup = async () => {
     if (!authEmail||!authPassword){setAuthError("Preencha e-mail e senha");return;}
     if (!authName.trim()){setAuthError("Preencha seu nome");return;}
+    if (!authSobrenome.trim()){setAuthError("Preencha seu sobrenome");return;}
     if (authPassword.length<6){setAuthError("Senha deve ter pelo menos 6 caracteres");return;}
     if (authPassword !== authConfirmPassword){setAuthError("As senhas não coincidem");return;}
     if (!authBirthdate.trim()){setAuthError("Preencha sua data de nascimento");return;}
