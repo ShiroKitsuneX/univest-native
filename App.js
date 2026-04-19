@@ -6,6 +6,7 @@ import {
   RefreshControl, LayoutAnimation,
 } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { GestureHandlerGestureHandler } from "react-native-gesture-handler";
 import { BarChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db, auth } from "./src/firebase/config";
@@ -19,6 +20,9 @@ import {
   createUserWithEmailAndPassword, signOut,
   sendEmailVerification, sendPasswordResetEmail,
 } from "firebase/auth";
+
+import { AuthProvider, ThemeProvider } from "./src/context";
+import AppNavigator from "./src/navigation/AppNavigator";
 
 import {
   USER_TYPES as _USER_TYPES,
@@ -3042,7 +3046,13 @@ const goalTodos = [
 export default function App() {
   return (
     <SafeAreaProvider>
-      <MainApp />
+      <GestureHandlerGestureHandler>
+        <AuthProvider>
+          <ThemeProvider>
+            <MainApp />
+          </ThemeProvider>
+        </AuthProvider>
+      </GestureHandlerGestureHandler>
     </SafeAreaProvider>
   );
 }
