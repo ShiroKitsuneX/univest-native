@@ -1157,7 +1157,9 @@ function MainApp() {
                             {authAcceptTerms && <Text style={{ color:AT, fontSize:14, fontWeight:"700" }}>✓</Text>}
                           </View>
                           <Text style={{ color:T.sub, fontSize:12 }}>Li e aceito os </Text>
-                          <Pressable onPress={()=>setShowTerms(true)}><Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline" }}>Termos e Condições</Text></Pressable>
+                          <TouchableOpacity onPress={()=>{setShowLogin(false);setTimeout(()=>setShowTerms(true),300);}} activeOpacity={0.7} style={{ paddingHorizontal:4 }}>
+                            <Text style={{ color:T.accent, fontSize:12, textDecorationLine:"underline" }}>Termos e Condições</Text>
+                          </TouchableOpacity>
                         </TouchableOpacity>
                       </>
                     )}
