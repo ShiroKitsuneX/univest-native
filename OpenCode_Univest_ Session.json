@@ -1,0 +1,72 @@
+{
+  "session_date": "2025-04-18",
+  "app_name": "UniVest",
+  "platform": "React Native (Expo)",
+  "changes_made": [
+    {
+      "change": "Fixed login tab animation colors",
+      "description": "Made tab colors match the main button, selected is green with darker unselected"
+    },
+    {
+      "change": "Added Terms and Conditions click handler",
+      "description": "Fixed click to open modal with terms content"
+    },
+    {
+      "change": "Added per-field validation with red borders",
+      "description": "Fields show red border immediately when user types and leaves invalid/empty"
+    },
+    {
+      "change": "Added birthdate validation",
+      "description": "Validates day (01-31), month (01-12), year (1900-2100) with 4-digit year"
+    },
+    {
+      "change": "Added password requirements",
+      "description": "Minimum 8 chars, maximum 64, at least 1 number, uppercase+lowercase, special character (!@#$%&*?)"
+    },
+    {
+      "change": "Added show/hide password icon to Confirmar Senha",
+      "description": "Eye icon toggles visibility for both password fields"
+    },
+    {
+      "change": "Simplified Terms text to single line",
+      "description": "Made 'Li e aceito os Termos e Condições' one line with clickable link"
+    },
+    {
+      "change": "Added sobrenome validation",
+      "description": "Sobrenome is now required field"
+    },
+    {
+      "change": "Replaced ScrollView with View in login modal",
+      "description": "Prevented swipe to see previous page"
+    },
+    {
+      "change": "Added reset loginMode to login when opening modal",
+      "description": "Modal always opens on Entrar tab"
+    }
+  ],
+  "signup_fields": [
+    "E-mail",
+    "Nome",
+    "Sobrenome",
+    "Senha (8-64 chars, number, upper+lower, special)",
+    "Confirmar Senha",
+    "Data de Nascimento (DD/MM/AAAA)",
+    "Termos e Condições (checkbox)"
+  ],
+  "password_requirements": {
+    "min_length": 8,
+    "max_length": 64,
+    "requires_number": true,
+    "requires_uppercase": true,
+    "requires_lowercase": true,
+    "requires_special": true,
+    "special_chars": "!@#$%&*?"
+  },
+  "birthdate_validation": {
+    "day_range": "01-31",
+    "month_range": "01-12",
+    "year_range": "1900-2100",
+    "format": "DD/MM/AAAA"
+  },
+  "file_location": "/Users/App/repos/univest-native/App.js"
+}
