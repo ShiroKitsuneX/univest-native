@@ -20,32 +20,23 @@ import {
   sendEmailVerification, sendPasswordResetEmail,
 } from "firebase/auth";
 
-// ─── DATA ────────────────────────────────────────────────────────────────────
-const USER_TYPES = [
-  { id:"medio",     emoji:"📚", label:"Ensino Médio",         sub:"Cursando o ensino médio regular" },
-  { id:"tecnico",   emoji:"🔧", label:"Ensino Médio Técnico", sub:"Ex: COTUCA, ETEC, SENAI, IFSP" },
-  { id:"prevestu",  emoji:"🎯", label:"Pré-vestibulando",     sub:"Me preparando para vestibulares" },
-  { id:"preenem",   emoji:"📝", label:"Foco no ENEM",         sub:"Estudando para o ENEM / SISU" },
-  { id:"graduando", emoji:"🎓", label:"Graduando",            sub:"Cursando uma graduação" },
-  { id:"premestre", emoji:"🔬", label:"Pré-mestrado",         sub:"Buscando uma vaga em mestrado" },
-  { id:"mestrando", emoji:"🧪", label:"Mestrando",            sub:"Cursando o mestrado" },
-  { id:"predouto",  emoji:"🏛️", label:"Pré-doutorado",        sub:"Buscando uma vaga em doutorado" },
-  { id:"doutorando",emoji:"⚗️", label:"Doutorando",           sub:"Cursando o doutorado" },
-  { id:"posdouto",  emoji:"🌟", label:"Pós-doutorando",       sub:"Realizando pesquisa pós-doutoral" },
-  { id:"continuo",  emoji:"💼", label:"Educação Continuada",  sub:"Cursos livres, MBAs, especializações" },
-];
+import {
+  USER_TYPES as _USER_TYPES,
+  AREAS as _AREAS,
+  ALL_COURSES as _ALL_COURSES,
+  UNIVERSITIES as _UNIVERSITIES,
+  FEED as _FEED,
+  NOTAS_CORTE as _NOTAS_CORTE,
+  EVENTS as _EVENTS,
+  AVATAR_PRESETS as _AVATAR_PRESETS,
+  AVATAR_COLORS as _AVATAR_COLORS,
+  TAG_TYPES as _TAG_TYPES,
+} from "./src/constants";
+import { getTheme as _getTheme, DK as _DK, LT as _LT } from "./src/theme";
+import { timeAgo as _timeAgo, fmtCount as _fmtCount, removeAccents as _removeAccents } from "./src/utils";
 
-const AREAS = [
-  { id:"saude",     emoji:"🏥", label:"Saúde",          cor:"#e11d48", bg:"#fff1f2", darkBg:"#2d0814", courses:["Medicina","Enfermagem","Odontologia","Farmácia","Fisioterapia","Nutrição","Biomedicina","Veterinária"] },
-  { id:"exatas",    emoji:"📐", label:"Exatas",         cor:"#2563eb", bg:"#eff6ff", darkBg:"#0c1a3a", courses:["Matemática","Física","Química","Engenharia Civil","Engenharia Elétrica","Engenharia Mecânica","Engenharia Química"] },
-  { id:"tecnologia",emoji:"💻", label:"Tecnologia",    cor:"#7c3aed", bg:"#f5f3ff", darkBg:"#1a0d33", courses:["Ciências da Computação","Engenharia de Computação","Sistemas de Informação","Design"] },
-  { id:"humanas",   emoji:"📖", label:"Humanas",        cor:"#d97706", bg:"#fffbeb", darkBg:"#2a1800", courses:["Direito","História","Filosofia","Sociologia","Letras","Pedagogia","Psicologia","Jornalismo"] },
-  { id:"negocios",  emoji:"💼", label:"Negócios",       cor:"#059669", bg:"#ecfdf5", darkBg:"#0a2018", courses:["Administração","Economia","Contabilidade","Publicidade","Relações Internacionais"] },
-  { id:"artes",     emoji:"🎨", label:"Artes & Design", cor:"#db2777", bg:"#fdf2f8", darkBg:"#2a0820", courses:["Arquitetura","Design","Música","Artes Visuais"] },
-  { id:"agrarias",  emoji:"🌱", label:"Agrárias",       cor:"#65a30d", bg:"#f7fee7", darkBg:"#142010", courses:["Agronomia","Medicina Veterinária","Engenharia Florestal","Biologia"] },
-];
-
-const ALL_COURSES = [...new Set(AREAS.flatMap(a=>a.courses))].sort();
+// Re-export for compatibility
+// Data imported from src/constants (re-exported above)
 
 const UNIVERSITIES = [
   { id:"enem", name:"ENEM", fullName:"Exame Nacional do Ensino Médio", city:"Nacional", state:"BR", color:"#1a3a5c", followers:"890k", type:"Nacional", description:"O maior exame educacional do Brasil. Usado para admissão em universidades públicas via SISU, Prouni e FIES.", courses:["Todos os cursos via SISU"], vestibular:"ENEM 2025", inscricao:"Mai–Jun/2025", prova:"Nov/2025", site:"https://enem.inep.gov.br", followed:false, books:["Dom Casmurro - Machado de Assis","Vidas Secas - Graciliano Ramos","O Cortiço - Aluísio Azevedo","Grande Sertão: Veredas - João Guimarães Rosa","Cem Anos de Solidão - Gabriel García Márquez","A Hora da Estrela - Clarice Lispector","Auto da Compadecida - Ariano Suassuna","Memórias Póstumas de Brás Cubas - Machado de Assis"],
@@ -134,39 +125,12 @@ const AVATAR_COLORS = [
 
 const TAG_D = { alert:{bg:"#2a1800",tx:"#fbbf24",b:"#78350f"}, lista:{bg:"#052e16",tx:"#4ade80",b:"#166534"}, nota:{bg:"#0c1f3a",tx:"#60a5fa",b:"#1e40af"}, simulado:{bg:"#1f0a33",tx:"#c084fc",b:"#6b21a8"}, news:{bg:"#2d0a18",tx:"#f9a8d4",b:"#9f1239"} };
 const TAG_L = { alert:{bg:"#fff7ed",tx:"#c2410c",b:"#fed7aa"}, lista:{bg:"#f0fdf4",tx:"#15803d",b:"#bbf7d0"}, nota:{bg:"#eff6ff",tx:"#1d4ed8",b:"#bfdbfe"}, simulado:{bg:"#faf5ff",tx:"#7c3aed",b:"#e9d5ff"}, news:{bg:"#fff1f2",tx:"#be123c",b:"#fecdd3"} };
-const DK = { bg:"#0d1117",card:"#161b27",card2:"#1c2333",border:"#21293d",text:"#e6edf3",sub:"#8b949e",muted:"#484f58",accent:"#00E5A0",acBg:"rgba(0,229,160,.1)",nav:"#0d1117",inp:"#1c2333",inpB:"#21293d" };
-const LT = { bg:"#f0f4fb",card:"#ffffff",card2:"#f0f4ff",border:"#dde3ef",text:"#1a1f2e",sub:"#5a6478",muted:"#9aa0ad",accent:"#0077cc",acBg:"rgba(0,119,204,.08)",nav:"#ffffff",inp:"#ffffff",inpB:"#dde3ef" };
+const getTheme = _getTheme;
 
-const timeAgo = (timestamp) => {
-  if (!timestamp) return "";
-  const now = Date.now();
-  const ms = typeof timestamp === "number" ? timestamp : timestamp?.toMillis?.() || timestamp?.seconds ? timestamp.seconds*1000 : new Date(timestamp).getTime();
-  if (!ms || isNaN(ms)) return "";
-  const diff = now - ms;
-  const mins = Math.floor(diff/60000);
-  if (mins < 1) return "agora";
-  if (mins < 60) return `${mins}min atrás`;
-  const hrs = Math.floor(mins/60);
-  if (hrs < 24) return `${hrs}h atrás`;
-  const days = Math.floor(hrs/24);
-  if (days < 2) return `${days}d atrás`;
-  const d = new Date(ms);
-  const pad = n => n.toString().padStart(2,"0");
-  return `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
-
-const fmtCount = (n) => {
-  if (typeof n === "string") return n;
-  if (!n || isNaN(n)) return "0";
-  if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"")+"M";
-  if (n >= 1000) return (n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,"")+"k";
-  return n.toString();
-};
-
-const removeAccents = (str) => {
-  if (!str) return "";
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-};
+// Use imported utilities
+const timeAgo = _timeAgo;
+const fmtCount = _fmtCount;
+const removeAccents = _removeAccents;
 
 const STORAGE_KEY = "univest_user";
 const loadLocalUserData = async () => {
