@@ -38,4 +38,21 @@ export const useProfileStore = create((set) => ({
   setStudyCountryId: (studyCountryId) => set({ studyCountryId }),
   setStudyStateId: (studyStateId) => set({ studyStateId }),
   setStudyCityId: (studyCityId) => set({ studyCityId }),
+
+  hydrate: (d) => set((state) => {
+    const next = {};
+    if (d.theme) next.theme = d.theme;
+    if (d.av) next.av = d.av;
+    if (d.avBgIdx !== undefined) next.avBgIdx = d.avBgIdx;
+    if (d.grades) next.gs = d.grades;
+    if (d.nome) next.nome = d.nome;
+    if (d.sobrenome) next.sobrenome = d.sobrenome;
+    if (d.countryId) next.countryId = d.countryId;
+    if (d.stateId) next.stateId = d.stateId;
+    if (d.cityId) next.cityId = d.cityId;
+    if (d.studyCountryId) next.studyCountryId = d.studyCountryId;
+    if (d.studyStateId) next.studyStateId = d.studyStateId;
+    if (d.studyCityId) next.studyCityId = d.studyCityId;
+    return { ...state, ...next };
+  }),
 }));

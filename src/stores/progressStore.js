@@ -22,4 +22,12 @@ export const useProgressStore = create((set) => ({
     else if (status === "none") delete next[bookKey];
     return { readBooks: next };
   }),
+
+  hydrate: (d) => set((state) => {
+    const next = {};
+    if (d.readBooks) next.readBooks = d.readBooks;
+    if (d.readingBooks) next.readingBooks = d.readingBooks;
+    if (d.completedTodos) next.completedTodos = d.completedTodos;
+    return { ...state, ...next };
+  }),
 }));

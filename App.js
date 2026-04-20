@@ -9,7 +9,6 @@ import { NavigationContainer } from "@react-navigation/native";
 import { db } from "./src/firebase/config";
 import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
-import { USER_TYPES } from "./src/data/userTypes";
 import { ALL_COURSES } from "./src/data/areas";
 import { DK, LT } from "./src/theme/palette";
 import { AVATAR_COLORS } from "./src/theme/avatar";
@@ -154,27 +153,10 @@ function MainApp() {
   useEffect(() => {
     loadLocalUserData().then(localData => {
       if (localData) {
-        setStep(localData.step||0);
-        setDone(localData.done||false);
-        setUType(localData.uTypeId?USER_TYPES.find(t=>t.id===localData.uTypeId)||null:null);
-        setC1(localData.c1||"");
-        setC2(localData.c2||"");
-        if (localData.theme) setTheme(localData.theme);
-        if (localData.av) setAv(localData.av);
-        if (localData.avBgIdx!==undefined) setAvBgIdx(localData.avBgIdx);
-        if (localData.grades) setGs(localData.grades);
-        if (localData.saved) setSaved(localData.saved);
-        if (localData.nome) setNome(localData.nome);
-        if (localData.sobrenome) setSobrenome(localData.sobrenome);
-        if (localData.liked) setLiked(localData.liked);
-        if (localData.readBooks) setReadBooks(localData.readBooks);
-        if (localData.readingBooks) setReadingBooks(localData.readingBooks);
-        if (localData.countryId) setCountryId(localData.countryId);
-        if (localData.stateId) setStateId(localData.stateId);
-        if (localData.cityId) setCityId(localData.cityId);
-        if (localData.studyCountryId) setStudyCountryId(localData.studyCountryId);
-        if (localData.studyStateId) setStudyStateId(localData.studyStateId);
-        if (localData.studyCityId) setStudyCityId(localData.studyCityId);
+        useOnboardingStore.getState().hydrateFromLocal(localData);
+        useProfileStore.getState().hydrate(localData);
+        useProgressStore.getState().hydrate(localData);
+        usePostsStore.getState().hydrate(localData);
       }
       setOnboardingLoaded(true);
     });
@@ -203,31 +185,11 @@ function MainApp() {
           if (fbData) {
             await saveLocalUserData(fbData);
             setUserData(fbData);
-            if (fbData.done===true) {
-              if (fbData.uTypeId) { const ut=USER_TYPES.find(t=>t.id===fbData.uTypeId); if(ut) setUType(ut); }
-              if (fbData.c1) setC1(fbData.c1);
-              if (fbData.c2) setC2(fbData.c2);
-              setStep(3); setDone(true);
-            } else if (fbData.done===false) {
-              setStep(1); setDone(false);
-            }
-            if (fbData.theme) setTheme(fbData.theme);
-            if (fbData.av) setAv(fbData.av);
-            if (fbData.avBgIdx!==undefined) setAvBgIdx(fbData.avBgIdx);
-            if (fbData.grades) setGs(fbData.grades);
-            if (fbData.saved) setSaved(fbData.saved);
-            if (fbData.nome) setNome(fbData.nome);
-            if (fbData.sobrenome) setSobrenome(fbData.sobrenome);
-            if (fbData.countryId) setCountryId(fbData.countryId);
-            if (fbData.stateId) setStateId(fbData.stateId);
-            if (fbData.cityId) setCityId(fbData.cityId);
-            if (fbData.studyCountryId) setStudyCountryId(fbData.studyCountryId);
-            if (fbData.studyStateId) setStudyStateId(fbData.studyStateId);
-            if (fbData.studyCityId) setStudyCityId(fbData.studyCityId);
-            if (fbData.goalsUnis) setGoalsUnis(fbData.goalsUnis);
-            if (fbData.completedTodos) setCompletedTodos(fbData.completedTodos);
-            if (fbData.readBooks) setReadBooks(fbData.readBooks);
-            if (fbData.readingBooks) setReadingBooks(fbData.readingBooks);
+            useOnboardingStore.getState().hydrateFromFb(fbData);
+            useProfileStore.getState().hydrate(fbData);
+            useProgressStore.getState().hydrate(fbData);
+            usePostsStore.getState().hydrate(fbData);
+            useUniversitiesStore.getState().hydrate(fbData);
           } else {
             setUserData({ followedUnis: [] });
             setStep(1); setDone(false);

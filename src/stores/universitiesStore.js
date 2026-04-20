@@ -49,4 +49,6 @@ export const useUniversitiesStore = create((set, get) => ({
     const source = fbUnis.length ? fbUnis : UNIVERSITIES;
     set({ unis: source.map(u => ({ ...u, followed: followedUnis.includes(u.name) || false })) });
   },
+
+  hydrate: (d) => { if (d.goalsUnis) set({ goalsUnis: d.goalsUnis }); },
 }));

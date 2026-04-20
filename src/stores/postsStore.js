@@ -53,4 +53,11 @@ export const usePostsStore = create((set, get) => ({
       ? { ...p, sharesCount: (p.sharesCount || 0) + delta }
       : p),
   })),
+
+  hydrate: (d) => set((state) => {
+    const next = {};
+    if (d.saved) next.saved = d.saved;
+    if (d.liked) next.liked = d.liked;
+    return { ...state, ...next };
+  }),
 }));
