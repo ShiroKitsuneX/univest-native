@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Appearance } from "react-native";
-import { doc, setDoc } from "firebase/firestore";
 import { BottomSheet } from "../components/BottomSheet";
 import { DK, LT } from "../theme/palette";
 import { GEO_DATA } from "../data/geo";
-import { db } from "../firebase/config";
-import { saveLocalUserData } from "../services/storage";
 import { useProfileStore } from "../stores/profileStore";
-import { useAuthStore } from "../stores/authStore";
 import { useGeoStore } from "../stores/geoStore";
 
-export function LocationSettingsModal({ visible, onClose, currentData }) {
+export function LocationSettingsModal({ visible, onClose }) {
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
   const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
@@ -29,7 +25,6 @@ export function LocationSettingsModal({ visible, onClose, currentData }) {
   const setStudyStateId = useProfileStore(s => s.setStudyStateId);
   const studyCityId = useProfileStore(s => s.studyCityId);
   const setStudyCityId = useProfileStore(s => s.setStudyCityId);
-  const currentUser = useAuthStore(s => s.currentUser);
 
   const states = useGeoStore(s => s.states);
   const cities = useGeoStore(s => s.cities);
@@ -174,11 +169,6 @@ export function LocationSettingsModal({ visible, onClose, currentData }) {
               setStudyCityId(tmpStudyCityId);
               setShowStatePicker(false);setShowCityPicker(false);setShowStudyStatePicker(false);setShowStudyCityPicker(false);
               onClose();
-              if (currentUser) {
-                const data = {countryId:tmpCountryId||"BR",stateId:tmpStateId,cityId:tmpCityId,studyCountryId:tmpStudyCountryId||"BR",studyStateId:tmpStudyStateId,studyCityId:tmpStudyCityId,updatedAt:new Date().toISOString()};
-                saveLocalUserData({...currentData(), ...data});
-                setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
-              }
             }} style={{ padding:16, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
               <Text style={{ color:AT, fontSize:16, fontWeight:"800" }}>Salvar</Text>
             </TouchableOpacity>

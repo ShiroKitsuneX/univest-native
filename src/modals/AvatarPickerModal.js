@@ -1,15 +1,11 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Appearance } from "react-native";
-import { doc, setDoc } from "firebase/firestore";
 import { BottomSheet } from "../components/BottomSheet";
 import { DK, LT } from "../theme/palette";
 import { AVATAR_PRESETS, AVATAR_COLORS } from "../theme/avatar";
-import { db } from "../firebase/config";
-import { saveLocalUserData } from "../services/storage";
 import { useProfileStore } from "../stores/profileStore";
-import { useAuthStore } from "../stores/authStore";
 
-export function AvatarPickerModal({ visible, onClose, currentData }) {
+export function AvatarPickerModal({ visible, onClose }) {
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
   const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
@@ -20,7 +16,6 @@ export function AvatarPickerModal({ visible, onClose, currentData }) {
   const setAv = useProfileStore(s => s.setAv);
   const avBgIdx = useProfileStore(s => s.avBgIdx);
   const setAvBgIdx = useProfileStore(s => s.setAvBgIdx);
-  const currentUser = useAuthStore(s => s.currentUser);
 
   const [tmpAv, setTmpAv] = useState(av);
   const [tmpBgIdx, setTmpBgIdx] = useState(avBgIdx);
@@ -55,11 +50,6 @@ export function AvatarPickerModal({ visible, onClose, currentData }) {
           setAv(tmpAv);
           setAvBgIdx(tmpBgIdx);
           onClose();
-          if (currentUser) {
-            const data = {av:tmpAv,avBgIdx:tmpBgIdx,updatedAt:new Date().toISOString()};
-            saveLocalUserData({...currentData(), ...data});
-            setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
-          }
         }} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
           <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar</Text>
         </TouchableOpacity>

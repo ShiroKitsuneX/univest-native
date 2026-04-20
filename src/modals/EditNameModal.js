@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Appearance } from "react-native";
-import { doc, setDoc } from "firebase/firestore";
 import { BottomSheet } from "../components/BottomSheet";
 import { DK, LT } from "../theme/palette";
-import { db } from "../firebase/config";
-import { saveLocalUserData } from "../services/storage";
 import { useProfileStore } from "../stores/profileStore";
-import { useAuthStore } from "../stores/authStore";
 
-export function EditNameModal({ visible, onClose, currentData }) {
+export function EditNameModal({ visible, onClose }) {
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
   const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
@@ -19,7 +15,6 @@ export function EditNameModal({ visible, onClose, currentData }) {
   const setNome = useProfileStore(s => s.setNome);
   const sobrenome = useProfileStore(s => s.sobrenome);
   const setSobrenome = useProfileStore(s => s.setSobrenome);
-  const currentUser = useAuthStore(s => s.currentUser);
 
   const [tmpNome, setTmpNome] = useState(nome);
   const [tmpSobrenome, setTmpSobrenome] = useState(sobrenome);
@@ -42,11 +37,6 @@ export function EditNameModal({ visible, onClose, currentData }) {
             setNome(tmpNome);
             setSobrenome(tmpSobrenome || "");
             onClose();
-            if (currentUser) {
-              const data = {nome:tmpNome,sobrenome:tmpSobrenome||"",updatedAt:new Date().toISOString()};
-              saveLocalUserData({...currentData(),...data});
-              setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
-            }
           }
         }} disabled={!tmpNome.trim()} style={{ padding:14, borderRadius:16, backgroundColor:tmpNome.trim()?T.accent:T.border, alignItems:"center" }}>
           <Text style={{ color:tmpNome.trim()?AT:T.muted, fontSize:15, fontWeight:"800" }}>Salvar</Text>

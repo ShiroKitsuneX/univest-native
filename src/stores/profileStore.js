@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persistToUser } from "./middleware/persistToUser";
 
 const INITIAL_GRADES = [
   { id: 1, ex: "FUVEST Simulado 1", dt: "Mar/2025", type: "simulado", s: { l: 62, h: 70, n: 58, m: 55, r: 680 } },
@@ -8,7 +9,20 @@ const INITIAL_GRADES = [
 
 const INITIAL_NG = { ex: "", dt: "", l: "", h: "", n: "", m: "", r: "", type: "prova" };
 
-export const useProfileStore = create((set) => ({
+const PERSIST_KEYS = [
+  "theme", "av", "avBgIdx", "nome", "sobrenome", "gs",
+  "countryId", "stateId", "cityId", "studyCountryId", "studyStateId", "studyCityId",
+];
+
+// Store uses `gs`; Firestore uses `grades`. Middleware writes the Firestore shape.
+const serializeProfile = (s) => ({
+  theme: s.theme, av: s.av, avBgIdx: s.avBgIdx,
+  nome: s.nome, sobrenome: s.sobrenome, grades: s.gs,
+  countryId: s.countryId, stateId: s.stateId, cityId: s.cityId,
+  studyCountryId: s.studyCountryId, studyStateId: s.studyStateId, studyCityId: s.studyCityId,
+});
+
+export const useProfileStore = create(persistToUser((set, get, api) => ({
   nome: "",
   sobrenome: "",
   theme: "dark",
@@ -39,20 +53,27 @@ export const useProfileStore = create((set) => ({
   setStudyStateId: (studyStateId) => set({ studyStateId }),
   setStudyCityId: (studyCityId) => set({ studyCityId }),
 
-  hydrate: (d) => set((state) => {
-    const next = {};
-    if (d.theme) next.theme = d.theme;
-    if (d.av) next.av = d.av;
-    if (d.avBgIdx !== undefined) next.avBgIdx = d.avBgIdx;
-    if (d.grades) next.gs = d.grades;
-    if (d.nome) next.nome = d.nome;
-    if (d.sobrenome) next.sobrenome = d.sobrenome;
-    if (d.countryId) next.countryId = d.countryId;
-    if (d.stateId) next.stateId = d.stateId;
-    if (d.cityId) next.cityId = d.cityId;
-    if (d.studyCountryId) next.studyCountryId = d.studyCountryId;
-    if (d.studyStateId) next.studyStateId = d.studyStateId;
-    if (d.studyCityId) next.studyCityId = d.studyCityId;
-    return { ...state, ...next };
-  }),
-}));
+  hydrate: (d) => {
+    api.__suspendPersist();
+    try {
+      set((state) => {
+        const next = {};
+        if (d.theme) next.theme = d.theme;
+        if (d.av) next.av = d.av;
+        if (d.avBgIdx !== undefined) next.avBgIdx = d.avBgIdx;
+        if (d.grades) next.gs = d.grades;
+        if (d.nome) next.nome = d.nome;
+        if (d.sobrenome) next.sobrenome = d.sobrenome;
+        if (d.countryId) next.countryId = d.countryId;
+        if (d.stateId) next.stateId = d.stateId;
+        if (d.cityId) next.cityId = d.cityId;
+        if (d.studyCountryId) next.studyCountryId = d.studyCountryId;
+        if (d.studyStateId) next.studyStateId = d.studyStateId;
+        if (d.studyCityId) next.studyCityId = d.studyCityId;
+        return { ...state, ...next };
+      });
+    } finally {
+      api.__resumePersist();
+    }
+  },
+}), { keys: PERSIST_KEYS, serialize: serializeProfile }));

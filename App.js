@@ -448,11 +448,11 @@ function MainApp() {
       )}
       <BNav />
 
-      <SettingsModal visible={mCfg} onClose={()=>setMcfg(false)} currentData={currentData} onOpenName={()=>setMnome(true)} onOpenPhoto={()=>setMpho(true)} onOpenEditCourses={()=>setMedit(true)} onOpenLocation={()=>setMloc(true)} onOpenGoals={()=>setGoalsModal(true)} onLogout={handleLogout} />
+      <SettingsModal visible={mCfg} onClose={()=>setMcfg(false)} onOpenName={()=>setMnome(true)} onOpenPhoto={()=>setMpho(true)} onOpenEditCourses={()=>setMedit(true)} onOpenLocation={()=>setMloc(true)} onOpenGoals={()=>setGoalsModal(true)} onLogout={handleLogout} />
 
-      <AvatarPickerModal visible={mPho} onClose={()=>setMpho(false)} currentData={currentData} />
+      <AvatarPickerModal visible={mPho} onClose={()=>setMpho(false)} />
 
-      <EditNameModal visible={mNome} onClose={()=>setMnome(false)} currentData={currentData} />
+      <EditNameModal visible={mNome} onClose={()=>setMnome(false)} />
 
       {/* Edit course */}
       <EditCoursesModal visible={mEdit} onClose={()=>setMedit(false)} onSave={(a,b)=>{hC1(a);hC2(b);}} />
@@ -469,7 +469,7 @@ function MainApp() {
 
       <ExamDetailModal exam={mExam} onClose={()=>setMexam(null)} />
 
-      <LocationSettingsModal visible={mLoc} onClose={()=>setMloc(false)} currentData={currentData} />
+      <LocationSettingsModal visible={mLoc} onClose={()=>setMloc(false)} />
 
       <GoalsModal visible={goalsModal} onClose={()=>setGoalsModal(false)} currentData={currentData} />
 
