@@ -12,12 +12,10 @@ import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firest
 import { USER_TYPES } from "./src/data/userTypes";
 import { ALL_COURSES } from "./src/data/areas";
 import { DK, LT } from "./src/theme/palette";
-import { AVATAR_PRESETS, AVATAR_COLORS } from "./src/theme/avatar";
-import { fmtCount } from "./src/utils/format";
+import { AVATAR_COLORS } from "./src/theme/avatar";
 import { loadLocalUserData, saveLocalUserData } from "./src/services/storage";
 import { onAuthChange, logout } from "./src/services/auth";
 import { fetchUserDoc } from "./src/services/firestore";
-import { BottomSheet } from "./src/components/BottomSheet";
 import { useGeoStore } from "./src/stores/geoStore";
 import { useCoursesStore } from "./src/stores/coursesStore";
 import { usePostsStore } from "./src/stores/postsStore";
@@ -49,6 +47,7 @@ import { EditNameModal } from "./src/modals/EditNameModal";
 import { EditCoursesModal } from "./src/modals/EditCoursesModal";
 import { LocationSettingsModal } from "./src/modals/LocationSettingsModal";
 import { GoalsModal } from "./src/modals/GoalsModal";
+import { SettingsModal } from "./src/modals/SettingsModal";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -329,7 +328,6 @@ function MainApp() {
   const coursesToUse = fbCourses.length ? fbCourses : ALL_COURSES;
 
   const cd = (extra={}) => ({ backgroundColor:T.card, borderRadius:18, borderWidth:1, borderColor:T.border, ...extra });
-  const lbl = { color:T.muted, fontSize:10, fontWeight:"700", textTransform:"uppercase", letterSpacing:0.8 };
 
   if (!onboardingLoaded || authLoading) {
     return (
@@ -488,53 +486,7 @@ function MainApp() {
       )}
       <BNav />
 
-      {/* Settings modal */}
-      <BottomSheet visible={mCfg} onClose={()=>setMcfg(false)} T={T}>
-        <View style={{ padding:20, paddingBottom:24 }}>
-          <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
-            <Text style={{ color:T.text, fontSize:18, fontWeight:"800" }}>⚙️ Configurações</Text>
-            <TouchableOpacity onPress={()=>setMcfg(false)} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:14 }}>✕</Text></TouchableOpacity>
-          </View>
-          <Text style={[lbl,{marginBottom:10}]}>Tema</Text>
-          <View style={{ flexDirection:"row", gap:8, marginBottom:24 }}>
-            {[["dark","🌙 Escuro"],["light","☀️ Claro"],["auto","🔄 Auto"]].map(([v,l])=>(
-              <TouchableOpacity key={v} onPress={()=>{
-                setTheme(v);
-                if (currentUser) {
-                  const data = {theme:v,updatedAt:new Date().toISOString()};
-                  saveLocalUserData({...currentData(), ...data});
-                  setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
-                }
-              }} style={{ flex:1, padding:12, borderRadius:12, backgroundColor:theme===v?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:theme===v?T.accent:T.border }}>
-                <Text style={{ color:theme===v?AT:T.sub, fontSize:12, fontWeight:"700" }}>{l}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <Text style={[lbl,{marginBottom:10}]}>Conta</Text>
-          {[
-            ["👤","Nome",nome && sobrenome ? nome + " " + sobrenome : nome || "Não definido",()=>{setMcfg(false);setMnome(true);}],
-            ["📷","Alterar foto de perfil","Ícone e cor",()=>{setMcfg(false);setMpho(true);}],
-            ["✏️","Editar opções de curso","Altere suas preferências",()=>{setMcfg(false);setMedit(true);}],
-            ["📍","Localização","Sua cidade e destino de estudos",()=>{setMcfg(false);setMloc(true);}],
-            ["🎯","Metas de vestibular","Universidades que você vai fazer",()=>{setMcfg(false);setGoalsModal(true);}],
-            ["📧","E-mail",currentUser?.email||"—",()=>{}],
-          ].map(([ic,ti,su,fn])=>(
-            <TouchableOpacity key={ti} onPress={fn} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card2, borderRadius:14, padding:15, marginBottom:10, borderWidth:1, borderColor:T.border }}>
-              <Text style={{ fontSize:22, marginRight:14 }}>{ic}</Text>
-              <View style={{ flex:1 }}>
-                <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>{ti}</Text>
-                <Text style={{ color:T.sub, fontSize:12 }}>{su}</Text>
-              </View>
-              <Text style={{ color:T.muted, fontSize:18 }}>›</Text>
-            </TouchableOpacity>
-          ))}
-          <View style={{ height:1, backgroundColor:T.border, marginVertical:16 }} />
-          <TouchableOpacity onPress={()=>{setMcfg(false);handleLogout();}} style={{ backgroundColor:"#dc2626", borderRadius:14, padding:15, alignItems:"center", marginBottom:12 }}>
-            <Text style={{ color:"#fff", fontSize:15, fontWeight:"700" }}>Sair</Text>
-          </TouchableOpacity>
-          <Text style={{ color:T.muted, fontSize:12, textAlign:"center" }}>UniVest v4.0 · Feito com 💚</Text>
-        </View>
-      </BottomSheet>
+      <SettingsModal visible={mCfg} onClose={()=>setMcfg(false)} currentData={currentData} onOpenName={()=>setMnome(true)} onOpenPhoto={()=>setMpho(true)} onOpenEditCourses={()=>setMedit(true)} onOpenLocation={()=>setMloc(true)} onOpenGoals={()=>setGoalsModal(true)} onLogout={handleLogout} />
 
       <AvatarPickerModal visible={mPho} onClose={()=>setMpho(false)} currentData={currentData} />
 
