@@ -45,11 +45,17 @@ Organized by app flow for development reference.
 - Terms and Conditions link
   - Should open as Modal or Page
   - Store in database (updateable)
-- Keep email-based login
+- Buttons "Entrar" and "Criar conta" are darker, until "Li e aceito os Termos e Condições" are checked. That should not happen.
+- Add password requirements (show them for the user)
 
 ### Terms and Conditions
+- The checkbox and text of the terms and conditions are too close to the Data de Nascimento's field
+- Bug: when clicking in Termos e Condições, the pop-up opens up in the first page of the app (you can see "Entrar ou criar conta" in the back). That should not happen since the signup pages should be a real page.
 - Store in database for updates without app update
 - Accessible from signup
+- Everytime the Terms and Conditions are updated, the user must receive and email notifying them that it was updated and with a summary of what's been updated
+- Everytime the Terms and Conditions are updated, the user must agree again inside the app (a pop-up should appear the next time the user opens the app or logs in)
+
 
 ---
 
