@@ -10,8 +10,7 @@ import { db } from "./src/firebase/config";
 import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
 import { USER_TYPES } from "./src/data/userTypes";
-import { AREAS, ALL_COURSES } from "./src/data/areas";
-import { NOTAS_CORTE } from "./src/data/notasCorte";
+import { ALL_COURSES } from "./src/data/areas";
 import { GEO_DATA } from "./src/data/geo";
 import { DK, LT } from "./src/theme/palette";
 import { AVATAR_PRESETS, AVATAR_COLORS } from "./src/theme/avatar";
@@ -46,6 +45,8 @@ import { UniSortModal } from "./src/modals/UniSortModal";
 import { AddGradeModal } from "./src/modals/AddGradeModal";
 import { SavedPostsModal } from "./src/modals/SavedPostsModal";
 import { EventDetailModal } from "./src/modals/EventDetailModal";
+import { ExamDetailModal } from "./src/modals/ExamDetailModal";
+import { DiscoverCoursesModal } from "./src/modals/DiscoverCoursesModal";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -130,7 +131,6 @@ function MainApp() {
   const [mShr,  setMshr]  = useState(null);
   const [mDisc, setMdisc] = useState(false);
   const [mUni,  setMUni]  = useState(false);
-  const [dArea, setDarea] = useState(null);
   const [eC1,   setEC1]   = useState("");
   const [eC2,   setEC2]   = useState("");
   const [ePick, setEpick] = useState(1);
@@ -684,120 +684,11 @@ function MainApp() {
 
       <ShareModal item={mShr} onClose={()=>setMshr(null)} />
 
-      {/* Course discovery */}
-      <BottomSheet visible={mDisc} onClose={()=>{setMdisc(false);setDarea(null);}} T={T}>
-        <View style={{ padding:20, paddingBottom:24 }}>
-          <Text style={{ color:T.text, fontSize:17, fontWeight:"800", marginBottom:4 }}>🧭 Descobrir Cursos</Text>
-          {!dArea ? (
-            <>
-              <Text style={{ color:T.sub, fontSize:13, marginBottom:14 }}>Explore por área do conhecimento</Text>
-              <View style={{ flexDirection:"row", flexWrap:"wrap", gap:10, marginBottom:16 }}>
-                {AREAS.map(a=>(
-                  <TouchableOpacity key={a.id} onPress={()=>setDarea(a)} style={{ width:"47%", backgroundColor:isDark?a.darkBg:a.bg, borderRadius:16, padding:14, borderWidth:1, borderColor:a.cor+"40" }}>
-                    <Text style={{ fontSize:26, marginBottom:6 }}>{a.emoji}</Text>
-                    <Text style={{ color:a.cor, fontSize:13, fontWeight:"800" }}>{a.label}</Text>
-                    <Text style={{ color:isDark?"rgba(255,255,255,.4)":a.cor+"99", fontSize:10, marginTop:2 }}>{a.courses.length} cursos</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </>
-          ) : (
-            <>
-              <TouchableOpacity onPress={()=>setDarea(null)} style={{ paddingHorizontal:14, paddingVertical:7, borderRadius:12, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignSelf:"flex-start", marginBottom:14 }}>
-                <Text style={{ color:T.sub, fontSize:12, fontWeight:"700" }}>← Voltar</Text>
-              </TouchableOpacity>
-              <View style={{ backgroundColor:isDark?dArea.darkBg:dArea.bg, borderRadius:16, padding:16, borderWidth:1, borderColor:dArea.cor+"40", marginBottom:14 }}>
-                <Text style={{ fontSize:30, marginBottom:6 }}>{dArea.emoji}</Text>
-                <Text style={{ color:dArea.cor, fontSize:18, fontWeight:"800" }}>{dArea.label}</Text>
-                <Text style={{ color:isDark?"rgba(255,255,255,.45)":dArea.cor+"99", fontSize:12, marginTop:2 }}>{dArea.courses.length} cursos</Text>
-              </View>
-              {dArea.courses.map(cc=>{ const ncs=NOTAS_CORTE.filter(n=>n.curso===cc); const mn=ncs.length?Math.min(...ncs.map(n=>n.nota)):null; const mx=ncs.length?Math.max(...ncs.map(n=>n.nota)):null; return (
-                <TouchableOpacity key={cc} onPress={()=>{hC1(cc);setMdisc(false);setDarea(null);}} style={{ ...cd(), padding:13, marginBottom:8, flexDirection:"row", alignItems:"center", gap:12 }}>
-                  <View style={{ flex:1 }}>
-                    <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>{cc}</Text>
-                    {mn?<Text style={{ color:T.sub, fontSize:11 }}>Nota: {mn===mx?mn:`${mn}–${mx}`} pts</Text>:<Text style={{ color:T.muted, fontSize:11 }}>Dados em breve</Text>}
-                  </View>
-                  {mn && <View style={{ backgroundColor:T.acBg, borderRadius:8, paddingHorizontal:10, paddingVertical:4, alignItems:"center" }}><Text style={{ color:T.accent, fontSize:13, fontWeight:"800" }}>{mn}</Text><Text style={{ color:T.muted, fontSize:9 }}>mín.</Text></View>}
-                  <View style={{ backgroundColor:dArea.cor+"20", borderRadius:8, paddingHorizontal:10, paddingVertical:6 }}><Text style={{ color:dArea.cor, fontSize:11, fontWeight:"800" }}>Escolher →</Text></View>
-                </TouchableOpacity>
-              );})}
-            </>
-          )}
-        </View>
-      </BottomSheet>
+      <DiscoverCoursesModal visible={mDisc} onClose={()=>setMdisc(false)} onPickCourse={hC1} />
 
       <UniSortModal visible={mUni} onClose={()=>setMUni(false)} />
 
-      <BottomSheet visible={!!mExam && !mExam?.isList} onClose={()=>{setMexam(null);}} T={T}>
-        <View style={{ padding:20, paddingBottom:24 }}>
-          {mExam?.status === "upcoming" ? (
-            <>
-              <View style={{ flexDirection:"row", alignItems:"center", marginBottom:16 }}>
-                <TouchableOpacity onPress={() => setMexam(null)} style={{ marginRight:12 }}>
-                  <Text style={{ color:T.accent, fontSize:24 }}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              <Text style={{ color:T.text, fontSize:17, fontWeight:"800", marginBottom:4 }}>📋 {mExam.subject}</Text>
-              <Text style={{ color:T.sub, fontSize:13, marginBottom:16 }}>{mExam.year} · {mExam.phase}</Text>
-              <View style={{ backgroundColor:isDark?"#2a2a1a":"#fffbeb", borderRadius:14, padding:16, marginBottom:16, borderWidth:1, borderColor:isDark?"#5c4d1a":"#fcd34d" }}>
-                <Text style={{ color:"#f59e0b", fontSize:14, fontWeight:"800", marginBottom:6 }}>⏳ Prova ainda não realizada</Text>
-                <Text style={{ color:T.sub, fontSize:13, lineHeight:20 }}>Esta prova está prevista para {mExam.date}. Quando estiver disponível, você poderá baixar o PDF e acessar pelo site da instituição.</Text>
-              </View>
-              <View style={{ backgroundColor:T.card2, borderRadius:14, padding:14, marginBottom:14, borderWidth:1, borderColor:T.border }}>
-                <Text style={{ color:T.text, fontSize:13, marginBottom:8 }}>⏱️ Duração: <Text style={{ fontWeight:"700" }}>{mExam.duration}</Text></Text>
-                <Text style={{ color:T.text, fontSize:13 }}>❓ Questões: <Text style={{ fontWeight:"700" }}>{mExam.questions}</Text></Text>
-              </View>
-              <TouchableOpacity onPress={() => Linking.openURL(mExam.sourceUrl)} style={{ flexDirection:"row", alignItems:"center", justifyContent:"center", padding:14, borderRadius:14, backgroundColor:T.accent }}>
-                <Text style={{ fontSize:16, marginRight:8 }}>🌐</Text>
-                <Text style={{ color:AT, fontSize:14, fontWeight:"700" }}>Acompanhar no site</Text>
-              </TouchableOpacity>
-            </>
-          ) : mExam ? (
-            <>
-              <View style={{ flexDirection:"row", alignItems:"center", marginBottom:16 }}>
-                <TouchableOpacity onPress={() => setMexam(null)} style={{ marginRight:12 }}>
-                  <Text style={{ color:T.accent, fontSize:24 }}>✕</Text>
-                </TouchableOpacity>
-                <View style={{ flex:1 }}>
-                  <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>{mExam.subject}</Text>
-                  <Text style={{ color:T.sub, fontSize:12 }}>{mExam.year} · {mExam.phase}</Text>
-                </View>
-              </View>
-              <View style={{ backgroundColor:T.card2, borderRadius:14, padding:14, marginBottom:14, borderWidth:1, borderColor:T.border }}>
-                <View style={{ flexDirection:"row", marginBottom:10 }}>
-                  <Text style={{ color:T.sub, fontSize:13, width:80 }}>📅 Data</Text>
-                  <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{mExam.date}</Text>
-                </View>
-                <View style={{ flexDirection:"row", marginBottom:10 }}>
-                  <Text style={{ color:T.sub, fontSize:13, width:80 }}>⏱️ Duração</Text>
-                  <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{mExam.duration}</Text>
-                </View>
-                <View style={{ flexDirection:"row", marginBottom:10 }}>
-                  <Text style={{ color:T.sub, fontSize:13, width:80 }}>❓ Questões</Text>
-                  <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{mExam.questions}</Text>
-                </View>
-                {mExam.description && <Text style={{ color:T.sub, fontSize:12, marginTop:4, lineHeight:18 }}>{mExam.description}</Text>}
-              </View>
-              <View style={{ flexDirection:"row", gap:10 }}>
-                <TouchableOpacity onPress={() => Linking.openURL(mExam.sourceUrl)} style={{ flex:1, flexDirection:"row", alignItems:"center", justifyContent:"center", padding:14, borderRadius:14, backgroundColor:T.accent }}>
-                  <Text style={{ fontSize:16, marginRight:6 }}>🌐</Text>
-                  <Text style={{ color:AT, fontSize:13, fontWeight:"700" }}>Site</Text>
-                </TouchableOpacity>
-                {mExam.pdfUrl ? (
-                  <TouchableOpacity onPress={() => Linking.openURL(mExam.pdfUrl)} style={{ flex:1, flexDirection:"row", alignItems:"center", justifyContent:"center", padding:14, borderRadius:14, backgroundColor:isDark?"#1a2e4a":"#dbeafe", borderWidth:1, borderColor:isDark?"#3b82f6":"#93c5fd" }}>
-                    <Text style={{ fontSize:16, marginRight:6 }}>📄</Text>
-                    <Text style={{ color:"#60a5fa", fontSize:13, fontWeight:"700" }}>PDF</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <View style={{ flex:1, alignItems:"center", justifyContent:"center", padding:14, borderRadius:14, backgroundColor:isDark?"#1a1a1a":"#f5f5f5" }}>
-                    <Text style={{ color:T.muted, fontSize:12 }}>PDF indisponível</Text>
-                  </View>
-                )}
-              </View>
-            </>
-          ) : null}
-        </View>
-      </BottomSheet>
+      <ExamDetailModal exam={mExam} onClose={()=>setMexam(null)} />
 
       {/* Location settings - completely redesigned */}
       <BottomSheet visible={mLoc} onClose={()=>setMloc(false)} T={T}>
