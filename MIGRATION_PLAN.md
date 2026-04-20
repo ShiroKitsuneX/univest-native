@@ -6,13 +6,13 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 
 ## 0. Current State
 
-| | Before | After Phases 1–4 | After Phase A | After Phase B | After Phase C (Auth) |
-|---|---|---|---|---|---|
-| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines | ~2,551 lines | 2,325 lines |
-| `MainApp` `useState` sites | ~80 | ~80 | 57 | 57 | 40 |
-| Modules under `src/` | 1 (firebase config) | 16 | 24 | 26 | 27 |
-| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites | ~10 sites | ~10 sites |
-| UI/behavior changes | — | **None** | **None** | **None** | **None** |
+| | Before | After Phases 1–4 | After Phase A | After Phase B | After Phase C (Auth) | After Phase C (Onboarding) | After Phase C (Feed) | After Phase C (Notas) | After Phase C (Explorar) | After Phase C (Perfil) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines | ~2,551 lines | 2,317 lines | 2,192 lines | 2,070 lines | 1,825 lines | 1,736 lines | 1,504 lines |
+| `MainApp` `useState` sites | ~80 | ~80 | 57 | 57 | 40 | 37 | 37 | 34 | 32 | 32 |
+| Modules under `src/` | 1 (firebase config) | 16 | 24 | 26 | 27 | 29 | 30 | 31 | 32 | 33 |
+| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites | ~10 sites | ~10 sites | ~9 sites | ~5 sites | ~5 sites | ~5 sites | ~3 sites |
+| UI/behavior changes | — | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** |
 
 `App.js` still contains a god-component `MainApp` and the full screen tree as a giant `tab === "..."` switch. Cross-screen state is now in Zustand stores; remaining `useState` calls are modal toggles, form fields, temporary pickers, and search strings. Splitting the screen tree is the next target.
 
@@ -20,10 +20,22 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 
 1. **Data extraction** → `src/data/` (userTypes, areas, universities, feed, notasCorte, events, geo)
 2. **Theme extraction** → `src/theme/palette.js`, `src/theme/avatar.js`
-3. **Utilities & Firebase services** → `src/utils/{format,string,validation}.js`, `src/services/{storage,auth,firestore,geo}.js`
-4. **Standalone presentational components** → `src/components/{SBox,BottomSheet}.js`
+3. **Utilities & Firebase services** → `src/utils/{format,string,validation,dates,goals,filter}.js`, `src/services/{storage,auth,firestore,geo}.js`
+4. **Standalone presentational components** → `src/components/{SBox,BottomSheet,Chip,EmptyState}.js`
 
 Everything above is pure cut-and-paste. Zero behavioral risk.
+
+### Additional utilities added (risk-free)
+
+| File | Purpose |
+|------|---------|
+| `src/utils/dates.js` | Date helpers: daysUntil, formatDate, getMonthName, isToday/isPast/isFuture |
+| `src/utils/goals.js` | Goal helpers: buildGoalTodos, getTodoStatus, getUpcomingExam, getGoalProgress |
+| `src/utils/filter.js` | Filter/sort helpers: sortByDate, filterBySearch, groupBy, uniqueBy |
+| `src/data/constants.js` | App-wide constants: TAB_NAMES, EXAM_TYPES, BOOK_STATUS, SORT_OPTIONS |
+| `src/data/subjects.js` | ENEM subject metadata (k/short/long/color) + `subjectScore(s, k)` that normalizes Redação to 0–100 |
+| `src/components/Chip.js` | Reusable filter chip component |
+| `src/components/EmptyState.js` | Reusable empty state placeholder |
 
 ### Phase A complete (✅)
 
@@ -61,7 +73,21 @@ Everything above is pure cut-and-paste. Zero behavioral risk.
 - ✅ `App.js`: `if (!currentUser) return <WelcomeScreen />;` — auth state, handlers, refs, and 172 lines of JSX removed. Dropped unused imports: `validatePassword`, `signIn`, `signUp`, `resetPassword`, `getAuthErrorMessage`, `LayoutAnimation`. **−228 lines** net.
 - 🐛 **Fix:** a stray "Entrar ou criar conta" `TouchableOpacity` inside `renderExplorar` was referencing removed auth state (`loginBtnScale`, `setShowLogin`, `setLoginMode`, `setAuthTouched`) and crashing the Explorar tab on render. It was dead code (Explorar only renders for logged-in users) — deleted. **Lesson:** after removing state, grep every identifier across the whole file, not just obviously-related render blocks.
 
-**Next screen targets (per plan order):** Onboarding → Feed → Notas → Explorar → Perfil.
+- ✅ **Constants cleanup:** inline `months={JAN:1,...}` map in `MainApp` replaced with the existing `getMonthFromKey` util from `src/utils/dates.js` (was a duplicate). ENEM subject metadata — duplicated across the radar array, bar-chart object keys, and the "você vs meta" comparativo block — extracted to `src/data/subjects.js` as `ENEM_SUBJECTS` + `subjectScore(s, k)`. All three render blocks now iterate the shared list, so adding a subject or recoloring happens in one place. **Caveat:** `bars` skips `k === "r"` because the bar chart omits Redação (intentional, different scale).
+- ✅ `src/screens/onboarding/OnboardingScreen.js` (174 lines) — 3-step picker (user type → courses → universities) lifted out. Pulls step/uType/c1/c2 from `useOnboardingStore`, unis from `useUniversitiesStore`, fbCourses/getIcon from `useCoursesStore`, currentUser from `useAuthStore`. Keeps `cSrch`/`uSrch`/`picking` local. Receives `hStep`/`hDone`/`hUType`/`hC1`/`hC2` as props since these wrappers call `syncUserData`, which still lives in MainApp.
+- ✅ `App.js`: `if (!done) return <OnboardingScreen ... />;` — replaced ~125 lines of JSX. Removed three now-unused useState hooks (`cSrch`, `uSrch`, `picking`).
+- ✅ `src/screens/feed/FeedScreen.js` (187 lines) — feed + stories strip + upcoming-exams countdown + like/share/report actions. Pulls posts/liked/saved from `usePostsStore`, unis/goalsUnis/uniSort/uniPrefs from `useUniversitiesStore`, currentUser from `useAuthStore`. Owns `toggleLike`/`shareItem`/`reportItem` (Firestore writes stayed co-located with the UI that triggers them — splitting them out would create action-at-a-distance). Takes props for cross-screen concerns: `refreshing`/`onRefresh` (shared with Explorar), `goExplorar`/`onSelectUni` (tab navigation), `onShare` (opens MainApp's share sheet), `currentData` (needed by `saveLocalUserData` after like toggle).
+- ✅ `App.js`: `renderFeed` is now a 7-line thunk that returns `<FeedScreen ... />`. Removed unused imports: `timeAgo`, `collection`, `addDoc`, `serverTimestamp`, `deleteDoc`, `TAG_D`, `TAG_L`, and the `TG` local derived constant.
+- ✅ `src/screens/notas/NotasScreen.js` (279 lines) — goal card + notas de corte list + "minhas notas" history (evolution bar chart, você-vs-meta comparativo, compare-mode vs cut scores, grade rows with delete). Pulls `theme`/`gs`/`setGs` from `useProfileStore`, `c1`/`c2` from `useOnboardingStore`. Owns local `nSrch`/`gradeFilter`/`compareMode` state. Recomputes `last`/`avg`/`tgt`/`radar`/`weak`/`bars`/`chartConfig`/`uCourses`/`filtN` internally. Reimplements the `cd()`/`lbl` style helpers locally since they're tiny and screen-scoped. Takes `onEditCourses`/`onAddGrade` as props so the Edit-courses (`mEdit`) and Add-grade (`mGr`) modals stay MainApp-owned for now.
+- ✅ `App.js`: `renderNotas` is now a 5-line thunk. Removed three now-unused useState hooks (`nSrch`, `gradeFilter`, `compareMode`) and the local derivations `radar`/`weak`/`bars`/`chartConfig`/`uCourses`/`filtN`. Kept `last`/`avg`/`tgt` in MainApp since `renderExplorar` still references them. Dropped unused imports: `BarChart`, `ENEM_SUBJECTS`, `subjectScore`. **−245 lines** net.
+- ✅ `src/screens/explorar/ExplorarScreen.js` (127 lines) — location-picker CTA, discover card, university search box, state filter chips, university list. Pulls `theme`/`studyStateId` from `useProfileStore`, `unis` from `useUniversitiesStore`, `states` from `useGeoStore`. Owns local `query`/`fSt` state and recomputes `filtU`/`hasSearch`/`userStudyState` + `getState`/`getStateDisplayName` helpers internally. Takes callback props for cross-screen/modal side-effects: `refreshing`/`onRefresh`, `onOpenLocation` (MainApp primes tmp-location state + opens `mLoc`), `onOpenDiscover` (sets `mDisc`), `onSelectUni` (sets `selUni`, which MainApp renders as a detail overlay).
+- ✅ `App.js`: `renderExplorar` is now a 9-line thunk. Removed two unused useState hooks (`query`, `fSt`) and the derivations `userStudyState`/`isMyRegionFilter`/`filtU`/`hasSearch`. `isMyRegionFilter` was dead code — defined but never consumed. Dropped now-unused `RefreshControl` import (ExplorarScreen was the sole user). **−89 lines** net.
+- ✅ `src/screens/perfil/PerfilScreen.js` (342 lines) — profile card (avatar/banner/name/courses/location/stats), goal card (objetivo with last/avg/tgt progress), books summary, goals-as-tasks section (with nested `GoalsList` component owning the `bookMenu` local state), upcoming exams from goals, and EVENTS list. Pulls from `useProfileStore`/`useOnboardingStore`/`useUniversitiesStore`/`useProgressStore`/`usePostsStore`/`useAuthStore`/`useGeoStore`. Reimplements `getCityDisplayName`, `last`/`avg`/`tgt`, and `cd`/`lbl` locally (screen-scoped, small). Receives 10 MainApp callback props for modal/tab transitions: `onChangePhoto`, `onChangeName`, `onEditCourses`, `onShowFollowing`, `onShowSaved`, `onShowBooks`, `onAddGoal`, `onOpenEvent`, `onSelectUni`, `goNotas`, plus `currentData` for the goal-todo persistence writes. Inlined `followedCount = unis.filter(u=>u.followed).length` (didn't need the sorted `fol` list, just its count).
+- ✅ `App.js`: `renderPerfil` is now a 14-line thunk. Removed the now-unused `last`/`avg`/`tgt` derivations (Perfil was the last consumer after Notas left). Moved Firestore writes for `readBooks`/`completedTodos` inside the Goals/Tasks section into PerfilScreen's `GoalsList`. Dropped the `EVENTS` import (no other MainApp consumer). **−232 lines** net.
+
+**Phase C complete for the five main tabs.** Remaining in `MainApp`: the `selUni` university detail overlay, the `showExamsPage`/`showBooksPage`/`showFollowingPage` sub-pages, the `dArea` discover modal, and ~14 true modals (config/photo/edit-courses/name/grade/share/uni-search/location/saved/book-menu/event/exam). These naturally belong to Explorar/Perfil sub-stacks once Phase B navigator routes replace the boolean toggles.
+
+**Known deferred work for Phase C cleanup:** the `h*` handler wrappers (hStep/hDone/hUType/hC1/hC2) should eventually be absorbed by `onboardingStore` once per-slice persistence middleware exists (Phase A deferred item). Until then, passing them as props is fine.
 
 ### Remaining phases
 
@@ -244,6 +270,13 @@ src/navigation/
 ## Phase C (was 5) — Split MainApp into per-screen components
 
 **Goal:** Physically move screen JSX out of `MainApp` and into dedicated files. Prerequisite: Phase A (state is in stores) and Phase B (navigator is calling screens).
+
+**Inline constants to extract:**
+| Constant | Location | Proposed Destination |
+|----------|----------|---------------------|
+| `goalTodos` | App.js line ~1556 | Move to `src/utils/goals.js` as helper |
+
+Note: This is built dynamically from `goalsUnis`, so it's a helper function, not a static constant.
 
 ### Target layout
 
