@@ -43,6 +43,7 @@ import { BooksListScreen } from "./src/screens/explorar/BooksListScreen";
 import { ExamsListScreen } from "./src/screens/explorar/ExamsListScreen";
 import { UniversityDetailScreen } from "./src/screens/explorar/UniversityDetailScreen";
 import { PerfilScreen } from "./src/screens/perfil/PerfilScreen";
+import { ShareModal } from "./src/modals/ShareModal";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -746,27 +747,7 @@ function MainApp() {
         </KeyboardAvoidingView>
       </BottomSheet>
 
-      {/* Share */}
-      <BottomSheet visible={!!mShr} onClose={()=>setMshr(null)} T={T}>
-        {mShr && (
-          <View style={{ padding:20, paddingBottom:24 }}>
-            <Text style={{ color:T.text, fontSize:17, fontWeight:"800", marginBottom:4 }}>📤 Compartilhar</Text>
-            <Text style={{ color:T.sub, fontSize:13, marginBottom:18, lineHeight:20 }}>{mShr.title}</Text>
-            <View style={{ flexDirection:"row", gap:8 }}>
-              {[
-                {l:"WhatsApp",i:"💬",c:"#25D366",href:`https://api.whatsapp.com/send?text=${encodeURIComponent(mShr.title+"\n\nVia UniVest 🎓")}`},
-                {l:"Twitter",i:"🐦",c:"#1DA1F2",href:`https://twitter.com/intent/tweet?text=${encodeURIComponent(mShr.title)}`},
-                {l:"Copiar",i:"🔗",c:T.accent,href:"copy"},
-              ].map(o=>(
-                <TouchableOpacity key={o.l} onPress={()=>{ if(o.href==="copy"){Alert.alert("Copiado!","Texto copiado.");}else{Linking.openURL(o.href);} setMshr(null); }} style={{ flex:1, alignItems:"center", paddingVertical:11, borderRadius:13, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
-                  <Text style={{ fontSize:22, marginBottom:4 }}>{o.i}</Text>
-                  <Text style={{ fontSize:10, fontWeight:"700", color:o.c }}>{o.l}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
-      </BottomSheet>
+      <ShareModal item={mShr} onClose={()=>setMshr(null)} />
 
       {/* Course discovery */}
       <BottomSheet visible={mDisc} onClose={()=>{setMdisc(false);setDarea(null);}} T={T}>
