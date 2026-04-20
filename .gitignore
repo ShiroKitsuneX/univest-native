@@ -47,3 +47,5 @@ GoogleService-Info.plist
 /ios
 /android
 dist-new2/
+
+*.log
