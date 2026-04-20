@@ -101,13 +101,35 @@ Remaining in `MainApp`: the `showExamsPage`/`showBooksPage`/`showFollowingPage` 
 
 ---
 
-## Remaining Plan
+## Remaining Plan (revised)
 
-Order matters. The original proposal was 5 → 6 → 7, but the correct dependency order is **7 → 6 → 5 → 8**:
+After the Phase C main-tab + sub-page extraction, what remains in `MainApp` (1,174 lines) is roughly:
 
-- **Screens can't be split until shared state is lifted out of MainApp.** Zustand (Phase 7) must come first.
-- **Navigation can't replace `tab` state cleanly until screens are separate components.** So nav sits between store-lifting and screen-splitting (Phase 6) — register placeholder screens that still render slices of MainApp, then cut those slices out (Phase 5).
-- **Polish (Phase 8)** — TypeScript, memoization, error boundaries, security — only makes sense once the structure is stable.
+- ~55 `useState` sites (most of them modal toggles + tmp-picker state)
+- 13 bottom-sheet modals (`mCfg`, `mPho`, `mNome`, `mEdit`, `mEv`, `mGr`, `mShr`, `mDisc`, `mUni`, `mExam`, `mLoc`, `goalsModal`, `mSaved`)
+- ~15 inline `setDoc(doc(db,"usuarios",uid), {...}, {merge:true})` sites, one per modal save
+- The `onAuthChange` cascade (~55 lines of per-field `if (fbData.X) setX(...)`)
+- `syncUserData` + `currentData()` + `h*` wrappers (Phase A deferred work)
+- 4 boolean page toggles (`showExamsPage` / `showBooksPage` / `showFollowingPage` / `selUni`)
+- Custom `BNav` bottom tab bar + `SBar` header
+
+The original plan ended at "Phase C screen split → Phase D polish" and treated modals as "stay as `<Modal>`" — that conflated *presentation* (bottom sheet vs. route) with *location* (inlined in MainApp vs. own file). Modals should still be bottom sheets, but they should live in their own files; only then does the persistence middleware (Phase A deferred) have a clean target, and only then does the navigator (Phase B deferred) have routes to point at.
+
+Revised phase order — each independently mergeable:
+
+| Phase | Scope | Target delta |
+|---|---|---|
+| **C.1 — Deadwood sweep** | Remove `updateBookStatus` (unused since book status moved into BooksList/UniDetail), `examYear` (never read), orphaned useState, dead imports | App.js −30 lines; no UI change |
+| **D — Modal extraction** | 13 PRs, one per modal, into `src/modals/`. MainApp passes only `visible`/`onClose` + any cross-store callbacks. Each modal owns its own tmp-picker useState and its own Firestore write (for now) | MainApp → ~500 lines; `tmp*` / `eC1`/`eC2`/`ePick`/`eSrch` / `goalsSearch` / tmp-geo all leave MainApp |
+| **E — Persistence middleware** | `persistToUser` Zustand middleware subscribes each store's whitelisted keys and debounces `setDoc(doc(db,"usuarios",uid), partial, {merge:true})`. `authStore.hydrateFromFb(fbData)` collapses the 55-line cascade to 1 call. Delete `currentData()`, `syncUserData`, `h*` wrappers. Remove all 15 inline setDoc sites from modals | MainApp → ~350 lines; ~15 Firestore write sites → ~0 |
+| **F — React Navigation execution** | AuthStack / OnboardingStack / MainTabs / ExplorarStack / PerfilStack. Kills `tab` / `showExamsPage` / `showBooksPage` / `showFollowingPage` / `selUni` booleans. Replaces custom `BNav` with `MainTabs.screenOptions`. ExamDetail / EventDetail may migrate from modal → route during this phase | MainApp → ~root auth/onboarding gate; page-boolean state machine gone |
+| **G — Polish** (was Phase D) | TypeScript bottom-up, memo+FlatList on heavy lists, `useColorScheme()` instead of `Appearance.getColorScheme()`, error boundary, path aliases, ESLint/Prettier, Firestore rules review | Incremental quality; no single-PR target |
+
+**Dependency notes:**
+- D before E: trying to land E with 13 inline modals means touching each modal twice. Extracting first gives E exactly 13 tidy callsites to migrate.
+- D and E can also interleave *per-modal* if you prefer small PRs (extract modal → migrate its write to store → repeat). Either ordering works.
+- F after E is cleanest (so navigation code isn't mixed with store migration), but F can run in parallel with any modal that hasn't been extracted yet — they don't touch the same files.
+- G waits for a stable structure. Don't start until D+E+F are merged.
 
 Each phase below lists: goal, prerequisites, concrete files, a migration pattern, and a verification checklist.
 
@@ -200,7 +222,7 @@ Replace the current debounced sync block (`saveTimerRef`/`prefsInitRef` in `App.
 
 ---
 
-## Phase B (was 6) — React Navigation
+## Phase B (was 6) — React Navigation (reference; executed as Phase F)
 
 **Goal:** Replace the `tab` / `showExamsPage` / `showBooksPage` / `showFollowingPage` / `selUni` state machine with a proper navigator tree. Back button, deep linking, and screen lifecycle all become free.
 
@@ -355,18 +377,171 @@ Put them in `src/components/` if truly app-wide, or `src/screens/<feature>/compo
 
 ---
 
-## Phase D — Polish
+## Phase C.1 — Deadwood sweep
 
-Once the structure is clean, tighten quality. Don't do any of this before C — premature optimization on a moving target.
+**Goal:** Remove unused code left behind by the Phase C extractions so downstream phases diff cleanly.
 
-### D.1 TypeScript migration (optional but recommended)
+**Known targets:**
+- `updateBookStatus` (App.js ~line 196) — defined but never called. Book-status writes now live in `BooksListScreen.persistReadBooks` and `UniversityDetailScreen.persistReadBooks`.
+- `examYear` / `setExamYear` (App.js ~line 131) — defined but never read after the exam-detail modal was simplified.
+- Any other orphaned `useState` or import surfaced by a grep sweep.
+
+**Verification:**
+- [ ] `grep <removed-identifier> App.js` returns 0 hits.
+- [ ] App.js parses (`@babel/parser`).
+- [ ] Book-status toggle still writes to Firestore from BooksListScreen & UniversityDetailScreen.
+
+**Estimated delta:** −20 to −30 lines, 0 UI impact.
+
+---
+
+## Phase D — Modal extraction
+
+**Goal:** Move each of the 13 bottom-sheet modals out of `MainApp` into its own file under `src/modals/`. `MainApp` keeps only the `visible` / `onClose` wiring plus any cross-store callback it already passes today. This phase does *not* change the Firestore write pattern — each modal keeps its inline `setDoc` for now (those disappear in Phase E).
+
+**Prerequisite:** C.1 merged (so the grep sweeps per modal don't surface dead code).
+
+### Target layout
+
+```
+src/modals/
+  SettingsModal.js         // mCfg
+  AvatarPickerModal.js     // mPho  — owns tmpAv, tmpBgIdx
+  EditNameModal.js         // mNome — owns tmpNome, tmpSobrenome
+  EditCoursesModal.js      // mEdit — owns eC1, eC2, ePick, eSrch
+  AddGradeModal.js         // mGr
+  ShareModal.js            // mShr
+  DiscoverCoursesModal.js  // mDisc — owns dArea
+  UniSortModal.js          // mUni
+  ExamDetailModal.js       // mExam
+  EventDetailModal.js      // mEv
+  LocationSettingsModal.js // mLoc  — owns all tmpCountry/tmpState/tmpCity + 4 search strings + 4 picker toggles
+  GoalsModal.js            // goalsModal — owns goalsSearch
+  SavedPostsModal.js       // mSaved
+```
+
+### Migration pattern (per modal)
+
+1. Create `src/modals/<Name>Modal.js` wrapping `BottomSheet`. Props: `visible`, `onClose`, plus any callback the modal currently calls that lives in MainApp (e.g. `onLogout`, `onSelectPost` for SavedPostsModal → `setPost`).
+2. Pull store reads inside the modal using Zustand selectors, same pattern as Phase C screens.
+3. Move any `tmp*` / local-picker `useState` into the modal file. Seed them from store state on open (via the modal's own `useEffect(() => { if (visible) setTmpX(storeX); }, [visible])`).
+4. Keep the inline `setDoc(...)` and `saveLocalUserData(...)` call exactly as-is — Phase E replaces these with store writes.
+5. In `App.js`, replace the big `<BottomSheet>{...}</BottomSheet>` block with `<SettingsModal visible={mCfg} onClose={()=>setMcfg(false)} ... />`.
+6. Delete the now-unused `useState` hooks from MainApp.
+7. Parse-check + eyeball the flow.
+
+### Special cases
+
+- **LocationSettingsModal** — largest modal; owns 10+ useState hooks (4 tmp IDs × 2 + 4 search strings + 4 picker toggles). Consider extracting helper components (`<StatePicker>`, `<CityPicker>`) within the same file if it exceeds 300 lines.
+- **ExamDetailModal** — has two render modes (`status === "upcoming"` vs. past). Keep both inside one component; do not premature-split.
+- **DiscoverCoursesModal** — two-step (area list → course list). `dArea` is internal state, trivial.
+- **GoalsModal** — only writes `goalsUnis` via `setDoc`; migrates cleanly in Phase E via `universitiesStore.setGoalsUnis + persist`.
+- **SavedPostsModal** — reads `feedItems = posts.length ? posts : FEED`, which is MainApp-local. Either compute inside the modal (it can pull `posts` from `postsStore` itself) or lift `feedItems` to `postsStore` as a derived selector.
+
+### Verification (per modal)
+
+- [ ] Modal opens/closes with same animation; visible state unchanged.
+- [ ] Save button still writes to Firestore (network tab check) and `/usuarios/{uid}` receives the same keys as before.
+- [ ] No orphaned useState in MainApp after removal (grep the state name).
+- [ ] `@babel/parser` passes.
+
+**Estimated delta:** App.js 1,174 → ~500 lines. MainApp useState sites: ~55 → ~20.
+
+---
+
+## Phase E — Persistence middleware & auth cascade
+
+**Goal:** Eliminate the ~15 inline `setDoc(doc(db,"usuarios",uid), {...}, {merge:true})` sites scattered across modals by introducing a Zustand middleware that auto-syncs whitelisted keys. Collapse the 55-line `onAuthChange` cascade into a single store action. Delete the now-unneeded `currentData()` / `syncUserData` / `h*` wrappers.
+
+**Prerequisite:** Phase D merged (so the write sites are all in modal files and the diff is narrow).
+
+### The middleware
+
+```js
+// src/stores/middleware/persistToUser.js
+// Subscribes to a whitelist of store keys. On change, debounces a merge-write to
+// /usuarios/{currentUser.uid}. Also writes the whole slice to AsyncStorage.
+//
+// Usage:
+//   export const useProfileStore = create(
+//     persistToUser(
+//       (set) => ({ theme: "auto", setTheme: (v) => set({ theme: v }), ... }),
+//       { keys: ["theme", "av", "avBgIdx", "nome", "sobrenome", "countryId", ...], debounceMs: 500 }
+//     )
+//   );
+```
+
+The middleware listens to `authStore` for `currentUser` so it knows *which* user doc to write to. Debounce window defaults to 500 ms of silence (same as current `saveTimerRef`).
+
+### `authStore.hydrateFromFb`
+
+```js
+// Replaces the ~55-line `if (fbData.X) setX(...)` cascade in App.js line ~266.
+// authStore owns the cross-store fan-out, calling setters on every peer store.
+hydrateFromFb: (fbData) => {
+  useProfileStore.getState().hydrate(fbData);     // theme/av/nome/.../geo
+  useOnboardingStore.getState().hydrate(fbData);  // step/done/uType/c1/c2
+  useUniversitiesStore.getState().hydrate(fbData);// goalsUnis
+  useProgressStore.getState().hydrate(fbData);    // readBooks/readingBooks/completedTodos
+  usePostsStore.getState().hydrate(fbData);       // saved/liked
+}
+```
+
+Each store's `hydrate(fbData)` is a ~5-line action that pulls its own keys.
+
+### Cleanup in App.js
+
+- Delete `currentData()` (line ~216) — no longer needed; stores own their slices.
+- Delete `syncUserData` (line ~252) — replaced by middleware.
+- Delete `hStep` / `hDone` / `hUType` / `hC1` / `hC2` wrappers — onboardingStore setters now auto-persist.
+- Simplify `onAuthChange` effect to `authStore.subscribe()` which internally calls `hydrateFromFb(fbData)`.
+- Remove `currentData` prop from every screen/modal that currently receives it.
+- Remove every inline `setDoc(doc(db,"usuarios",uid),...)` call from extracted modals (13 sites).
+
+### Migration pattern
+
+1. Land the `persistToUser` middleware in isolation; wrap one small store first (e.g. `profileStore` with just `theme`). Verify writes still land in Firestore.
+2. Add `hydrate(fbData)` action to each store; call from `authStore.hydrateFromFb`.
+3. Swap the App.js `onAuthChange` cascade for `authStore.hydrateFromFb(fbData)`. Keep the old code commented-out for one commit to diff-check.
+4. For each modal, replace `setDoc(...)` + `saveLocalUserData(...)` with the store's setter (which now auto-persists). Delete `currentData` prop drilling.
+5. Drop `currentData` / `syncUserData` / `h*` once every caller is gone.
+
+### Verification
+
+- [ ] Change theme in Settings; Firestore doc shows `theme` updated after ~500 ms, nothing else changed.
+- [ ] Add a goal; `goalsUnis` persists on reload.
+- [ ] Cold-start with a logged-in user; all fields hydrate exactly as before.
+- [ ] `grep "setDoc(doc(db,\"usuarios\"" App.js src/` — 0 hits outside the middleware.
+- [ ] `grep "currentData" App.js src/` — 0 hits.
+
+**Estimated delta:** App.js ~500 → ~350 lines; ~15 inline Firestore sites → 0.
+
+---
+
+## Phase F — React Navigation execution (was Phase B)
+
+Phase B was scaffolded (`RootNavigator` exists, wraps `<MainApp/>`) but the boolean state machine (`tab`, `showExamsPage`, `showBooksPage`, `showFollowingPage`, `selUni`) still drives routing. Now that every destination is its own screen file and modals are extracted, Phase B is unblocked. See the detailed plan in "Phase B (was 6)" above — it's unchanged except:
+
+- `UniversityDetail`, `ExamsList`, `BooksList`, `Following` now point at the files created in Phase C (sub-pages).
+- `ExamDetailModal` and `EventDetailModal` (extracted in Phase D) are candidates to become routes instead of modals during this phase, if deep-linkability is desired.
+- Replaces the custom `BNav` component + `SBar` header — `MainTabs.screenOptions` owns both.
+
+**Estimated delta:** MainApp becomes a thin root auth/onboarding gate; 4 page-boolean useStates deleted.
+
+---
+
+## Phase G — Polish (was Phase D)
+
+Once the structure is clean, tighten quality. Don't do any of this before C/D/E/F — premature optimization on a moving target.
+
+### G.1 TypeScript migration (optional but recommended)
 
 - Add `tsconfig.json` with `strict: true`, `jsx: react-native`.
 - Rename files bottom-up: stores first, then services, then components, then screens.
 - Define domain types in `src/types/`: `User`, `University`, `Post`, `Exam`, `Book`, `Grade`.
 - Firestore types: write converter functions (`withConverter<T>`) per collection rather than scattering `as` casts.
 
-### D.2 Performance
+### G.2 Performance
 
 - Wrap list items in `React.memo`.
 - Replace long `ScrollView`s with `FlatList` / `FlashList` (see below) — feed, universities, notas.
@@ -375,34 +550,34 @@ Once the structure is clean, tighten quality. Don't do any of this before C — 
 - Consider `react-native-reanimated` for the login button shake (already imported from deps).
 - Use `@shopify/flash-list` for the feed if list grows beyond ~50 items.
 
-### D.3 Correctness & UX
+### G.3 Correctness & UX
 
 - Add an **error boundary** at the root (`src/app/ErrorBoundary.js`) that logs and shows a friendly fallback.
 - Replace swallowed `try/catch {}` blocks with structured logging (`src/services/logger.js` — thin wrapper; console in dev, Sentry/Crashlytics in prod).
 - Standardize all Alerts into a single `showConfirm`/`showError` helper to make them themeable and testable.
 - Replace `Appearance.getColorScheme()` (called once at mount) with `useColorScheme()` so theme follows OS changes live.
 
-### D.4 Security
+### G.4 Security
 
 - Audit `.env` usage — make sure no Firebase private keys are in client code. (The Firebase web SDK config is publicly shippable; anything else must stay server-side.)
 - Add Firestore security rules review checklist; current client trusts that rules guard `/usuarios/{uid}` writes.
 - Validate all user input at the boundary (signup form, edit profile) — `src/utils/validation.js` is the home for new validators (email, birthdate, name).
 - Rate-limit writes on the client (the `prefsInitRef` debounce is a start) to prevent accidental Firestore quota burn.
 
-### D.5 Testing
+### G.5 Testing
 
 - Unit-test pure modules first: `src/utils/*`, validation, formatters, store reducers (Zustand supports `create` outside React → pure function tests).
 - Integration-test stores against a Firestore emulator (`firebase-tools`).
 - Component smoke tests with `@testing-library/react-native` — start with auth screens.
 - No E2E until flows stabilize.
 
-### D.6 Developer experience
+### G.6 Developer experience
 
 - Add ESLint + Prettier with a shared config.
 - Add a `path` alias `@/` → `src/` in `babel.config.js` (`babel-plugin-module-resolver`) so imports stop being `../../../services/...`.
 - Consider Expo Router if you ever want file-based routing — but not now; React Navigation is fine.
 
-### D.7 Analytics / observability (when relevant)
+### G.7 Analytics / observability (when relevant)
 
 - Add `expo-application` for version, `expo-device` for device info.
 - Tag every Firestore write with a `source` field to understand usage patterns.
@@ -424,11 +599,15 @@ Every phase should be a separate PR (or at least a separate commit) so you can:
 
 ## Estimated effort
 
-| Phase | Rough size | Risk |
-|---|---|---|
-| A — Zustand stores | ~9 stores, ~400 lines cut from App.js | Medium (state migrations subtle) |
-| B — React Navigation | ~6 navigator files, shim MainApp | Low if staged, High if rushed |
-| C — Screen split | ~25 new screen/component files, ~2,000 lines moved | High (many cuts, easy to drop a prop) |
-| D — Polish | Incremental, indefinite | Low per change |
+| Phase | Status | Rough size | Risk |
+|---|---|---|---|
+| A — Zustand stores | ✅ done | ~9 stores, ~400 lines cut from App.js | Medium (state migrations subtle) |
+| B — React Navigation (scaffolding) | 🟡 scaffolded | `RootNavigator` + `linking`; stacks deferred to F | Low (shim only) |
+| C — Screen split (main tabs + sub-pages) | ✅ done | 11 screens, ~1,900 lines moved | High (many cuts, easy to drop a prop) |
+| C.1 — Deadwood sweep | ⏳ next | −20 to −30 lines, 0 UI impact | Trivial |
+| D — Modal extraction | ⏳ pending | 13 modal files, ~600 lines moved | Low per modal, medium aggregate |
+| E — Persistence middleware & auth cascade | ⏳ pending | 1 middleware + 7 `hydrate` actions; ~150 lines removed | Medium (touches every store's write path) |
+| F — React Navigation execution (was B) | ⏳ pending | ~6 navigator files; kills 4 page booleans | Low if staged, High if rushed |
+| G — Polish (was D) | ⏳ pending | Incremental, indefinite | Low per change |
 
-Do A and B on quiet days with simulator open. Don't start C until A+B are merged and stable.
+Execution order: **C.1 → D → E → F → G**. D and E can interleave per-modal if you prefer smaller PRs. Don't start G until D+E+F are merged and stable.
