@@ -38,6 +38,10 @@ import { OnboardingScreen } from "./src/screens/onboarding/OnboardingScreen";
 import { FeedScreen } from "./src/screens/feed/FeedScreen";
 import { NotasScreen } from "./src/screens/notas/NotasScreen";
 import { ExplorarScreen } from "./src/screens/explorar/ExplorarScreen";
+import { FollowingScreen } from "./src/screens/explorar/FollowingScreen";
+import { BooksListScreen } from "./src/screens/explorar/BooksListScreen";
+import { ExamsListScreen } from "./src/screens/explorar/ExamsListScreen";
+import { UniversityDetailScreen } from "./src/screens/explorar/UniversityDetailScreen";
 import { PerfilScreen } from "./src/screens/perfil/PerfilScreen";
 
 function MainApp() {
@@ -82,7 +86,6 @@ function MainApp() {
   const fbIcons = useCoursesStore(s => s.fbIcons);
   const selUni = useUniversitiesStore(s => s.selUni);
   const setSU = useUniversitiesStore(s => s.setSelUni);
-  const [selectedBookYear, setSelectedBookYear] = useState(null);
   const goalsUnis = useUniversitiesStore(s => s.goalsUnis);
   const setGoalsUnis = useUniversitiesStore(s => s.setGoalsUnis);
   const [goalsModal, setGoalsModal] = useState(false);
@@ -127,12 +130,8 @@ function MainApp() {
   const [mExam, setMexam] = useState(null);
   const [examYear, setExamYear] = useState(null);
   const [showExamsPage, setShowExamsPage] = useState(false);
+
   const [showBooksPage, setShowBooksPage] = useState(false);
-  const [booksSearch, setBooksSearch] = useState("");
-  const [expandedYears, setExpandedYears] = useState({});
-  const [examSearch, setExamSearch] = useState("");
-  const [examSort, setExamSort] = useState("newest");
-  const [bookMenu, setBookMenu] = useState(null);
   const [showFollowingPage, setShowFollowingPage] = useState(false);
   const [mGr,   setMgr]   = useState(false);
   const [mShr,  setMshr]  = useState(null);
@@ -466,366 +465,37 @@ function MainApp() {
     </View>
   );
 
-  const renderExamsPage = () => {
-    if (!selUni?.exams) return null;
-    const allExams = selUni.exams;
-    const upcoming = allExams.filter(e => e.status === "upcoming");
-    const past = allExams.filter(e => e.status === "past");
-    const years = [...new Set(past.map(e => e.year))].sort((a, b) => examSort === "newest" ? b - a : a - b);
-    
-    const toggleYear = (year) => {
-      setExpandedYears(prev => ({ ...prev, [year]: !prev[year] }));
-    };
-    
-    const filteredYears = years.map(year => ({
-      year,
-      exams: past.filter(e => e.year === year).filter(e => 
-        !examSearch || 
-        e.subject.toLowerCase().includes(examSearch.toLowerCase()) ||
-        e.phase.toLowerCase().includes(examSearch.toLowerCase())
-      )
-    })).filter(g => !examSearch || g.exams.length > 0);
+  const renderExamsPage = () => (
+    <ExamsListScreen
+      selUni={selUni}
+      onBack={() => setShowExamsPage(false)}
+      onSelectExam={(exam) => setMexam(exam)}
+    />
+  );
 
-    return (
-      <View style={{ flex:1, backgroundColor:T.bg }}>
-        <View style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, borderBottomWidth:1, borderColor:T.border }}>
-          <TouchableOpacity onPress={()=>{setShowExamsPage(false);setExamSearch("");}} style={{ marginRight:12 }}>
-            <Text style={{ fontSize:24, color:T.accent }}>←</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize:18, fontWeight:"800", color:T.text, flex:1 }}>📝 Provas Anteriores</Text>
-        </View>
-        
-        <ScrollView style={{ flex:1, paddingHorizontal:16, paddingTop:16 }}>
-          <View style={{ flexDirection:"row", gap:8, marginBottom:16 }}>
-            <TouchableOpacity onPress={()=>setExamSort("newest")} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:examSort==="newest"?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:examSort==="newest"?T.accent:T.border }}>
-              <Text style={{ color:examSort==="newest"?AT:T.sub, fontSize:12, fontWeight:"700" }}>Mais recente</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={()=>setExamSort("oldest")} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:examSort==="oldest"?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:examSort==="oldest"?T.accent:T.border }}>
-              <Text style={{ color:examSort==="oldest"?AT:T.sub, fontSize:12, fontWeight:"700" }}>Mais antigo</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:13, paddingHorizontal:14, paddingVertical:11, borderWidth:1, borderColor:T.inpB, marginBottom:16 }}>
-            <Text style={{ fontSize:14, marginRight:10 }}>🔍</Text>
-            <TextInput value={examSearch} onChangeText={setExamSearch} placeholder="Buscar prova..." placeholderTextColor={T.muted} style={{ flex:1, color:T.text, fontSize:14, padding:0 }} />
-            {examSearch ? <TouchableOpacity onPress={()=>setExamSearch("")}><Text style={{ color:T.muted }}>✕</Text></TouchableOpacity> : null}
-          </View>
-
-          {upcoming.length > 0 && (
-            <View style={{ marginBottom:20 }}>
-              <Text style={[lbl,{marginBottom:10}]}>🔥 {new Date().getFullYear()}</Text>
-              {upcoming.map(exam => (
-                <TouchableOpacity key={exam.id} onPress={() => setMexam(exam)} style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:12, backgroundColor:isDark?"#1a2e1a":"#f0fdf4", borderWidth:1, borderColor:T.accent+"40", marginBottom:8 }}>
-                  <View style={{ width:44, height:44, borderRadius:22, backgroundColor:T.accent+"20", alignItems:"center", justifyContent:"center", marginRight:12 }}>
-                    <Text style={{ fontSize:20 }}>📋</Text>
-                  </View>
-                  <View style={{ flex:1 }}>
-                    <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>{exam.subject}</Text>
-                    <Text style={{ color:T.sub, fontSize:12 }}>{exam.phase} · {exam.questions} questões</Text>
-                  </View>
-                  <View style={{ backgroundColor:"#fbbf24", paddingHorizontal:10, paddingVertical:4, borderRadius:8 }}>
-                    <Text style={{ color:"#000", fontSize:11, fontWeight:"700" }}>Em breve</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
-          {filteredYears.length === 0 ? (
-            <View style={{ alignItems:"center", padding:40 }}>
-              <Text style={{ fontSize:40, marginBottom:12 }}>📭</Text>
-              <Text style={{ color:T.sub, fontSize:14, textAlign:"center" }}>Nenhuma prova encontrada</Text>
-            </View>
-          ) : filteredYears.map(({year, exams}) => (
-            <View key={year} style={{ marginBottom:12 }}>
-              <TouchableOpacity onPress={() => toggleYear(year)} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:14, borderRadius:12, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, marginBottom:expandedYears[year] ? 8 : 0 }}>
-                <View style={{ flexDirection:"row", alignItems:"center" }}>
-                  <Text style={{ fontSize:18, marginRight:10 }}>📅</Text>
-                  <Text style={{ color:T.text, fontSize:15, fontWeight:"700" }}>{year}</Text>
-                  <View style={{ backgroundColor:T.accent+"30", paddingHorizontal:8, paddingVertical:2, borderRadius:10, marginLeft:8 }}>
-                    <Text style={{ color:T.accent, fontSize:11, fontWeight:"700" }}>{exams.length} provas</Text>
-                  </View>
-                </View>
-                <Text style={{ color:T.accent, fontSize:18 }}>{expandedYears[year] ? "∧" : "∨"}</Text>
-              </TouchableOpacity>
-              
-              {expandedYears[year] && exams.map(exam => (
-                <TouchableOpacity key={exam.id} onPress={() => setMexam(exam)} style={{ flexDirection:"row", alignItems:"center", padding:12, paddingLeft:20, borderRadius:10, backgroundColor:T.bg, borderWidth:1, borderColor:T.border, marginBottom:6 }}>
-                  <View style={{ width:36, height:36, borderRadius:18, backgroundColor:selUni.color+"20", alignItems:"center", justifyContent:"center", marginRight:10 }}>
-                    <Text style={{ fontSize:16 }}>📋</Text>
-                  </View>
-                  <View style={{ flex:1 }}>
-                    <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }}>{exam.subject}</Text>
-                    <Text style={{ color:T.sub, fontSize:11 }}>{exam.phase} · {exam.questions} questões · {exam.duration}</Text>
-                  </View>
-                  <View style={{ flexDirection:"row", alignItems:"center", gap:6 }}>
-                    {exam.pdfUrl ? (
-                      <View style={{ backgroundColor:"#22c55e30", paddingHorizontal:6, paddingVertical:2, borderRadius:6 }}>
-                        <Text style={{ color:"#22c55e", fontSize:10, fontWeight:"700" }}>PDF</Text>
-                      </View>
-                    ) : null}
-                    <Text style={{ color:T.accent, fontSize:16 }}>→</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ))}
-          <View style={{ height:40 }} />
-        </ScrollView>
-      </View>
-    );
-  };
-
-  const renderBooksPage = () => {
-    const allBooks = [];
-    unis.forEach(uni => {
-      if (uni.books && Array.isArray(uni.books) && !Array.isArray(uni.books[0])) {
-        uni.books.forEach(book => {
-          allBooks.push({ id: `${uni.id}-${book}`, book, uni });
-        });
-      }
-    });
-
-    const filteredBooks = allBooks.filter(b => 
-      !booksSearch || 
-      b.book.toLowerCase().includes(booksSearch.toLowerCase()) ||
-      b.uni.name.toLowerCase().includes(booksSearch.toLowerCase())
-    );
-
-    const readCount = Object.values(readBooks).filter(s => s === "read").length;
-    const readingCount = Object.values(readBooks).filter(s => s === "reading").length;
-
-    return (
-      <View style={{ flex:1, backgroundColor:T.bg }}>
-        <View style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, borderBottomWidth:1, borderColor:T.border }}>
-          <TouchableOpacity onPress={()=>{setShowBooksPage(false);setBooksSearch("");}} style={{ marginRight:12 }}>
-            <Text style={{ fontSize:24, color:T.accent }}>←</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize:18, fontWeight:"800", color:T.text, flex:1 }}>📚 Todos os Livros</Text>
-        </View>
-
-        <ScrollView style={{ flex:1, paddingHorizontal:16, paddingTop:16 }}>
-          {(readCount > 0 || readingCount > 0) && (
-            <Text style={{ color:T.sub, fontSize:12, marginBottom:12 }}>
-              {readingCount > 0 ? `Lendo ${readingCount} · ` : ""}Lidos: {readCount}
-            </Text>
-          )}
-
-          <View style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.inp, borderRadius:13, paddingHorizontal:14, paddingVertical:11, borderWidth:1, borderColor:T.inpB, marginBottom:16 }}>
-            <Text style={{ fontSize:14, marginRight:10 }}>🔍</Text>
-            <TextInput value={booksSearch} onChangeText={setBooksSearch} placeholder="Buscar livro ou universidade..." placeholderTextColor={T.muted} style={{ flex:1, color:T.text, fontSize:14, padding:0 }} />
-            {booksSearch ? <TouchableOpacity onPress={()=>setBooksSearch("")}><Text style={{ color:T.muted }}>✕</Text></TouchableOpacity> : null}
-          </View>
-
-          {filteredBooks.length === 0 ? (
-            <View style={{ paddingVertical:40, alignItems:"center" }}>
-              <Text style={{ fontSize:48, marginBottom:12 }}>📚</Text>
-              <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>Nenhum livro encontrado</Text>
-            </View>
-          ) : (
-            <View style={{ gap:8, marginBottom:40 }}>
-              {filteredBooks.map(item => {
-                const status = readBooks[item.id] || "none";
-                const isRead = status === "read";
-                const isReading = status === "reading";
-                const showMenu = bookMenu === item.id;
-                return (
-                  <View key={item.id}>
-                    <TouchableOpacity onPress={() => setBookMenu(showMenu ? null : item.id)} activeOpacity={0.7}>
-                      <View style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:14, backgroundColor:isRead ? T.accent+"15" : isReading ? "#f59e0b15" : T.card2, borderWidth:1, borderColor:isRead ? T.accent+"40" : isReading ? "#f59e0b40" : T.border }}>
-                        {showMenu ? (
-                          <View style={{ flexDirection:"row", flex:1, gap:6 }}>
-                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks}; delete newRead[item.id]; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:10, borderRadius:10, backgroundColor:T.card, borderWidth:1, borderColor:T.border }}>
-                              <Text style={{ color:T.muted, fontSize:12, fontWeight:"700", textAlign:"center" }}>○ Nenhum</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [item.id]: "reading"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:10, borderRadius:10, backgroundColor:"#f59e0b30", borderWidth:1, borderColor:"#f59e0b" }}>
-                              <Text style={{ color:"#f59e0b", fontSize:12, fontWeight:"700", textAlign:"center" }}>📖 Lendo</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [item.id]: "read"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:10, borderRadius:10, backgroundColor:T.accent+"20", borderWidth:1, borderColor:T.accent }}>
-                              <Text style={{ color:T.accent, fontSize:12, fontWeight:"700", textAlign:"center" }}>✓ Lido</Text>
-                            </TouchableOpacity>
-                          </View>
-                        ) : (
-                          <View style={{ flexDirection:"row", alignItems:"center", flex:1 }}>
-                            <View style={{ width:32, height:32, borderRadius:16, backgroundColor:item.uni.color, alignItems:"center", justifyContent:"center", marginRight:12 }}>
-                              <Text style={{ color:"#fff", fontSize:10, fontWeight:"800" }}>{item.uni.name.slice(0,2)}</Text>
-                            </View>
-                            <View style={{ flex:1 }}>
-                              <Text style={{ color:T.text, fontSize:13, fontWeight:"600" }} numberOfLines={2}>{item.book}</Text>
-                              <Text style={{ color:T.sub, fontSize:11 }}>{item.uni.name}</Text>
-                            </View>
-                            {isReading && <Text style={{ fontSize:16 }}>📖</Text>}
-                            {isRead && <Text style={{ color:T.accent, fontSize:16 }}>✓</Text>}
-                          </View>
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </ScrollView>
-      </View>
-    );
-  };
+  const renderBooksPage = () => (
+    <BooksListScreen
+      onBack={() => setShowBooksPage(false)}
+      currentData={currentData}
+    />
+  );
 
   const renderFollowingPage = () => (
-    <View style={{ flex:1, backgroundColor:T.bg }}>
-      <View style={{ flexDirection:"row", alignItems:"center", paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, borderBottomWidth:1, borderColor:T.border }}>
-        <TouchableOpacity onPress={()=>setShowFollowingPage(false)} style={{ marginRight:12 }}>
-          <Text style={{ fontSize:24, color:T.accent }}>←</Text>
-        </TouchableOpacity>
-        <Text style={{ fontSize:18, fontWeight:"800", color:T.text, flex:1 }}>🏛️ Seguindo</Text>
-      </View>
-
-      <ScrollView style={{ flex:1, paddingHorizontal:16, paddingTop:16 }}>
-        {fol.length === 0 ? (
-          <View style={{ paddingVertical:40, alignItems:"center" }}>
-            <Text style={{ fontSize:48, marginBottom:12 }}>🏛️</Text>
-            <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>Nenhuma universidade seguida</Text>
-            <TouchableOpacity onPress={()=>{setShowFollowingPage(false);setTab("explorar");}} style={{ marginTop:16, paddingHorizontal:16, paddingVertical:8, backgroundColor:T.accent, borderRadius:8 }}>
-              <Text style={{ color:AT, fontSize:12, fontWeight:"700" }}>Explorar universidades</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={{ gap:10, marginBottom:40 }}>
-            {fol.map(u => (
-              <TouchableOpacity key={u.id} onPress={()=>{setSU(u);setTab("explorar");setShowFollowingPage(false);}} style={{ flexDirection:"row", alignItems:"center", padding:14, borderRadius:14, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
-                <View style={{ width:44, height:44, borderRadius:22, backgroundColor:u.color, alignItems:"center", justifyContent:"center" }}>
-                  <Text style={{ color:"#fff", fontSize:14, fontWeight:"800" }}>{u.name.slice(0,2)}</Text>
-                </View>
-                <View style={{ flex:1, marginLeft:12 }}>
-                  <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>{u.name}</Text>
-                  <Text style={{ color:T.sub, fontSize:11 }}>{u.fullName}</Text>
-                </View>
-                <Text style={{ color:T.accent, fontSize:20 }}>›</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-    </View>
+    <FollowingScreen
+      onBack={() => setShowFollowingPage(false)}
+      onExplore={() => { setShowFollowingPage(false); setTab("explorar"); }}
+      onSelectUni={(u) => { setSU(u); setTab("explorar"); setShowFollowingPage(false); }}
+    />
   );
 
   const renderUniDetail = () => (
-    <ScrollView style={{ flex:1 }}>
-      <TouchableOpacity onPress={()=>setSU(null)} style={{ paddingHorizontal:14, paddingVertical:8, borderRadius:12, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignSelf:"flex-start", margin:16 }}>
-        <Text style={{ color:T.sub, fontSize:12, fontWeight:"700" }}>← Voltar</Text>
-      </TouchableOpacity>
-      <View style={{ marginHorizontal:16, borderRadius:22, padding:22, backgroundColor:selUni.color }}>
-        <Text style={{ fontSize:30, marginBottom:8 }}>{selUni.name.slice(0,2)}</Text>
-        <Text style={{ color:"#fff", fontSize:22, fontWeight:"800" }}>{selUni.name}</Text>
-        <Text style={{ color:"rgba(255,255,255,.65)", fontSize:12, marginBottom:8 }}>{selUni.fullName}</Text>
-        <Text style={{ color:"rgba(255,255,255,.8)", fontSize:12, lineHeight:20, marginBottom:14 }}>{selUni.description}</Text>
-        <View style={{ flexDirection:"row", gap:10, alignItems:"center", flexWrap:"wrap" }}>
-          <TouchableOpacity onPress={()=>toggleFollow(selUni,!selUni.followed)} style={{ paddingHorizontal:18, paddingVertical:9, borderRadius:13, backgroundColor:selUni.followed?"#dc2626":T.accent }}>
-            <Text style={{ color:selUni.followed?"#fff":AT, fontSize:13, fontWeight:"800" }}>{selUni.followed?"🚫 Deixar de seguir":"+ Seguir"}</Text>
-          </TouchableOpacity>
-          <Text style={{ color:"rgba(255,255,255,.65)", fontSize:11 }}>👥 <Text style={{ color:"#fff", fontWeight:"800" }}>{fmtCount(selUni.followersCount??selUni.followers)}</Text> seguidores</Text>
-        </View>
-      </View>
-      {selUni.exams && selUni.exams.length > 0 && (
-        <View style={{ paddingHorizontal:16, paddingTop:16, paddingBottom:8 }}>
-          <TouchableOpacity onPress={() => { setExpandedYears({}); setExamSearch(""); setExamSort("newest"); setShowExamsPage(true); }} style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", padding:14, borderRadius:14, backgroundColor:selUni.color }}>
-            <View style={{ flexDirection:"row", alignItems:"center" }}>
-              <Text style={{ fontSize:22, marginRight:12 }}>📝</Text>
-              <View>
-                <Text style={{ color:"#fff", fontSize:15, fontWeight:"800" }}>Provas Anteriores</Text>
-                <Text style={{ color:"rgba(255,255,255,.7)", fontSize:11 }}>Consulte provas e simulados</Text>
-              </View>
-            </View>
-            <Text style={{ color:"#fff", fontSize:22 }}>→</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-      <View style={{ padding:16, gap:10 }}>
-        <View style={cd({ padding:16 })}>
-          <Text style={[lbl,{marginBottom:10}]}>📅 Próximo Vestibular</Text>
-          <Text style={{ color:T.text, fontSize:16, fontWeight:"800", marginBottom:8 }}>{selUni.vestibular}</Text>
-          <View style={{ flexDirection:"row", gap:8 }}>
-            {[["Inscrições",selUni.inscricao,T.accent],["Data da Prova",selUni.prova,"#c084fc"]].map(([l,v,c])=>(
-              <View key={l} style={{ backgroundColor:T.card2, borderRadius:10, padding:8 }}>
-                <Text style={{ color:c, fontSize:10, fontWeight:"700" }}>{l}</Text>
-                <Text style={{ color:T.text, fontSize:12, fontWeight:"600" }}>{v}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-        <View style={cd({ padding:16 })}>
-          <Text style={[lbl,{marginBottom:10}]}>📖 Cursos</Text>
-          <View style={{ flexDirection:"row", flexWrap:"wrap", gap:7 }}>
-            {selUni.courses.map(c=>(
-              <View key={c} style={{ backgroundColor:T.card2, borderRadius:10, paddingHorizontal:11, paddingVertical:5, borderWidth:1, borderColor:T.border }}>
-                <Text style={{ color:T.text, fontSize:12, fontWeight:"600" }}>{c}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-        {selUni.books && selUni.books.length > 0 && (
-          <View style={cd({ padding:16 })}>
-            <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <Text style={[lbl,{marginBottom:0}]}>📚 Livros Obrigatórios</Text>
-              {selUni.books && selUni.books.length > 4 && (
-                <TouchableOpacity onPress={()=>setSelectedBookYear(selectedBookYear === "2026" ? "2025" : "2026")} style={{ paddingHorizontal:10, paddingVertical:4, borderRadius:8, backgroundColor:T.card2, borderWidth:1, borderColor:T.border }}>
-                  <Text style={{ color:T.sub, fontSize:10, fontWeight:"600" }}>{selectedBookYear || "2026"} ▼</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-            {Array.isArray(selUni.books?.[0]) ? (
-              <Text style={{ color:T.text, fontSize:12 }}>Verificar ano...</Text>
-            ) : (
-              <View>
-                {selUni.books?.slice(0, 8).map((book, i) => {
-                  const bookKey = `${selUni.id}-${book}`;
-                  const status = readBooks[bookKey] || "none";
-                  const isRead = status === "read";
-                  const isReading = status === "reading";
-                  const showMenu = bookMenu === bookKey;
-                  return (
-                    <View key={i}>
-                      <TouchableOpacity onPress={() => setBookMenu(showMenu ? null : bookKey)} activeOpacity={0.7} style={{ paddingVertical:8, paddingHorizontal: isRead || isReading ? 8 : 0, marginHorizontal: isRead || isReading ? -8 : 0, borderRadius: isRead || isReading ? 8 : 0, backgroundColor: isRead ? T.accent+"10" : isReading ? "#f59e0b10" : "transparent", borderBottomWidth:i<Math.min(selUni.books.length, 8)-1?1:0, borderColor:T.border }}>
-                        {showMenu ? (
-                          <View style={{ flexDirection:"row", flex:1, gap:4 }}>
-                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks}; delete newRead[bookKey]; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:6, borderRadius:6, backgroundColor:T.card, borderWidth:1, borderColor:T.border }}>
-                              <Text style={{ color:T.muted, fontSize:10, fontWeight:"700", textAlign:"center" }}>○</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [bookKey]: "reading"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:6, borderRadius:6, backgroundColor:"#f59e0b30", borderWidth:1, borderColor:"#f59e0b" }}>
-                              <Text style={{ color:"#f59e0b", fontSize:10, fontWeight:"700", textAlign:"center" }}>📖</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={(e) => { e.stopPropagation(); const newRead = {...readBooks, [bookKey]: "read"}; setReadBooks(newRead); saveLocalUserData({...currentData(), readBooks: newRead}); if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{}); setBookMenu(null); }} style={{ flex:1, padding:6, borderRadius:6, backgroundColor:T.accent+"20", borderWidth:1, borderColor:T.accent }}>
-                              <Text style={{ color:T.accent, fontSize:10, fontWeight:"700", textAlign:"center" }}>✓</Text>
-                            </TouchableOpacity>
-                          </View>
-                        ) : (
-                          <View style={{ flexDirection:"row", alignItems:"center" }}>
-                            <View style={{ width:24, height:24, borderRadius:12, backgroundColor:isRead ? T.accent : isReading ? "#f59e0b" : T.card2, borderWidth:2, borderColor:isRead ? T.accent : isReading ? "#f59e0b" : T.border, alignItems:"center", justifyContent:"center", marginRight:10 }}>
-                              {isRead && <Text style={{ color:AT, fontSize:10, fontWeight:"800" }}>✓</Text>}
-                              {isReading && <Text style={{ color:"#fff", fontSize:10 }}>📖</Text>}
-                              {!isRead && !isReading && <View style={{ width:8, height:8, borderRadius:4, backgroundColor:T.muted }} />}
-                            </View>
-                            <Text style={{ color:T.text, fontSize:12, flex:1 }}>{book}</Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-        )}
-        <TouchableOpacity onPress={()=>Linking.openURL(selUni.site)} style={{ backgroundColor:isDark?"#0a1f15":"#f0fdf4", borderRadius:14, padding:13, borderWidth:1, borderColor:T.accent+"30", flexDirection:"row", alignItems:"center", gap:10 }}>
-          <Text style={{ fontSize:18 }}>🌐</Text>
-          <View style={{ flex:1 }}>
-            <Text style={{ color:T.sub, fontSize:10 }}>Site oficial</Text>
-            <Text style={{ color:T.accent, fontSize:13, fontWeight:"700" }}>{selUni.site}</Text>
-          </View>
-          <Text style={{ color:T.accent }}>›</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={{ height:16 }} />
-    </ScrollView>
+    <UniversityDetailScreen
+      selUni={selUni}
+      onBack={() => setSU(null)}
+      onToggleFollow={toggleFollow}
+      onShowExams={() => setShowExamsPage(true)}
+      currentData={currentData}
+    />
   );
 
   const renderFeed = () => (

@@ -6,13 +6,13 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 
 ## 0. Current State
 
-| | Before | After Phases 1–4 | After Phase A | After Phase B | After Phase C (Auth) | After Phase C (Onboarding) | After Phase C (Feed) | After Phase C (Notas) | After Phase C (Explorar) | After Phase C (Perfil) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines | ~2,551 lines | 2,317 lines | 2,192 lines | 2,070 lines | 1,825 lines | 1,736 lines | 1,504 lines |
-| `MainApp` `useState` sites | ~80 | ~80 | 57 | 57 | 40 | 37 | 37 | 34 | 32 | 32 |
-| Modules under `src/` | 1 (firebase config) | 16 | 24 | 26 | 27 | 29 | 30 | 31 | 32 | 33 |
-| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites | ~10 sites | ~10 sites | ~9 sites | ~5 sites | ~5 sites | ~5 sites | ~3 sites |
-| UI/behavior changes | — | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** |
+| | Before | After Phases 1–4 | After Phase A | After Phase B | After Phase C (Auth) | After Phase C (Onboarding) | After Phase C (Feed) | After Phase C (Notas) | After Phase C (Explorar) | After Phase C (Perfil) | After Phase C (sub-pages) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines | ~2,551 lines | 2,317 lines | 2,192 lines | 2,070 lines | 1,825 lines | 1,736 lines | 1,504 lines | 1,174 lines |
+| `MainApp` `useState` sites | ~80 | ~80 | 57 | 57 | 40 | 37 | 37 | 34 | 32 | 32 | 26 |
+| Modules under `src/` | 1 (firebase config) | 16 | 24 | 26 | 27 | 29 | 30 | 31 | 32 | 33 | 37 |
+| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites | ~10 sites | ~10 sites | ~9 sites | ~5 sites | ~5 sites | ~5 sites | ~3 sites | ~3 sites |
+| UI/behavior changes | — | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** |
 
 `App.js` still contains a god-component `MainApp` and the full screen tree as a giant `tab === "..."` switch. Cross-screen state is now in Zustand stores; remaining `useState` calls are modal toggles, form fields, temporary pickers, and search strings. Splitting the screen tree is the next target.
 
@@ -85,7 +85,15 @@ Everything above is pure cut-and-paste. Zero behavioral risk.
 - ✅ `src/screens/perfil/PerfilScreen.js` (342 lines) — profile card (avatar/banner/name/courses/location/stats), goal card (objetivo with last/avg/tgt progress), books summary, goals-as-tasks section (with nested `GoalsList` component owning the `bookMenu` local state), upcoming exams from goals, and EVENTS list. Pulls from `useProfileStore`/`useOnboardingStore`/`useUniversitiesStore`/`useProgressStore`/`usePostsStore`/`useAuthStore`/`useGeoStore`. Reimplements `getCityDisplayName`, `last`/`avg`/`tgt`, and `cd`/`lbl` locally (screen-scoped, small). Receives 10 MainApp callback props for modal/tab transitions: `onChangePhoto`, `onChangeName`, `onEditCourses`, `onShowFollowing`, `onShowSaved`, `onShowBooks`, `onAddGoal`, `onOpenEvent`, `onSelectUni`, `goNotas`, plus `currentData` for the goal-todo persistence writes. Inlined `followedCount = unis.filter(u=>u.followed).length` (didn't need the sorted `fol` list, just its count).
 - ✅ `App.js`: `renderPerfil` is now a 14-line thunk. Removed the now-unused `last`/`avg`/`tgt` derivations (Perfil was the last consumer after Notas left). Moved Firestore writes for `readBooks`/`completedTodos` inside the Goals/Tasks section into PerfilScreen's `GoalsList`. Dropped the `EVENTS` import (no other MainApp consumer). **−232 lines** net.
 
-**Phase C complete for the five main tabs.** Remaining in `MainApp`: the `selUni` university detail overlay, the `showExamsPage`/`showBooksPage`/`showFollowingPage` sub-pages, the `dArea` discover modal, and ~14 true modals (config/photo/edit-courses/name/grade/share/uni-search/location/saved/book-menu/event/exam). These naturally belong to Explorar/Perfil sub-stacks once Phase B navigator routes replace the boolean toggles.
+**Phase C complete for the five main tabs.**
+
+- ✅ `src/screens/explorar/FollowingScreen.js` (63 lines) — following-universities page. Pulls `unis`/`uniSort`/`uniPrefs` from `useUniversitiesStore`, computes the sorted `fol` list internally (by preference or exam month via `getMonthFromKey`). Props: `onBack`, `onExplore` (jumps to explorar tab), `onSelectUni`.
+- ✅ `src/screens/explorar/BooksListScreen.js` (125 lines) — all-books-across-unis page. Pulls `unis` from `useUniversitiesStore`, `readBooks`/`setReadBooks` from `useProgressStore`, `currentUser` from `useAuthStore`. Owns `booksSearch`/`bookMenu` local state and the `persistReadBooks` Firestore write helper. Props: `onBack`, `currentData`.
+- ✅ `src/screens/explorar/ExamsListScreen.js` (126 lines) — per-uni exams overview: upcoming strip + year-grouped accordions. Owns `examSearch`/`examSort`/`expandedYears` local state. Props: `selUni`, `onBack`, `onSelectExam`. Unmount-on-exit (triggered by MainApp's `showExamsPage` toggle) means state resets naturally each entry, so the old `setExpandedYears({}); setExamSearch(""); setExamSort("newest")` reset on the "open exams" button becomes implicit.
+- ✅ `src/screens/explorar/UniversityDetailScreen.js` (154 lines) — uni detail overlay: header card, CTA to exams list, Próximo Vestibular block, courses chips, books checklist with tap-to-status menu, site link. Pulls `readBooks`/`setReadBooks` from `useProgressStore`, `currentUser` from `useAuthStore`. Owns `selectedBookYear`/`bookMenu` locally. Props: `selUni`, `onBack`, `onToggleFollow` (forwards to MainApp's `toggleFollow` since it does complex Firestore writes against two collections — `usuarios/{uid}.followedUnis` arrayUnion + `universidades/{id}.followersCount` increment — and still needs MainApp's `setUnis`/`setSU`/`setUserData` to reconcile the optimistic update on rollback), `onShowExams`, `currentData`.
+- ✅ `App.js`: all four sub-page `render*` methods are now thin thunks. Removed 6 useState hooks from MainApp (`expandedYears`, `examSearch`, `examSort`, `bookMenu`, `booksSearch`, `selectedBookYear`). **−330 lines** net across the four extractions.
+
+Remaining in `MainApp`: the `showExamsPage`/`showBooksPage`/`showFollowingPage` boolean toggles (will become navigator routes in Phase B), the `dArea` discover modal, the `toggleFollow` handler, and ~14 true modals (config/photo/edit-courses/name/grade/share/uni-search/location/saved/event/exam). These naturally belong to Explorar/Perfil sub-stacks once Phase B navigator routes replace the boolean toggles.
 
 **Known deferred work for Phase C cleanup:** the `h*` handler wrappers (hStep/hDone/hUType/hC1/hC2) should eventually be absorbed by `onboardingStore` once per-slice persistence middleware exists (Phase A deferred item). Until then, passing them as props is fine.
 
