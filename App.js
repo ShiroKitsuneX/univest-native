@@ -1,13 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  Modal, Alert, Appearance, Linking, Platform, StatusBar,
-  KeyboardAvoidingView, Dimensions, ActivityIndicator, Animated, Pressable,
+  Alert, Appearance, Linking, Platform, StatusBar,
+  KeyboardAvoidingView, ActivityIndicator,
 } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { db } from "./src/firebase/config";
-import { doc, setDoc, updateDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
+import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
 import { USER_TYPES } from "./src/data/userTypes";
 import { AREAS, ALL_COURSES } from "./src/data/areas";
@@ -96,8 +96,6 @@ function MainApp() {
   const setReadBooks = useProgressStore(s => s.setReadBooks);
   const readingBooks = useProgressStore(s => s.readingBooks);
   const setReadingBooks = useProgressStore(s => s.setReadingBooks);
-  const [requirementsModal, setRequirementsModal] = useState(false);
-  const [selectedRequirements, setSelectedRequirements] = useState(null);
   const saved = usePostsStore(s => s.saved);
   const setSaved = usePostsStore(s => s.setSaved);
   const liked = usePostsStore(s => s.liked);
@@ -128,7 +126,6 @@ function MainApp() {
   const [tmpSobrenome, setTmpSobrenome] = useState("");
   const [mEv,   setMev]   = useState(null);
   const [mExam, setMexam] = useState(null);
-  const [examYear, setExamYear] = useState(null);
   const [showExamsPage, setShowExamsPage] = useState(false);
 
   const [showBooksPage, setShowBooksPage] = useState(false);
@@ -165,10 +162,6 @@ function MainApp() {
   const [tmpStudyCountryId, setTmpStudyCountryId] = useState("");
   const [tmpStudyStateId, setTmpStudyStateId] = useState("");
   const [tmpStudyCityId, setTmpStudyCityId] = useState("");
-  const [stateSearch, setStateSearch] = useState("");
-  const [citySearch, setCitySearch] = useState("");
-  const [studyStateSearch, setStudyStateSearch] = useState("");
-  const [studyCitySearch, setStudyCitySearch] = useState("");
   const [showStatePicker, setShowStatePicker] = useState(false);
   const [showCityPicker, setShowCityPicker] = useState(false);
   const [showStudyStatePicker, setShowStudyStatePicker] = useState(false);
@@ -192,26 +185,6 @@ function MainApp() {
   const getCountryDisplayName = (id) => getCountry(id)?.name || "";
 
   const getIcon = (id, fallback) => fbIcons[id] || fallback;
-
-  const updateBookStatus = (bookKey, status) => {
-    const isReading = readBooks[bookKey] === "reading";
-    const isRead = readBooks[bookKey] === "read";
-    let newRead = {...readBooks};
-    
-    if (status === "reading") {
-      newRead[bookKey] = "reading";
-    } else if (status === "read") {
-      newRead[bookKey] = "read";
-    } else if (status === "none") {
-      delete newRead[bookKey];
-    }
-    
-    setReadBooks(newRead);
-    saveLocalUserData({...currentData(), readBooks: newRead});
-    if (currentUser) {
-      setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-    }
-  };
 
   const currentData = () => ({
     step, done, uTypeId:uType?.id, c1, c2, theme, av, avBgIdx, nome, sobrenome,
@@ -514,7 +487,7 @@ function MainApp() {
     <ExplorarScreen
       refreshing={refreshing}
       onRefresh={onRefresh}
-      onOpenLocation={() => { setTmpCountryId(countryId||'BR'); setTmpStateId(stateId); setTmpCityId(cityId); setTmpStudyCountryId(studyCountryId||'BR'); setTmpStudyStateId(studyStateId); setTmpStudyCityId(studyCityId); setStateSearch(''); setCitySearch(''); setStudyStateSearch(''); setStudyCitySearch(''); setMloc(true); }}
+      onOpenLocation={() => { setTmpCountryId(countryId||'BR'); setTmpStateId(stateId); setTmpCityId(cityId); setTmpStudyCountryId(studyCountryId||'BR'); setTmpStudyStateId(studyStateId); setTmpStudyCityId(studyCityId); setMloc(true); }}
       onOpenDiscover={() => setMdisc(true)}
       onSelectUni={(u) => setSU(u)}
     />
@@ -589,7 +562,7 @@ function MainApp() {
             ["👤","Nome",nome && sobrenome ? nome + " " + sobrenome : nome || "Não definido",()=>{setTmpNome(nome);setTmpSobrenome(sobrenome);setMcfg(false);setMnome(true);}],
             ["📷","Alterar foto de perfil","Ícone e cor",()=>{setTmpAv(av);setTmpBgIdx(avBgIdx);setMcfg(false);setMpho(true);}],
             ["✏️","Editar opções de curso","Altere suas preferências",()=>{setEC1(c1);setEC2(c2);setEpick(1);setEsrch("");setMcfg(false);setMedit(true);}],
-            ["📍","Localização","Sua cidade e destino de estudos",()=>{setTmpCountryId(countryId||"BR");setTmpStateId(stateId);setTmpCityId(cityId);setTmpStudyCountryId(studyCountryId||"BR");setTmpStudyStateId(studyStateId);setTmpStudyCityId(studyCityId);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");setMcfg(false);setMloc(true);}],
+            ["📍","Localização","Sua cidade e destino de estudos",()=>{setTmpCountryId(countryId||"BR");setTmpStateId(stateId);setTmpCityId(cityId);setTmpStudyCountryId(studyCountryId||"BR");setTmpStudyStateId(studyStateId);setTmpStudyCityId(studyCityId);setMcfg(false);setMloc(true);}],
             ["🎯","Metas de vestibular","Universidades que você vai fazer",()=>{setMcfg(false);setGoalsModal(true);}],
             ["📧","E-mail",currentUser?.email||"—",()=>{}],
           ].map(([ic,ti,su,fn])=>(
@@ -945,10 +918,10 @@ function MainApp() {
       </BottomSheet>
 
       {/* Location settings - completely redesigned */}
-      <BottomSheet visible={mLoc} onClose={()=>{setMloc(false);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");}} T={T}>
+      <BottomSheet visible={mLoc} onClose={()=>setMloc(false)} T={T}>
         <View style={{ flex:1, paddingBottom:20 }}>
           <View style={{ flexDirection:"row", alignItems:"center", justifyContent:"space-between", paddingHorizontal:20, paddingVertical:12, borderBottomWidth:1, borderBottomColor:T.border }}>
-            <TouchableOpacity onPress={()=>{setMloc(false);setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");}} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}>
+            <TouchableOpacity onPress={()=>setMloc(false)} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}>
               <Text style={{ color:T.sub, fontSize:18 }}>←</Text>
             </TouchableOpacity>
             <Text style={{ color:T.text, fontSize:18, fontWeight:"800" }}>📍 Localização</Text>
@@ -1043,7 +1016,6 @@ function MainApp() {
                 setStudyCityId(tmpStudyCityId);
                 setShowStatePicker(false);setShowCityPicker(false);setShowStudyStatePicker(false);setShowStudyCityPicker(false);
                 setMloc(false);
-                setStateSearch("");setCitySearch("");setStudyStateSearch("");setStudyCitySearch("");
                 if (currentUser) {
                   const data = {countryId:tmpCountryId||"BR",stateId:tmpStateId,cityId:tmpCityId,studyCountryId:tmpStudyCountryId||"BR",studyStateId:tmpStudyStateId,studyCityId:tmpStudyCityId,updatedAt:new Date().toISOString()};
                   saveLocalUserData({...currentData(), ...data});
