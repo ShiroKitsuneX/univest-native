@@ -5,7 +5,7 @@ import { useProfileStore } from "../stores/profileStore";
 import { useUniversitiesStore } from "../stores/universitiesStore";
 import { StoryCircle } from "./StoryCircle";
 
-export function StoriesStrip({ onStoryPress, onAddStoryPress, goExplorar }) {
+export function StoriesStrip({ onStoryPress, goExplorar }) {
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
   const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
@@ -48,18 +48,7 @@ export function StoriesStrip({ onStoryPress, onAddStoryPress, goExplorar }) {
 
   return (
     <View style={{ paddingVertical: 8 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginBottom: 8 }}>
-        <Text style={{ color: T.text, fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 }}>
-          SEUS STORIES
-        </Text>
-        <View style={{ flex: 1 }} />
-        {fol.length > 0 && (
-          <TouchableOpacity onPress={onAddStoryPress} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Text style={{ color: T.accent, fontSize: 12, fontWeight: "600" }}>+Novo</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingHorizontal: 20 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, flexGrow: 1, justifyContent: "center" }}>
         {groupedStories.map(group => (
           <StoryCircle
             key={group.uniId}

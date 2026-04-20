@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { FEED } from "../data/feed";
 import { fetchPosts, fetchPostLikes } from "../services/firestore";
+import { persistToUser } from "./middleware/persistToUser";
 
-export const usePostsStore = create((set, get) => ({
+export const usePostsStore = create(persistToUser((set, get, api) => ({
   posts: [],
   liked: {},
   saved: {},
@@ -54,10 +55,15 @@ export const usePostsStore = create((set, get) => ({
       : p),
   })),
 
-  hydrate: (d) => set((state) => {
-    const next = {};
-    if (d.saved) next.saved = d.saved;
-    if (d.liked) next.liked = d.liked;
-    return { ...state, ...next };
-  }),
-}));
+  hydrate: (d) => {
+    api.__suspendPersist();
+    try {
+      set((state) => {
+        const next = {};
+        if (d.saved) next.saved = d.saved;
+        if (d.liked) next.liked = d.liked;
+        return { ...state, ...next };
+      });
+    } finally { api.__resumePersist(); }
+  },
+}), { keys: ["saved"] }));

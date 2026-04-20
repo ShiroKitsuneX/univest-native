@@ -1,112 +1,101 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   View, Text, Image, TouchableOpacity, Dimensions, StyleSheet,
-  StatusBar, Animated, Modal, PanResponder, Alert,
+  StatusBar, Animated, Modal, PanResponder,
 } from "react-native";
 import { useStoriesStore } from "../stores/storiesStore";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 const STORY_DURATION = 5000;
+const SWIPE_THRESHOLD = 50;
 
 export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const timerRef = useRef(null);
+  const animationRef = useRef(null);
   const imageLoadedRef = useRef(false);
-
+  
   const markViewed = useStoriesStore(s => s.markViewed);
 
   const currentStory = stories[currentIndex];
   const isLastStory = currentIndex === stories.length - 1;
+  const isFirstStory = currentIndex === 0;
+
+  const stopAnimation = useCallback(() => {
+    if (animationRef.current) {
+      animationRef.current.stop();
+      animationRef.current = null;
+    }
+  }, []);
 
   const resetAnimation = useCallback(() => {
+    stopAnimation();
     progressAnim.setValue(0);
     imageLoadedRef.current = false;
-  }, [progressAnim]);
+  }, [stopAnimation, progressAnim]);
 
-  const startProgress = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    
-    progressAnim.setValue(0);
-    
-    Animated.timing(progressAnim, {
-      toValue: 1,
-      duration: STORY_DURATION,
-      useNativeDriver: false,
-    }).start(({ finished }) => {
-      if (finished && visible && imageLoadedRef.current) {
-        if (isLastStory) {
-          onClose();
-        } else {
-          setCurrentIndex(prev => prev + 1);
-        }
-      }
-    });
-  }, [visible, isLastStory, onClose, progressAnim]);
-
-  useEffect(() => {
-    if (visible && currentStory) {
-      markViewed(currentStory.id);
-      resetAnimation();
-      setTimeout(() => {
-        imageLoadedRef.current = true;
-        startProgress();
-      }, 100);
-    }
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [visible, currentIndex, currentStory]);
-
-  useEffect(() => {
-    if (currentIndex > 0 && visible) {
-      resetAnimation();
-      setTimeout(() => {
-        imageLoadedRef.current = true;
-        startProgress();
-      }, 100);
-    }
-  }, [currentIndex, visible]);
-
-  const nextStory = () => {
+  const goToNext = useCallback(() => {
+    stopAnimation();
     if (isLastStory) {
       onClose();
     } else {
       setCurrentIndex(prev => prev + 1);
     }
-  };
+  }, [isLastStory, onClose, stopAnimation]);
 
-  const prevStory = () => {
-    if (currentIndex > 0) {
+  const goToPrev = useCallback(() => {
+    stopAnimation();
+    if (!isFirstStory) {
       setCurrentIndex(prev => prev - 1);
     }
-  };
+  }, [isFirstStory, stopAnimation]);
 
-  const handleTouchStart = (event) => {
-    const x = event.nativeEvent.locationX;
+  useEffect(() => {
+    if (!visible || !currentStory) return;
+    
+    markViewed(currentStory.id);
+    resetAnimation();
+    imageLoadedRef.current = true;
+    
+    animationRef.current = Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: STORY_DURATION,
+      useNativeDriver: false,
+    });
+    
+    animationRef.current.start(({ finished }) => {
+      if (finished && imageLoadedRef.current && !isLastStory) {
+        setCurrentIndex(prev => prev + 1);
+      } else if (finished && imageLoadedRef.current && isLastStory) {
+        onClose();
+      }
+    });
+
+    return () => {
+      stopAnimation();
+    };
+  }, [visible, currentIndex, currentStory]);
+
+  const handleTap = useCallback((x) => {
     if (x < width / 3) {
-      prevStory();
+      goToPrev();
     } else if (x > (width * 2) / 3) {
-      nextStory();
+      goToNext();
     }
-  };
+  }, [goToPrev, goToNext]);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dy) > 10;
-      },
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          progressAnim.setValue(1 - gestureState.dy / 200);
-        }
-      },
+      onMoveShouldSetPanResponder: () => true,
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 50) {
+        const { dx, dy } = gestureState;
+        if (dx <= -SWIPE_THRESHOLD) {
+          goToNext();
+        } else if (dx >= SWIPE_THRESHOLD) {
+          goToPrev();
+        } else if (dy >= SWIPE_THRESHOLD) {
           onClose();
-        } else {
-          startProgress();
         }
       },
     })
@@ -123,53 +112,59 @@ export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
       onRequestClose={onClose}
     >
       <View style={styles.container} {...panResponder.panHandlers}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
+        <StatusBar barStyle="light-content" />
         
-        <TouchableOpacity
-          activeOpacity={1}
-          onTouchStart={handleTouchStart}
+        <TouchableOpacity 
+          activeOpacity={1} 
           style={styles.imageContainer}
+          onPress={(e) => handleTap(e.nativeEvent.locationX)}
         >
           <Image
             source={{ uri: currentStory.imageUrl }}
             style={styles.image}
             resizeMode="cover"
           />
-          
-          <View style={styles.overlay}>
-            <View style={styles.header}>
-              <View style={styles.uniInfo}>
-                <View style={[styles.uniAvatar, { backgroundColor: currentStory.uniColor }]}>
-                  <Text style={styles.uniInitial}>
-                    {currentStory.uniName.slice(0, 2).toUpperCase()}
-                  </Text>
-                </View>
-                <Text style={styles.uniName}>{currentStory.uniName}</Text>
+        </TouchableOpacity>
+        
+        <View style={styles.overlay}>
+          <View style={styles.header}>
+            <View style={styles.uniInfo}>
+              <View style={[styles.uniAvatar, { backgroundColor: currentStory.uniColor }]}>
+                <Text style={styles.uniInitial}>
+                  {currentStory.uniName.slice(0, 2).toUpperCase()}
+                </Text>
               </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text style={styles.closeText}>✕</Text>
-              </TouchableOpacity>
+              <Text style={styles.uniName}>{currentStory.uniName}</Text>
             </View>
-            
-            <View style={styles.progressContainer}>
-              {stories.map((s, i) => (
-                <View key={s.id} style={styles.progressBarBg}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.progressContainer}>
+            {stories.map((s, i) => (
+              <View key={s.id} style={styles.progressBarBg}>
+                {i < currentIndex ? (
+                  <View style={styles.progressBarFill} />
+                ) : i === currentIndex ? (
                   <Animated.View
                     style={[
                       styles.progressBarFill,
                       {
-                        width: i < currentIndex ? "100%" : i === currentIndex ? progressAnim.interpolate({
+                        width: progressAnim.interpolate({
                           inputRange: [0, 1],
                           outputRange: ["0%", "100%"],
-                        }) : "0%",
+                        }),
                       },
                     ]}
                   />
-                </View>
-              ))}
-            </View>
+                ) : (
+                  <View style={styles.progressBarEmpty} />
+                )}
+              </View>
+            ))}
           </View>
-        </TouchableOpacity>
+        </View>
       </View>
     </Modal>
   );
@@ -250,6 +245,11 @@ const styles = StyleSheet.create({
   progressBarFill: {
     height: "100%",
     backgroundColor: "#fff",
+    borderRadius: 1,
+  },
+  progressBarEmpty: {
+    height: "100%",
+    backgroundColor: "transparent",
     borderRadius: 1,
   },
 });

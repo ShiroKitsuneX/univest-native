@@ -35,15 +35,14 @@ export function SettingsModal({ visible, onClose, onOpenName, onOpenPhoto, onOpe
         </View>
         <Text style={[lbl,{marginBottom:10}]}>Conta</Text>
         {[
-          ["👤","Nome",nome && sobrenome ? nome + " " + sobrenome : nome || "Não definido",()=>{onClose();onOpenName();}],
-          ["📷","Alterar foto de perfil","Ícone e cor",()=>{onClose();onOpenPhoto();}],
-          ["✏️","Editar opções de curso","Altere suas preferências",()=>{onClose();onOpenEditCourses();}],
-          ["📍","Localização","Sua cidade e destino de estudos",()=>{onClose();onOpenLocation();}],
-          ["🎯","Metas de vestibular","Universidades que você vai fazer",()=>{onClose();onOpenGoals();}],
-          ["📧","E-mail",currentUser?.email||"—",()=>{}],
-        ].map(([ic,ti,su,fn])=>(
+          ["Nome",nome && sobrenome ? nome + " " + sobrenome : nome || "Não definido",()=>{onClose();onOpenName();}],
+          ["Alterar foto de perfil","Ícone e cor",()=>{onClose();onOpenPhoto();}],
+          ["Editar opções de curso","Altere suas preferências",()=>{onClose();onOpenEditCourses();}],
+          ["Localização","Sua cidade e destino de estudos",()=>{onClose();onOpenLocation();}],
+          ["Metas de vestibular","Universidades que você vai fazer",()=>{onClose();onOpenGoals();}],
+          ["E-mail",currentUser?.email||"—",()=>{}],
+        ].map(([ti,su,fn])=>(
           <TouchableOpacity key={ti} onPress={fn} style={{ flexDirection:"row", alignItems:"center", backgroundColor:T.card2, borderRadius:14, padding:15, marginBottom:10, borderWidth:1, borderColor:T.border }}>
-            <Text style={{ fontSize:22, marginRight:14 }}>{ic}</Text>
             <View style={{ flex:1 }}>
               <Text style={{ color:T.text, fontSize:14, fontWeight:"700" }}>{ti}</Text>
               <Text style={{ color:T.sub, fontSize:12 }}>{su}</Text>
@@ -55,7 +54,7 @@ export function SettingsModal({ visible, onClose, onOpenName, onOpenPhoto, onOpe
         <TouchableOpacity onPress={()=>{onClose();onLogout();}} style={{ backgroundColor:"#dc2626", borderRadius:14, padding:15, alignItems:"center", marginBottom:12 }}>
           <Text style={{ color:"#fff", fontSize:15, fontWeight:"700" }}>Sair</Text>
         </TouchableOpacity>
-        <Text style={{ color:T.muted, fontSize:12, textAlign:"center" }}>UniVest v4.0 · Feito com 💚</Text>
+        <Text style={{ color:T.muted, fontSize:12, textAlign:"center", marginTop: 8, marginBottom: 24 }}>UniVest v4.0 · Feito com</Text>
       </View>
     </BottomSheet>
   );

@@ -1,6 +1,7 @@
 import { create } from "zustand";
+import { persistToUser } from "./middleware/persistToUser";
 
-export const useProgressStore = create((set) => ({
+export const useProgressStore = create(persistToUser((set, get, api) => ({
   readBooks: {},
   readingBooks: [],
   completedTodos: {},
@@ -23,11 +24,16 @@ export const useProgressStore = create((set) => ({
     return { readBooks: next };
   }),
 
-  hydrate: (d) => set((state) => {
-    const next = {};
-    if (d.readBooks) next.readBooks = d.readBooks;
-    if (d.readingBooks) next.readingBooks = d.readingBooks;
-    if (d.completedTodos) next.completedTodos = d.completedTodos;
-    return { ...state, ...next };
-  }),
-}));
+  hydrate: (d) => {
+    api.__suspendPersist();
+    try {
+      set((state) => {
+        const next = {};
+        if (d.readBooks) next.readBooks = d.readBooks;
+        if (d.readingBooks) next.readingBooks = d.readingBooks;
+        if (d.completedTodos) next.completedTodos = d.completedTodos;
+        return { ...state, ...next };
+      });
+    } finally { api.__resumePersist(); }
+  },
+}), { keys: ["readBooks", "readingBooks", "completedTodos"] }));

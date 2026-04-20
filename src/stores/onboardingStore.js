@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { USER_TYPES } from "../data/userTypes";
+import { persistToUser } from "./middleware/persistToUser";
 
-export const useOnboardingStore = create((set) => ({
+const PERSIST_KEYS = ["step", "done", "uType", "c1", "c2"];
+
+const serialize = (s) => ({
+  step: s.step, done: s.done, uTypeId: s.uType?.id, c1: s.c1, c2: s.c2,
+});
+
+export const useOnboardingStore = create(persistToUser((set, get, api) => ({
   step: 0,
   done: false,
   uType: null,
@@ -21,26 +28,36 @@ export const useOnboardingStore = create((set) => ({
     set({ uType: ut });
   },
 
-  hydrateFromLocal: (d) => set({
-    step: d.step || 0,
-    done: d.done || false,
-    uType: d.uTypeId ? USER_TYPES.find(t => t.id === d.uTypeId) || null : null,
-    c1: d.c1 || "",
-    c2: d.c2 || "",
-  }),
+  hydrateFromLocal: (d) => {
+    api.__suspendPersist();
+    try {
+      set({
+        step: d.step || 0,
+        done: d.done || false,
+        uType: d.uTypeId ? USER_TYPES.find(t => t.id === d.uTypeId) || null : null,
+        c1: d.c1 || "",
+        c2: d.c2 || "",
+      });
+    } finally { api.__resumePersist(); }
+  },
 
-  hydrateFromFb: (d) => set((state) => {
-    if (d.done === true) {
-      const ut = d.uTypeId ? USER_TYPES.find(t => t.id === d.uTypeId) : null;
-      return {
-        uType: ut || state.uType,
-        c1: d.c1 || state.c1,
-        c2: d.c2 || state.c2,
-        step: 3,
-        done: true,
-      };
-    }
-    if (d.done === false) return { step: 1, done: false };
-    return state;
-  }),
-}));
+  hydrateFromFb: (d) => {
+    api.__suspendPersist();
+    try {
+      set((state) => {
+        if (d.done === true) {
+          const ut = d.uTypeId ? USER_TYPES.find(t => t.id === d.uTypeId) : null;
+          return {
+            uType: ut || state.uType,
+            c1: d.c1 || state.c1,
+            c2: d.c2 || state.c2,
+            step: 3,
+            done: true,
+          };
+        }
+        if (d.done === false) return { step: 1, done: false };
+        return state;
+      });
+    } finally { api.__resumePersist(); }
+  },
+}), { keys: PERSIST_KEYS, serialize }));

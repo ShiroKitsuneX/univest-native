@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { UNIVERSITIES } from "../data/universities";
 import { fetchUniversities } from "../services/firestore";
+import { persistToUser } from "./middleware/persistToUser";
 
-export const useUniversitiesStore = create((set, get) => ({
+export const useUniversitiesStore = create(persistToUser((set, get, api) => ({
   unis: UNIVERSITIES,
   fbUnis: [],
   selUni: null,
@@ -50,5 +51,10 @@ export const useUniversitiesStore = create((set, get) => ({
     set({ unis: source.map(u => ({ ...u, followed: followedUnis.includes(u.name) || false })) });
   },
 
-  hydrate: (d) => { if (d.goalsUnis) set({ goalsUnis: d.goalsUnis }); },
-}));
+  hydrate: (d) => {
+    api.__suspendPersist();
+    try {
+      if (d.goalsUnis) set({ goalsUnis: d.goalsUnis });
+    } finally { api.__resumePersist(); }
+  },
+}), { keys: ["goalsUnis"] }));

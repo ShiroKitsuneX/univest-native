@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   Alert, Appearance, Linking, StatusBar,
@@ -52,10 +52,8 @@ function MainApp() {
   const insets = useSafeAreaInsets();
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
-  const setTheme = useProfileStore(s => s.setTheme);
   const isDark = theme==="auto" ? colorScheme==="dark" : theme==="dark";
   const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
 
   const currentUser = useAuthStore(s => s.currentUser);
   const setCurrentUser = useAuthStore(s => s.setCurrentUser);
@@ -63,20 +61,13 @@ function MainApp() {
   const setAuthLoading = useAuthStore(s => s.setAuthLoading);
   const userData = useAuthStore(s => s.userData);
   const setUserData = useAuthStore(s => s.setUserData);
-  const nome = useProfileStore(s => s.nome);
-  const setNome = useProfileStore(s => s.setNome);
-  const sobrenome = useProfileStore(s => s.sobrenome);
-  const setSobrenome = useProfileStore(s => s.setSobrenome);
 
-  const step = useOnboardingStore(s => s.step);
   const setStep = useOnboardingStore(s => s.setStep);
   const done = useOnboardingStore(s => s.done);
   const setDone = useOnboardingStore(s => s.setDone);
   const uType = useOnboardingStore(s => s.uType);
   const setUType = useOnboardingStore(s => s.setUType);
-  const c1 = useOnboardingStore(s => s.c1);
   const setC1 = useOnboardingStore(s => s.setC1);
-  const c2 = useOnboardingStore(s => s.c2);
   const setC2 = useOnboardingStore(s => s.setC2);
   const [onboardingLoaded, setOnboardingLoaded] = useState(false);
 
@@ -84,33 +75,15 @@ function MainApp() {
   const unis = useUniversitiesStore(s => s.unis);
   const setUnis = useUniversitiesStore(s => s.setUnis);
   const fbUnis = useUniversitiesStore(s => s.fbUnis);
-  const setFbUnis = useUniversitiesStore(s => s.setFbUnis);
   const fbCourses = useCoursesStore(s => s.fbCourses);
   const fbIcons = useCoursesStore(s => s.fbIcons);
   const selUni = useUniversitiesStore(s => s.selUni);
   const setSU = useUniversitiesStore(s => s.setSelUni);
-  const goalsUnis = useUniversitiesStore(s => s.goalsUnis);
-  const setGoalsUnis = useUniversitiesStore(s => s.setGoalsUnis);
   const [goalsModal, setGoalsModal] = useState(false);
-  const completedTodos = useProgressStore(s => s.completedTodos);
-  const setCompletedTodos = useProgressStore(s => s.setCompletedTodos);
-  const readBooks = useProgressStore(s => s.readBooks);
-  const setReadBooks = useProgressStore(s => s.setReadBooks);
-  const readingBooks = useProgressStore(s => s.readingBooks);
-  const setReadingBooks = useProgressStore(s => s.setReadingBooks);
-  const saved = usePostsStore(s => s.saved);
-  const setSaved = usePostsStore(s => s.setSaved);
-  const liked = usePostsStore(s => s.liked);
-  const setLiked = usePostsStore(s => s.setLiked);
   const [refreshing, setRefreshing] = useState(false);
 
-  const gs = useProfileStore(s => s.gs);
-  const setGs = useProfileStore(s => s.setGs);
-
   const av = useProfileStore(s => s.av);
-  const setAv = useProfileStore(s => s.setAv);
   const avBgIdx = useProfileStore(s => s.avBgIdx);
-  const setAvBgIdx = useProfileStore(s => s.setAvBgIdx);
 
   const [mCfg,  setMcfg]  = useState(false);
   const [mPho,  setMpho]  = useState(false);
@@ -128,27 +101,8 @@ function MainApp() {
   const [mUni,  setMUni]  = useState(false);
   const [mLoc,  setMloc]  = useState(false);
   const [mSaved, setMSaved] = useState(false);
-  const countryId = useProfileStore(s => s.countryId);
-  const setCountryId = useProfileStore(s => s.setCountryId);
-  const stateId = useProfileStore(s => s.stateId);
-  const setStateId = useProfileStore(s => s.setStateId);
-  const cityId = useProfileStore(s => s.cityId);
-  const setCityId = useProfileStore(s => s.setCityId);
-  const studyCountryId = useProfileStore(s => s.studyCountryId);
-  const setStudyCountryId = useProfileStore(s => s.setStudyCountryId);
-  const studyStateId = useProfileStore(s => s.studyStateId);
-  const setStudyStateId = useProfileStore(s => s.setStudyStateId);
-  const studyCityId = useProfileStore(s => s.studyCityId);
-  const setStudyCityId = useProfileStore(s => s.setStudyCityId);
 
   const getIcon = (id, fallback) => fbIcons[id] || fallback;
-
-  const currentData = () => ({
-    step, done, uTypeId:uType?.id, c1, c2, theme, av, avBgIdx, nome, sobrenome,
-    grades:gs, saved, liked, followedUnis: unis.filter(u=>u.followed).map(u=>u.name),
-    countryId, stateId, cityId, studyCountryId, studyStateId, studyCityId,
-    readBooks, readingBooks
-  });
 
   useEffect(() => {
     loadLocalUserData().then(localData => {
@@ -161,20 +115,6 @@ function MainApp() {
       setOnboardingLoaded(true);
     });
   }, []);
-
-  const syncUserData = async (overrides) => {
-    const data = { ...currentData(), ...overrides };
-    await saveLocalUserData(data);
-    if (currentUser) {
-      try { await setDoc(doc(db,"usuarios",currentUser.uid),{...data,updatedAt:new Date().toISOString()},{merge:true}); } catch {}
-    }
-  };
-
-  const hStep = (v) => { const n = typeof v==="function"?v(step):v; setStep(n); syncUserData({ step:n }); };
-  const hDone = (v) => { setDone(v); syncUserData({ done:v }); };
-  const hUType = (v) => { setUType(v); syncUserData({ uTypeId:v?.id }); };
-  const hC1 = (v) => { setC1(v); syncUserData({ c1:v }); };
-  const hC2 = (v) => { setC2(v); syncUserData({ c2:v }); };
 
   useEffect(() => {
     const unsub = onAuthChange(async (user) => {
@@ -233,26 +173,8 @@ function MainApp() {
   }, [currentUser]);
 
   const handleLogout = () => {
-    Alert.alert("Sair","Deseja sair da sua conta?",[{text:"Cancelar",style:"cancel"},{text:"Sair",style:"destructive",onPress:async()=>{await logout(); hDone(false); hStep(0);}}]);
+    Alert.alert("Sair","Deseja sair da sua conta?",[{text:"Cancelar",style:"cancel"},{text:"Sair",style:"destructive",onPress:async()=>{await logout(); setDone(false); setStep(0);}}]);
   };
-
-  // Single debounced sync — prevents 4 separate writes on login
-  const saveTimerRef = useRef(null);
-  const prefsInitRef = useRef(false);
-  useEffect(() => {
-    // Skip the initial mount to avoid overwriting Firebase data on login
-    if (!currentUser) { prefsInitRef.current = false; return; }
-    if (!prefsInitRef.current) { prefsInitRef.current = true; return; }
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(async () => {
-      try {
-        const data = { theme, av, avBgIdx, grades:gs, saved, updatedAt:new Date().toISOString() };
-        await saveLocalUserData({ ...data, step, done, uTypeId:uType?.id, c1, c2 });
-        await setDoc(doc(db,"usuarios",currentUser.uid), data, {merge:true});
-      } catch (e) { console.log("Save error:", e.message); }
-    }, 500);
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [theme, av, avBgIdx, gs, saved, currentUser]);
 
   const toggleFollow = async (uni, isFollowing) => {
     if (!currentUser){Alert.alert("Atenção","Faça login para seguir universidades");return;}
@@ -263,7 +185,6 @@ function MainApp() {
       const next = isFollowing ? [...new Set([...cur, uni.name])] : cur.filter(n=>n!==uni.name);
       return { ...(prev||{}), followedUnis: next };
     });
-    saveLocalUserData(currentData());
     try {
       const userRef=doc(db,"usuarios",currentUser.uid);
       await setDoc(userRef,{
@@ -312,16 +233,14 @@ function MainApp() {
 
 
   // ── ONBOARDING ──
-  if (!done) return <OnboardingScreen hStep={hStep} hDone={hDone} hUType={hUType} hC1={hC1} hC2={hC2} />;
+  if (!done) return <OnboardingScreen hStep={setStep} hDone={setDone} hUType={setUType} hC1={setC1} hC2={setC2} />;
 
   // ── MAIN APP ──
-  const greeting = (() => { const h=new Date().getHours(); if(h<12) return "Bom dia"; if(h<18) return "Boa tarde"; return "Boa noite"; })();
-  const firstName = currentUser?.email?.split("@")[0]?.split(".")[0] || "você";
   const SBar = () => (
-    <View style={{ backgroundColor:T.bg, paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, flexDirection:"row", justifyContent:"space-between", alignItems:"center" }}>
-      <View>
+    <View style={{ backgroundColor:T.bg, paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, flexDirection:"row", alignItems:"center" }}>
+      <View style={{ width:36 }} />
+      <View style={{ flex: 1, alignItems: "center" }}>
         <Text style={{ fontSize:22, fontWeight:"800", color:T.text }}>Uni<Text style={{ color:T.accent }}>Vest</Text></Text>
-        {tab==="feed" && <Text style={{ fontSize:11, color:T.sub, marginTop:1 }}>{greeting}, {firstName} 👋</Text>}
       </View>
       {tab==="perfil" ? (
         <TouchableOpacity onPress={()=>setMcfg(true)} style={{ width:36, height:36, borderRadius:18, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignItems:"center", justifyContent:"center" }}>
@@ -331,7 +250,7 @@ function MainApp() {
         <View style={{ width:36, height:36, borderRadius:18, backgroundColor:AVATAR_COLORS[avBgIdx][0], alignItems:"center", justifyContent:"center" }}>
           <Text style={{ fontSize:18 }}>{av}</Text>
         </View>
-      ) : null}
+      ) : <View style={{ width:36 }} />}
     </View>
   );
 
@@ -362,7 +281,6 @@ function MainApp() {
   const renderBooksPage = () => (
     <BooksListScreen
       onBack={() => setShowBooksPage(false)}
-      currentData={currentData}
     />
   );
 
@@ -380,7 +298,6 @@ function MainApp() {
       onBack={() => setSU(null)}
       onToggleFollow={toggleFollow}
       onShowExams={() => setShowExamsPage(true)}
-      currentData={currentData}
     />
   );
 
@@ -391,7 +308,6 @@ function MainApp() {
       goExplorar={() => setTab("explorar")}
       onSelectUni={(u) => { setSU(u); setTab("explorar"); }}
       onShare={(item) => setMshr(item)}
-      currentData={currentData}
     />
   );
 
@@ -425,7 +341,6 @@ function MainApp() {
       onOpenEvent={(ev) => setMev(ev)}
       onSelectUni={(u) => { setSU(u); setTab('explorar'); }}
       goNotas={() => setTab('notas')}
-      currentData={currentData}
     />
   );
 
@@ -435,7 +350,7 @@ function MainApp() {
       {!showExamsPage && !showBooksPage && <SBar />}
       {!selUni && !showExamsPage && !showBooksPage && (
         <View style={{ paddingHorizontal:20, paddingTop:0, paddingBottom:6 }}>
-          <Text style={{ color:T.sub, fontSize:11 }}>{tab==="feed"?"Novidades para você":tab==="explorar"?"Encontre sua universidade":tab==="notas"?"Notas de corte & suas provas":`${uType?.emoji||"👤"} ${uType?.label||"Meu Perfil"}`}</Text>
+          <Text style={{ color:T.sub, fontSize:11 }}>{tab==="explorar"?"Encontre sua universidade":tab==="notas"?"Notas de corte & suas provas":`${uType?.emoji||"👤"} ${uType?.label||"Meu Perfil"}`}</Text>
         </View>
       )}
       {showExamsPage && selUni ? renderExamsPage() : showBooksPage ? renderBooksPage() : showFollowingPage ? renderFollowingPage() : selUni ? renderUniDetail() : (
@@ -455,7 +370,7 @@ function MainApp() {
       <EditNameModal visible={mNome} onClose={()=>setMnome(false)} />
 
       {/* Edit course */}
-      <EditCoursesModal visible={mEdit} onClose={()=>setMedit(false)} onSave={(a,b)=>{hC1(a);hC2(b);}} />
+      <EditCoursesModal visible={mEdit} onClose={()=>setMedit(false)} onSave={(a,b)=>{setC1(a);setC2(b);}} />
 
       <EventDetailModal event={mEv} onClose={()=>setMev(null)} />
 
@@ -463,7 +378,7 @@ function MainApp() {
 
       <ShareModal item={mShr} onClose={()=>setMshr(null)} />
 
-      <DiscoverCoursesModal visible={mDisc} onClose={()=>setMdisc(false)} onPickCourse={hC1} />
+      <DiscoverCoursesModal visible={mDisc} onClose={()=>setMdisc(false)} onPickCourse={setC1} />
 
       <UniSortModal visible={mUni} onClose={()=>setMUni(false)} />
 
@@ -471,7 +386,7 @@ function MainApp() {
 
       <LocationSettingsModal visible={mLoc} onClose={()=>setMloc(false)} />
 
-      <GoalsModal visible={goalsModal} onClose={()=>setGoalsModal(false)} currentData={currentData} />
+      <GoalsModal visible={goalsModal} onClose={()=>setGoalsModal(false)} />
 
       {/* Saved posts */}
       <SavedPostsModal visible={mSaved} onClose={()=>setMSaved(false)} />

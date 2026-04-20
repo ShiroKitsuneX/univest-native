@@ -117,7 +117,6 @@ export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onS
       <ScrollView style={{ flex: 1 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={T.accent} colors={[T.accent]} />}>
         <StoriesStrip
           onStoryPress={handleStoryPress}
-          onAddStoryPress={() => Alert.alert("Em breve", "Instituições poderão postar stories em breve!")}
           goExplorar={goExplorar}
         />
         <View style={{ height: 1, backgroundColor: T.border, marginBottom: 8 }} />
