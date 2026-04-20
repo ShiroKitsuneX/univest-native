@@ -48,6 +48,7 @@ import { EventDetailModal } from "./src/modals/EventDetailModal";
 import { ExamDetailModal } from "./src/modals/ExamDetailModal";
 import { DiscoverCoursesModal } from "./src/modals/DiscoverCoursesModal";
 import { AvatarPickerModal } from "./src/modals/AvatarPickerModal";
+import { EditNameModal } from "./src/modals/EditNameModal";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -118,8 +119,6 @@ function MainApp() {
   const [mPho,  setMpho]  = useState(false);
   const [mEdit, setMedit] = useState(false);
   const [mNome, setMnome] = useState(false);
-  const [tmpNome, setTmpNome] = useState("");
-  const [tmpSobrenome, setTmpSobrenome] = useState("");
   const [mEv,   setMev]   = useState(null);
   const [mExam, setMexam] = useState(null);
   const [showExamsPage, setShowExamsPage] = useState(false);
@@ -492,7 +491,7 @@ function MainApp() {
   const renderPerfil = () => (
     <PerfilScreen
       onChangePhoto={() => setMpho(true)}
-      onChangeName={() => { setTmpNome(nome); setTmpSobrenome(sobrenome); setMcfg(false); setMnome(true); }}
+      onChangeName={() => { setMcfg(false); setMnome(true); }}
       onEditCourses={() => { setEC1(c1); setEC2(c2); setEpick(1); setEsrch(''); setMedit(true); }}
       onShowFollowing={() => setShowFollowingPage(true)}
       onShowSaved={() => setMSaved(true)}
@@ -548,7 +547,7 @@ function MainApp() {
           </View>
           <Text style={[lbl,{marginBottom:10}]}>Conta</Text>
           {[
-            ["👤","Nome",nome && sobrenome ? nome + " " + sobrenome : nome || "Não definido",()=>{setTmpNome(nome);setTmpSobrenome(sobrenome);setMcfg(false);setMnome(true);}],
+            ["👤","Nome",nome && sobrenome ? nome + " " + sobrenome : nome || "Não definido",()=>{setMcfg(false);setMnome(true);}],
             ["📷","Alterar foto de perfil","Ícone e cor",()=>{setMcfg(false);setMpho(true);}],
             ["✏️","Editar opções de curso","Altere suas preferências",()=>{setEC1(c1);setEC2(c2);setEpick(1);setEsrch("");setMcfg(false);setMedit(true);}],
             ["📍","Localização","Sua cidade e destino de estudos",()=>{setTmpCountryId(countryId||"BR");setTmpStateId(stateId);setTmpCityId(cityId);setTmpStudyCountryId(studyCountryId||"BR");setTmpStudyStateId(studyStateId);setTmpStudyCityId(studyCityId);setMcfg(false);setMloc(true);}],
@@ -574,33 +573,7 @@ function MainApp() {
 
       <AvatarPickerModal visible={mPho} onClose={()=>setMpho(false)} currentData={currentData} />
 
-      {/* Edit name */}
-      <BottomSheet visible={mNome} onClose={()=>setMnome(false)} T={T}>
-        <View style={{ padding:20, paddingBottom:24 }}>
-          <View style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:16 }}>
-            <TouchableOpacity onPress={()=>setMnome(false)} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:16 }}>←</Text></TouchableOpacity>
-            <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>👤 Alterar Nome</Text>
-          </View>
-          <View style={{ flexDirection:"row", gap:8, marginBottom:16 }}>
-            <TextInput value={tmpNome} onChangeText={setTmpNome} placeholder="Nome" placeholderTextColor={T.muted} style={{ flex:1, padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
-            <TextInput value={tmpSobrenome} onChangeText={setTmpSobrenome} placeholder="Sobrenome" placeholderTextColor={T.muted} style={{ flex:1, padding:12, borderRadius:12, borderWidth:1, borderColor:T.inpB, backgroundColor:T.inp, color:T.text, fontSize:14 }} />
-          </View>
-          <TouchableOpacity onPress={()=>{
-            if (tmpNome.trim()) {
-              setNome(tmpNome);
-              setSobrenome(tmpSobrenome || "");
-              setMnome(false);
-              if (currentUser) {
-                const data = {nome:tmpNome,sobrenome:tmpSobrenome||"",updatedAt:new Date().toISOString()};
-                saveLocalUserData({...currentData(),...data});
-                setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
-              }
-            }
-          }} disabled={!tmpNome.trim()} style={{ padding:14, borderRadius:16, backgroundColor:tmpNome.trim()?T.accent:T.border, alignItems:"center" }}>
-            <Text style={{ color:tmpNome.trim()?AT:T.muted, fontSize:15, fontWeight:"800" }}>Salvar</Text>
-          </TouchableOpacity>
-        </View>
-      </BottomSheet>
+      <EditNameModal visible={mNome} onClose={()=>setMnome(false)} currentData={currentData} />
 
       {/* Edit course */}
       <BottomSheet visible={mEdit} onClose={()=>setMedit(false)} T={T}>
