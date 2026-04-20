@@ -6,13 +6,13 @@ Staged refactor of the monolithic `App.js` into a scalable, feature-oriented arc
 
 ## 0. Current State
 
-| | Before | After Phases 1–4 | After Phase A | After Phase B | After Phase C (Auth) | After Phase C (Onboarding) | After Phase C (Feed) | After Phase C (Notas) | After Phase C (Explorar) | After Phase C (Perfil) | After Phase C (sub-pages) |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines | ~2,551 lines | 2,317 lines | 2,192 lines | 2,070 lines | 1,825 lines | 1,736 lines | 1,504 lines | 1,174 lines |
-| `MainApp` `useState` sites | ~80 | ~80 | 57 | 57 | 40 | 37 | 37 | 34 | 32 | 32 | 26 |
-| Modules under `src/` | 1 (firebase config) | 16 | 24 | 26 | 27 | 29 | 30 | 31 | 32 | 33 | 37 |
-| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites | ~10 sites | ~10 sites | ~9 sites | ~5 sites | ~5 sites | ~5 sites | ~3 sites | ~3 sites |
-| UI/behavior changes | — | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** |
+| | Before | After Phases 1–4 | After Phase A | After Phase B | After Phase C (Auth) | After Phase C (Onboarding) | After Phase C (Feed) | After Phase C (Notas) | After Phase C (Explorar) | After Phase C (Perfil) | After Phase C (sub-pages) | After Phase D.1–D.10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `App.js` | 3,084 lines | ~2,570 lines | ~2,549 lines | ~2,551 lines | 2,317 lines | 2,192 lines | 2,070 lines | 1,825 lines | 1,736 lines | 1,504 lines | 1,174 lines | 781 lines |
+| `MainApp` `useState` sites | ~80 | ~80 | 57 | 57 | 40 | 37 | 37 | 34 | 32 | 32 | 26 | 16 |
+| Modules under `src/` | 1 (firebase config) | 16 | 24 | 26 | 27 | 29 | 30 | 31 | 32 | 33 | 37 | 47 |
+| Firebase calls inline in App | ~25 sites | ~15 sites | ~10 sites | ~10 sites | ~10 sites | ~9 sites | ~5 sites | ~5 sites | ~5 sites | ~3 sites | ~3 sites | ~3 sites |
+| UI/behavior changes | — | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** | **None** |
 
 `App.js` still contains a god-component `MainApp` and the full screen tree as a giant `tab === "..."` switch. Cross-screen state is now in Zustand stores; remaining `useState` calls are modal toggles, form fields, temporary pickers, and search strings. Splitting the screen tree is the next target.
 
@@ -395,11 +395,38 @@ Put them in `src/components/` if truly app-wide, or `src/screens/<feature>/compo
 
 ---
 
-## Phase D — Modal extraction
+## Phase D — Modal extraction (🟡 in progress: 10 / 13 modals)
 
 **Goal:** Move each of the 13 bottom-sheet modals out of `MainApp` into its own file under `src/modals/`. `MainApp` keeps only the `visible` / `onClose` wiring plus any cross-store callback it already passes today. This phase does *not* change the Firestore write pattern — each modal keeps its inline `setDoc` for now (those disappear in Phase E).
 
 **Prerequisite:** C.1 merged (so the grep sweeps per modal don't surface dead code).
+
+### Progress
+
+Completed (App.js 1,174 → 781, −393 lines; 10 useState sites eliminated):
+
+- ✅ **D.1 ShareModal** (`mShr`) — props: `{item, onClose}`. Pure presentation + `Share.share(...)` native call. Inlined `TAG_L`/`TAG_D` maps with the feed tag metadata lives here now since ShareModal was the only MainApp consumer.
+- ✅ **D.2 UniSortModal** (`mUni`) — pulls `unis`/`uniSort`/`uniPrefs` from `useUniversitiesStore` and computes the sorted `fol` list internally. Orphaned the MainApp-local `fol` derivation.
+- ✅ **D.3 AddGradeModal** (`mGr`) — owns `ng` internally, seeded from `useProfileStore.ng` on visible. Writes `gs` via store setter. Orphaned `Platform`/`KeyboardAvoidingView` imports from MainApp.
+- ✅ **D.4 SavedPostsModal** (`mSaved`) — pulls `saved`/`posts` from `usePostsStore`, folds in the `FEED` fallback internally. Takes optional `onSelectPost` callback. **Known pre-existing bug preserved as silent no-op:** the original MainApp tap handler called an undefined `setPost(...)`; extracted modal makes it `onSelectPost?.(item)` so the callback is currently unwired — behavior matches master (tap does nothing).
+- ✅ **D.5 EventDetailModal** (`mEv`) — props: `{event, onClose}`. Pure presentation.
+- ✅ **D.6 ExamDetailModal** (`mExam`) — props: `{exam, onClose}`. Two render modes (upcoming vs past) kept in one component.
+- ✅ **D.7 DiscoverCoursesModal** (`mDisc`) — owns two-step `dArea` state with reset-on-close. Callback: `onPickCourse` wired to MainApp's `hC1`.
+- ✅ **D.8 AvatarPickerModal** (`mPho`) — owns `tmpAv`/`tmpBgIdx`, seeded from `useProfileStore.av`/`avBgIdx` on visible. Takes `currentData` prop for the inline Firestore merge write (removed in Phase E).
+- ✅ **D.9 EditNameModal** (`mNome`) — owns `tmpNome`/`tmpSobrenome`, seeded from store on visible. Same inline setDoc pattern.
+- ✅ **D.10 EditCoursesModal** (`mEdit`) — owns `eC1`/`eC2`/`ePick`/`eSrch`, seeded from `useOnboardingStore.c1`/`c2` on visible. Callback: `onSave(c1, c2)` wired to MainApp's `hC1`/`hC2`. Three call sites (Perfil×2 + Settings row) collapsed from `setEC1(c1); setEC2(c2); setEpick(1); setEsrch(''); setMedit(true)` to plain `setMedit(true)`.
+
+Remaining (3 modals):
+
+- ⏳ **D.11 LocationSettingsModal** (`mLoc`) — largest: 10+ `useState` hooks (tmpCountryId/tmpStateId/tmpCityId + same for study + 4 picker toggles + 4 search strings). Biggest MainApp reduction left.
+- ⏳ **D.12 GoalsModal** (`goalsModal`) — owns `goalsSearch`. Writes `goalsUnis` on save.
+- ⏳ **D.13 SettingsModal** (`mCfg`) — extract LAST. Its "open sub-modal" rows (edit-name / photo / edit-courses / location) are already simplified now that those sub-modals self-seed — SettingsModal row handlers become plain `setMcfg(false); setM*(true)`.
+
+### Pattern lessons learned
+
+- **Seed-on-visible is the key simplification:** every modal that owns tmp-picker state uses `useEffect(() => { if (visible) { setTmpX(storeX); ... } }, [visible])`. Before this pattern, MainApp had to call `setEC1(c1); setEC2(c2); setEpick(1); ...` at every open site (3 sites for EditCourses). After: `setMedit(true)`. Multiplies out across 8 modals' worth of seeding logic.
+- **Orphan sweep is mandatory per extraction.** After each modal leaves, grep every identifier it owned — imports (`Platform`, `KeyboardAvoidingView`, `SBox`, `ScrollView`), derived values (`fol`, `feedItems`, `dArea`), and useState hooks. Missing one doesn't break the build (React just renders with an unused local) but bloats the delta.
+- **Preserve known bugs as silent no-ops** when the extraction exposes them. SavedPostsModal's undefined `setPost` crashes would be new behavior; making the callback optional (`onSelectPost?.(item)`) preserves the master "tap does nothing" behavior exactly. Document in the commit message.
 
 ### Target layout
 
@@ -604,8 +631,8 @@ Every phase should be a separate PR (or at least a separate commit) so you can:
 | A — Zustand stores | ✅ done | ~9 stores, ~400 lines cut from App.js | Medium (state migrations subtle) |
 | B — React Navigation (scaffolding) | 🟡 scaffolded | `RootNavigator` + `linking`; stacks deferred to F | Low (shim only) |
 | C — Screen split (main tabs + sub-pages) | ✅ done | 11 screens, ~1,900 lines moved | High (many cuts, easy to drop a prop) |
-| C.1 — Deadwood sweep | ⏳ next | −20 to −30 lines, 0 UI impact | Trivial |
-| D — Modal extraction | ⏳ pending | 13 modal files, ~600 lines moved | Low per modal, medium aggregate |
+| C.1 — Deadwood sweep | ✅ done | Absorbed into D extractions (per-modal orphan cleanup) | Trivial |
+| D — Modal extraction | 🟡 10 / 13 | D.1–D.10 merged, App.js 1,174 → 781; D.11 (Location) + D.12 (Goals) + D.13 (Settings) pending | Low per modal, medium aggregate |
 | E — Persistence middleware & auth cascade | ⏳ pending | 1 middleware + 7 `hydrate` actions; ~150 lines removed | Medium (touches every store's write path) |
 | F — React Navigation execution (was B) | ⏳ pending | ~6 navigator files; kills 4 page booleans | Low if staged, High if rushed |
 | G — Polish (was D) | ⏳ pending | Incremental, indefinite | Low per change |
