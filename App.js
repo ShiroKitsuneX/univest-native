@@ -45,6 +45,7 @@ import { ShareModal } from "./src/modals/ShareModal";
 import { UniSortModal } from "./src/modals/UniSortModal";
 import { AddGradeModal } from "./src/modals/AddGradeModal";
 import { SavedPostsModal } from "./src/modals/SavedPostsModal";
+import { EventDetailModal } from "./src/modals/EventDetailModal";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -677,31 +678,7 @@ function MainApp() {
         </View>
       </BottomSheet>
 
-      {/* Event detail */}
-      <BottomSheet visible={!!mEv} onClose={()=>setMev(null)} T={T}>
-        {mEv && (
-          <View style={{ padding:20, paddingBottom:24 }}>
-            <View style={{ flexDirection:"row", alignItems:"center", gap:12, marginBottom:14 }}>
-              <View style={{ backgroundColor:mEv.cor, borderRadius:12, width:52, height:52, alignItems:"center", justifyContent:"center" }}>
-                <Text style={{ color:"rgba(255,255,255,.55)", fontSize:8, fontWeight:"700" }}>{mEv.month}</Text>
-                <Text style={{ color:"#fff", fontSize:mEv.dayLabel==="—"?18:15, fontWeight:"800" }}>{mEv.dayLabel}</Text>
-                <Text style={{ color:"rgba(255,255,255,.45)", fontSize:8 }}>{mEv.year}</Text>
-              </View>
-              <View style={{ flex:1 }}>
-                <Text style={{ color:T.text, fontSize:15, fontWeight:"800", lineHeight:20 }}>{mEv.event}</Text>
-                <TouchableOpacity onPress={()=>Linking.openURL(mEv.site)}><Text style={{ color:T.accent, fontSize:12, fontWeight:"700" }}>{mEv.uni} ↗</Text></TouchableOpacity>
-              </View>
-            </View>
-            <View style={{ backgroundColor:T.card2, borderRadius:14, padding:14, marginBottom:18, borderWidth:1, borderColor:T.border }}>
-              <Text style={[lbl,{marginBottom:6}]}>ℹ️ Resumo</Text>
-              <Text style={{ color:T.text, fontSize:13, lineHeight:22 }}>{mEv.desc}</Text>
-            </View>
-            <TouchableOpacity onPress={()=>Linking.openURL(mEv.site)} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
-              <Text style={{ color:AT, fontSize:14, fontWeight:"800" }}>🌐 Ver fonte oficial →</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </BottomSheet>
+      <EventDetailModal event={mEv} onClose={()=>setMev(null)} />
 
       <AddGradeModal visible={mGr} onClose={()=>setMgr(false)} />
 
