@@ -17,7 +17,6 @@ import { GEO_DATA } from "./src/data/geo";
 import { DK, LT } from "./src/theme/palette";
 import { AVATAR_PRESETS, AVATAR_COLORS } from "./src/theme/avatar";
 import { fmtCount } from "./src/utils/format";
-import { getMonthFromKey } from "./src/utils/dates";
 import { removeAccents } from "./src/utils/string";
 import { loadLocalUserData, saveLocalUserData } from "./src/services/storage";
 import { onAuthChange, logout } from "./src/services/auth";
@@ -44,6 +43,7 @@ import { ExamsListScreen } from "./src/screens/explorar/ExamsListScreen";
 import { UniversityDetailScreen } from "./src/screens/explorar/UniversityDetailScreen";
 import { PerfilScreen } from "./src/screens/perfil/PerfilScreen";
 import { ShareModal } from "./src/modals/ShareModal";
+import { UniSortModal } from "./src/modals/UniSortModal";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -101,10 +101,6 @@ function MainApp() {
   const setSaved = usePostsStore(s => s.setSaved);
   const liked = usePostsStore(s => s.liked);
   const setLiked = usePostsStore(s => s.setLiked);
-  const uniSort = useUniversitiesStore(s => s.uniSort);
-  const setUniSort = useUniversitiesStore(s => s.setUniSort);
-  const uniPrefs = useUniversitiesStore(s => s.uniPrefs);
-  const setUniPrefs = useUniversitiesStore(s => s.setUniPrefs);
   const [refreshing, setRefreshing] = useState(false);
 
   const gs = useProfileStore(s => s.gs);
@@ -368,11 +364,6 @@ function MainApp() {
     }
   };
 
-  const fol = unis.filter(u=>u.followed).sort((a,b)=>{
-    if(uniSort==="pref") return (uniPrefs[b.id]||5)-(uniPrefs[a.id]||5);
-    const gm = s => getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || "DEZ");
-    return gm(a.prova)-gm(b.prova);
-  });
   const coursesToUse = fbCourses.length ? fbCourses : ALL_COURSES;
   const feedItems = posts.length ? posts : FEED;
 
@@ -791,41 +782,7 @@ function MainApp() {
         </View>
       </BottomSheet>
 
-      {/* Uni sort */}
-      <BottomSheet visible={mUni} onClose={()=>setMUni(false)} T={T}>
-        <View style={{ padding:20, paddingBottom:24 }}>
-          <View style={{ flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-            <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>⚙️ Ordenar universidades</Text>
-            <TouchableOpacity onPress={()=>setMUni(false)} style={{ padding:4 }}>
-              <Text style={{ color:T.muted, fontSize:20, fontWeight:"700" }}>✕</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={{ color:T.sub, fontSize:13, marginBottom:14 }}>Escolha como ordenar</Text>
-          <View style={{ flexDirection:"row", gap:8, marginBottom:16 }}>
-            {[["date","📅 Por data"],["pref","⭐ Por preferência"]].map(([v,l])=>(
-              <TouchableOpacity key={v} onPress={()=>setUniSort(v)} style={{ flex:1, padding:10, borderRadius:12, backgroundColor:uniSort===v?T.accent:T.card2, alignItems:"center", borderWidth:1, borderColor:uniSort===v?T.accent:T.border }}>
-                <Text style={{ color:uniSort===v?AT:T.sub, fontSize:12, fontWeight:"700" }}>{l}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          {uniSort==="pref" && fol.map(u=>(
-            <View key={u.id} style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:8 }}>
-              <View style={{ width:32, height:32, borderRadius:16, backgroundColor:u.color, alignItems:"center", justifyContent:"center" }}><Text style={{ color:"#fff", fontSize:10, fontWeight:"800" }}>{u.name.slice(0,2)}</Text></View>
-              <Text style={{ flex:1, color:T.text, fontSize:13, fontWeight:"600" }}>{u.name}</Text>
-              <View style={{ flexDirection:"row", gap:4 }}>
-                {[10,7,5,3,1].map(p=>(
-                  <TouchableOpacity key={p} onPress={()=>setUniPrefs(prev=>({...prev,[u.id]:p}))} style={{ width:28, height:28, borderRadius:8, backgroundColor:(uniPrefs[u.id]||5)===p?T.accent:T.card2, alignItems:"center", justifyContent:"center", borderWidth:1, borderColor:(uniPrefs[u.id]||5)===p?T.accent:T.border }}>
-                    <Text style={{ color:(uniPrefs[u.id]||5)===p?AT:T.sub, fontSize:11, fontWeight:"700" }}>{p}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          ))}
-          <TouchableOpacity onPress={()=>setMUni(false)} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center", marginTop:8 }}>
-            <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar ✓</Text>
-          </TouchableOpacity>
-        </View>
-      </BottomSheet>
+      <UniSortModal visible={mUni} onClose={()=>setMUni(false)} />
 
       <BottomSheet visible={!!mExam && !mExam?.isList} onClose={()=>{setMexam(null);}} T={T}>
         <View style={{ padding:20, paddingBottom:24 }}>
