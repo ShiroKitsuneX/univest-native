@@ -47,6 +47,7 @@ import { SavedPostsModal } from "./src/modals/SavedPostsModal";
 import { EventDetailModal } from "./src/modals/EventDetailModal";
 import { ExamDetailModal } from "./src/modals/ExamDetailModal";
 import { DiscoverCoursesModal } from "./src/modals/DiscoverCoursesModal";
+import { AvatarPickerModal } from "./src/modals/AvatarPickerModal";
 
 function MainApp() {
   const insets = useSafeAreaInsets();
@@ -112,8 +113,6 @@ function MainApp() {
   const setAv = useProfileStore(s => s.setAv);
   const avBgIdx = useProfileStore(s => s.avBgIdx);
   const setAvBgIdx = useProfileStore(s => s.setAvBgIdx);
-  const [tmpAv, setTmpAv] = useState("🧑‍🎓");
-  const [tmpBgIdx, setTmpBgIdx] = useState(0);
 
   const [mCfg,  setMcfg]  = useState(false);
   const [mPho,  setMpho]  = useState(false);
@@ -492,7 +491,7 @@ function MainApp() {
 
   const renderPerfil = () => (
     <PerfilScreen
-      onChangePhoto={() => { setTmpAv(av); setTmpBgIdx(avBgIdx); setMpho(true); }}
+      onChangePhoto={() => setMpho(true)}
       onChangeName={() => { setTmpNome(nome); setTmpSobrenome(sobrenome); setMcfg(false); setMnome(true); }}
       onEditCourses={() => { setEC1(c1); setEC2(c2); setEpick(1); setEsrch(''); setMedit(true); }}
       onShowFollowing={() => setShowFollowingPage(true)}
@@ -550,7 +549,7 @@ function MainApp() {
           <Text style={[lbl,{marginBottom:10}]}>Conta</Text>
           {[
             ["👤","Nome",nome && sobrenome ? nome + " " + sobrenome : nome || "Não definido",()=>{setTmpNome(nome);setTmpSobrenome(sobrenome);setMcfg(false);setMnome(true);}],
-            ["📷","Alterar foto de perfil","Ícone e cor",()=>{setTmpAv(av);setTmpBgIdx(avBgIdx);setMcfg(false);setMpho(true);}],
+            ["📷","Alterar foto de perfil","Ícone e cor",()=>{setMcfg(false);setMpho(true);}],
             ["✏️","Editar opções de curso","Altere suas preferências",()=>{setEC1(c1);setEC2(c2);setEpick(1);setEsrch("");setMcfg(false);setMedit(true);}],
             ["📍","Localização","Sua cidade e destino de estudos",()=>{setTmpCountryId(countryId||"BR");setTmpStateId(stateId);setTmpCityId(cityId);setTmpStudyCountryId(studyCountryId||"BR");setTmpStudyStateId(studyStateId);setTmpStudyCityId(studyCityId);setMcfg(false);setMloc(true);}],
             ["🎯","Metas de vestibular","Universidades que você vai fazer",()=>{setMcfg(false);setGoalsModal(true);}],
@@ -573,42 +572,7 @@ function MainApp() {
         </View>
       </BottomSheet>
 
-      {/* Avatar picker */}
-      <BottomSheet visible={mPho} onClose={()=>setMpho(false)} T={T}>
-        <View style={{ padding:20, paddingBottom:24 }}>
-          <View style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:12 }}>
-            <TouchableOpacity onPress={()=>setMpho(false)} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:16 }}>←</Text></TouchableOpacity>
-            <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>📷 Foto de Perfil</Text>
-          </View>
-          <Text style={{ color:T.sub, fontSize:13, marginBottom:16 }}>Escolha como aparecer no app</Text>
-          <Text style={[lbl,{marginBottom:10}]}>Ícones</Text>
-          <View style={{ flexDirection:"row", flexWrap:"wrap", gap:8, marginBottom:18 }}>
-            {AVATAR_PRESETS.map(e=>(
-              <TouchableOpacity key={e} onPress={()=>setTmpAv(e)} style={{ width:"23%", height:52, borderRadius:26, backgroundColor:tmpAv===e?T.acBg:T.card2, borderWidth:2, borderColor:tmpAv===e?T.accent:T.border, alignItems:"center", justifyContent:"center" }}>
-                <Text style={{ fontSize:26 }}>{e}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <Text style={[lbl,{marginBottom:10}]}>Cor de fundo</Text>
-          <View style={{ flexDirection:"row", flexWrap:"wrap", gap:8, marginBottom:18 }}>
-            {AVATAR_COLORS.map(([c1c],idx)=>(
-              <TouchableOpacity key={idx} onPress={()=>setTmpBgIdx(idx)} style={{ width:52, height:52, borderRadius:26, backgroundColor:c1c, borderWidth:tmpBgIdx===idx?3:1, borderColor:tmpBgIdx===idx?"#fff":c1c+"40" }} />
-            ))}
-          </View>
-          <TouchableOpacity onPress={()=>{
-            setAv(tmpAv);
-            setAvBgIdx(tmpBgIdx);
-            setMpho(false);
-            if (currentUser) {
-              const data = {av:tmpAv,avBgIdx:tmpBgIdx,updatedAt:new Date().toISOString()};
-              saveLocalUserData({...currentData(), ...data});
-              setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
-            }
-          }} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
-            <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar</Text>
-          </TouchableOpacity>
-        </View>
-      </BottomSheet>
+      <AvatarPickerModal visible={mPho} onClose={()=>setMpho(false)} currentData={currentData} />
 
       {/* Edit name */}
       <BottomSheet visible={mNome} onClose={()=>setMnome(false)} T={T}>

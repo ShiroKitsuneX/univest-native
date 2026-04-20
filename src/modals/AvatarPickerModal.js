@@ -1,0 +1,69 @@
+import { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, Appearance } from "react-native";
+import { doc, setDoc } from "firebase/firestore";
+import { BottomSheet } from "../components/BottomSheet";
+import { DK, LT } from "../theme/palette";
+import { AVATAR_PRESETS, AVATAR_COLORS } from "../theme/avatar";
+import { db } from "../firebase/config";
+import { saveLocalUserData } from "../services/storage";
+import { useProfileStore } from "../stores/profileStore";
+import { useAuthStore } from "../stores/authStore";
+
+export function AvatarPickerModal({ visible, onClose, currentData }) {
+  const colorScheme = Appearance.getColorScheme();
+  const theme = useProfileStore(s => s.theme);
+  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
+  const T = isDark ? DK : LT;
+  const AT = isDark ? "#000" : "#fff";
+
+  const av = useProfileStore(s => s.av);
+  const setAv = useProfileStore(s => s.setAv);
+  const avBgIdx = useProfileStore(s => s.avBgIdx);
+  const setAvBgIdx = useProfileStore(s => s.setAvBgIdx);
+  const currentUser = useAuthStore(s => s.currentUser);
+
+  const [tmpAv, setTmpAv] = useState(av);
+  const [tmpBgIdx, setTmpBgIdx] = useState(avBgIdx);
+
+  useEffect(() => { if (visible) { setTmpAv(av); setTmpBgIdx(avBgIdx); } }, [visible]);
+
+  const lbl = { color: T.muted, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 };
+
+  return (
+    <BottomSheet visible={visible} onClose={onClose} T={T}>
+      <View style={{ padding:20, paddingBottom:24 }}>
+        <View style={{ flexDirection:"row", alignItems:"center", gap:10, marginBottom:12 }}>
+          <TouchableOpacity onPress={onClose} style={{ width:34, height:34, borderRadius:17, backgroundColor:T.card2, alignItems:"center", justifyContent:"center" }}><Text style={{ color:T.sub, fontSize:16 }}>←</Text></TouchableOpacity>
+          <Text style={{ color:T.text, fontSize:17, fontWeight:"800" }}>📷 Foto de Perfil</Text>
+        </View>
+        <Text style={{ color:T.sub, fontSize:13, marginBottom:16 }}>Escolha como aparecer no app</Text>
+        <Text style={[lbl,{marginBottom:10}]}>Ícones</Text>
+        <View style={{ flexDirection:"row", flexWrap:"wrap", gap:8, marginBottom:18 }}>
+          {AVATAR_PRESETS.map(e=>(
+            <TouchableOpacity key={e} onPress={()=>setTmpAv(e)} style={{ width:"23%", height:52, borderRadius:26, backgroundColor:tmpAv===e?T.acBg:T.card2, borderWidth:2, borderColor:tmpAv===e?T.accent:T.border, alignItems:"center", justifyContent:"center" }}>
+              <Text style={{ fontSize:26 }}>{e}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text style={[lbl,{marginBottom:10}]}>Cor de fundo</Text>
+        <View style={{ flexDirection:"row", flexWrap:"wrap", gap:8, marginBottom:18 }}>
+          {AVATAR_COLORS.map(([c1c],idx)=>(
+            <TouchableOpacity key={idx} onPress={()=>setTmpBgIdx(idx)} style={{ width:52, height:52, borderRadius:26, backgroundColor:c1c, borderWidth:tmpBgIdx===idx?3:1, borderColor:tmpBgIdx===idx?"#fff":c1c+"40" }} />
+          ))}
+        </View>
+        <TouchableOpacity onPress={()=>{
+          setAv(tmpAv);
+          setAvBgIdx(tmpBgIdx);
+          onClose();
+          if (currentUser) {
+            const data = {av:tmpAv,avBgIdx:tmpBgIdx,updatedAt:new Date().toISOString()};
+            saveLocalUserData({...currentData(), ...data});
+            setDoc(doc(db,"usuarios",currentUser.uid),data,{merge:true}).catch(()=>{});
+          }
+        }} style={{ padding:14, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
+          <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar</Text>
+        </TouchableOpacity>
+      </View>
+    </BottomSheet>
+  );
+}
