@@ -15,7 +15,7 @@ import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useCoursesStore } from "../../stores/coursesStore";
 import { useAuthStore } from "../../stores/authStore";
 
-export function OnboardingScreen({ hStep, hDone, hUType, hC1, hC2 }) {
+export function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
@@ -27,6 +27,11 @@ export function OnboardingScreen({ hStep, hDone, hUType, hC1, hC2 }) {
   const uType = useOnboardingStore(s => s.uType);
   const c1 = useOnboardingStore(s => s.c1);
   const c2 = useOnboardingStore(s => s.c2);
+  const hStep = useOnboardingStore(s => s.setStep);
+  const hDone = useOnboardingStore(s => s.setDone);
+  const hUType = useOnboardingStore(s => s.setUType);
+  const hC1 = useOnboardingStore(s => s.setC1);
+  const hC2 = useOnboardingStore(s => s.setC2);
 
   const unis = useUniversitiesStore(s => s.unis);
   const setUnis = useUniversitiesStore(s => s.setUnis);

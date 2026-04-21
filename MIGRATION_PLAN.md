@@ -559,6 +559,13 @@ Phase B was scaffolded (`RootNavigator` exists, wraps `<MainApp/>`) but the bool
 
 **Estimated delta:** MainApp becomes a thin root auth/onboarding gate; 4 page-boolean useStates deleted.
 
+### Progress
+
+- ✅ **F.1** — `RootNavigator` is now the splash/welcome/onboarding/main gate. Bootstrap effects (local load, `onAuthChange`, courses/geo/unis load, followed-unis apply, posts load) lifted into `useBootstrap` hook. `SplashScreen` extracted. `OnboardingScreen` reads its setters from the store directly (no more `h*` prop drill). App.js 399 → 307 lines.
+- ⏳ **F.2** — `MainTabs` owns the bottom bar; delete `BNav` + `tab` state.
+- ⏳ **F.3** — `ExplorarStack`: convert `selUni` / `showExamsPage` / `showBooksPage` / `showFollowingPage` to routes.
+- ⏳ **F.4** — `PerfilStack` routes; optional `ExamDetail` / `EventDetail` modal→route lift.
+
 ---
 
 ## Phase G — Polish (was Phase D)

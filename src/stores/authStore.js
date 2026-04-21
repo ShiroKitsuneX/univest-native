@@ -7,12 +7,14 @@ export const useAuthStore = create((set) => ({
   currentUser: null,
   userData: null,
   authLoading: true,
+  bootstrapped: false,
 
   setCurrentUser: (currentUser) => set({ currentUser }),
   setUserData: (userData) => set(typeof userData === "function"
     ? state => ({ userData: userData(state.userData) })
     : { userData }),
   setAuthLoading: (authLoading) => set({ authLoading }),
+  setBootstrapped: (bootstrapped) => set({ bootstrapped }),
 
   subscribe: (onUserDoc) => onAuthChange(async (user) => {
     if (!user) {

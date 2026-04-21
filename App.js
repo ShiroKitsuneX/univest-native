@@ -1,8 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
-  Alert, Appearance, Linking, StatusBar,
-  ActivityIndicator,
+  View, Text, TouchableOpacity,
+  Alert, Appearance, StatusBar,
 } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
@@ -11,20 +10,14 @@ import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firest
 
 import { DK, LT } from "./src/theme/palette";
 import { AVATAR_COLORS } from "./src/theme/avatar";
-import { loadLocalUserData, saveLocalUserData } from "./src/services/storage";
-import { onAuthChange, logout } from "./src/services/auth";
-import { fetchUserDoc } from "./src/services/firestore";
-import { useGeoStore } from "./src/stores/geoStore";
+import { logout } from "./src/services/auth";
 import { useCoursesStore } from "./src/stores/coursesStore";
 import { usePostsStore } from "./src/stores/postsStore";
-import { useProgressStore } from "./src/stores/progressStore";
 import { useUniversitiesStore } from "./src/stores/universitiesStore";
 import { useOnboardingStore } from "./src/stores/onboardingStore";
 import { useProfileStore } from "./src/stores/profileStore";
 import { useAuthStore } from "./src/stores/authStore";
 import { RootNavigator } from "./src/navigation/RootNavigator";
-import { WelcomeScreen } from "./src/screens/auth/WelcomeScreen";
-import { OnboardingScreen } from "./src/screens/onboarding/OnboardingScreen";
 import { FeedScreen } from "./src/screens/feed/FeedScreen";
 import { NotasScreen } from "./src/screens/notas/NotasScreen";
 import { ExplorarScreen } from "./src/screens/explorar/ExplorarScreen";
@@ -55,25 +48,17 @@ function MainApp() {
   const T = isDark ? DK : LT;
 
   const currentUser = useAuthStore(s => s.currentUser);
-  const setCurrentUser = useAuthStore(s => s.setCurrentUser);
-  const authLoading = useAuthStore(s => s.authLoading);
-  const setAuthLoading = useAuthStore(s => s.setAuthLoading);
-  const userData = useAuthStore(s => s.userData);
   const setUserData = useAuthStore(s => s.setUserData);
 
   const setStep = useOnboardingStore(s => s.setStep);
-  const done = useOnboardingStore(s => s.done);
   const setDone = useOnboardingStore(s => s.setDone);
   const uType = useOnboardingStore(s => s.uType);
-  const setUType = useOnboardingStore(s => s.setUType);
   const setC1 = useOnboardingStore(s => s.setC1);
   const setC2 = useOnboardingStore(s => s.setC2);
-  const [onboardingLoaded, setOnboardingLoaded] = useState(false);
 
   const [tab, setTab] = useState("feed");
   const unis = useUniversitiesStore(s => s.unis);
   const setUnis = useUniversitiesStore(s => s.setUnis);
-  const fbUnis = useUniversitiesStore(s => s.fbUnis);
   const fbIcons = useCoursesStore(s => s.fbIcons);
   const selUni = useUniversitiesStore(s => s.selUni);
   const setSU = useUniversitiesStore(s => s.setSelUni);
@@ -101,60 +86,6 @@ function MainApp() {
   const [mSaved, setMSaved] = useState(false);
 
   const getIcon = (id, fallback) => fbIcons[id] || fallback;
-
-  useEffect(() => {
-    loadLocalUserData().then(localData => {
-      if (localData) {
-        useOnboardingStore.getState().hydrateFromLocal(localData);
-        useProfileStore.getState().hydrate(localData);
-        useProgressStore.getState().hydrate(localData);
-        usePostsStore.getState().hydrate(localData);
-      }
-      setOnboardingLoaded(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    const unsub = onAuthChange(async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        try {
-          const fbData = await fetchUserDoc(user.uid);
-          if (fbData) {
-            await saveLocalUserData(fbData);
-            setUserData(fbData);
-            useOnboardingStore.getState().hydrateFromFb(fbData);
-            useProfileStore.getState().hydrate(fbData);
-            useProgressStore.getState().hydrate(fbData);
-            usePostsStore.getState().hydrate(fbData);
-            useUniversitiesStore.getState().hydrate(fbData);
-          } else {
-            setUserData({ followedUnis: [] });
-            setStep(1); setDone(false);
-          }
-        } catch (e) { console.log("Error loading user data:", e.message); }
-      } else { setCurrentUser(null); setUserData(null); }
-      setAuthLoading(false);
-    });
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    useCoursesStore.getState().load();
-    useGeoStore.getState().load();
-    useUniversitiesStore.getState().load();
-  }, []);
-
-  useEffect(() => {
-    useUniversitiesStore.getState().applyFollowedUnis(userData?.followedUnis);
-  }, [fbUnis, userData]);
-
-  useEffect(() => {
-    (async () => {
-      await usePostsStore.getState().load();
-      if (currentUser) await usePostsStore.getState().loadLikesFor(currentUser.uid);
-    })();
-  }, [currentUser]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -205,29 +136,6 @@ function MainApp() {
       Alert.alert("Erro","Não foi possível seguir. " + (err?.message||""));
     }
   };
-
-  if (!onboardingLoaded || authLoading) {
-    return (
-      <View style={{ flex:1, backgroundColor:isDark?"#0d1117":"#f0f4fb", justifyContent:"center", alignItems:"center", padding:32 }}>
-        <StatusBar barStyle={isDark?"light-content":"dark-content"} />
-        <View style={{ width:96, height:96, borderRadius:48, backgroundColor:isDark?"#161b27":"#ffffff", alignItems:"center", justifyContent:"center", marginBottom:22, borderWidth:1, borderColor:isDark?"#21293d":"#dde3ef", shadowColor:"#00E5A0", shadowOpacity:0.18, shadowRadius:18, shadowOffset:{width:0,height:4} }}>
-          <Text style={{ fontSize:52 }}>🎓</Text>
-        </View>
-        <Text style={{ fontSize:34, fontWeight:"800", color:isDark?"#e6edf3":"#1a1f2e", marginBottom:8 }}>
-          Uni<Text style={{ color:"#00E5A0" }}>Vest</Text>
-        </Text>
-        <Text style={{ fontSize:13, color:isDark?"#8b949e":"#5a6478", marginBottom:36, textAlign:"center" }}>Sua jornada acadêmica começa aqui</Text>
-        <ActivityIndicator size="large" color="#00E5A0" />
-      </View>
-    );
-  }
-
-  // ── WELCOME ──
-  if (!currentUser) return <WelcomeScreen />;
-
-
-  // ── ONBOARDING ──
-  if (!done) return <OnboardingScreen hStep={setStep} hDone={setDone} hUType={setUType} hC1={setC1} hC2={setC2} />;
 
   // ── MAIN APP ──
   const SBar = () => (
