@@ -1,4 +1,4 @@
-export const AVATAR_PRESETS = [
+export const AVATAR_PRESETS: string[] = [
   '🧑‍🎓',
   '👩‍🔬',
   '👨‍💻',
@@ -16,7 +16,8 @@ export const AVATAR_PRESETS = [
   '🚀',
   '🧠',
 ]
-export const AVATAR_COLORS = [
+
+export const AVATAR_COLORS: [string, string][] = [
   ['#00E5A0', '#0099ff'],
   ['#e11d48', '#f97316'],
   ['#8b5cf6', '#ec4899'],

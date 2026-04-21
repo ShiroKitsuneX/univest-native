@@ -11,16 +11,28 @@ import {
   Modal,
   PanResponder,
 } from 'react-native'
-import { useStoriesStore } from '@/stores/storiesStore'
+import { useStoriesStore, type Story } from '@/stores/storiesStore'
 
 const { width } = Dimensions.get('window')
 const STORY_DURATION = 5000
 const SWIPE_THRESHOLD = 50
 
-export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
+type Props = {
+  visible: boolean
+  stories: Story[]
+  initialIndex?: number
+  onClose: () => void
+}
+
+export function StoryViewer({
+  visible,
+  stories,
+  initialIndex = 0,
+  onClose,
+}: Props) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const progressAnim = useRef(new Animated.Value(0)).current
-  const animationRef = useRef(null)
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null)
   const imageLoadedRef = useRef(false)
 
   const markViewed = useStoriesStore(s => s.markViewed)
@@ -82,10 +94,11 @@ export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
     return () => {
       stopAnimation()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, currentIndex, currentStory])
 
   const handleTap = useCallback(
-    x => {
+    (x: number) => {
       if (x < width / 3) {
         goToPrev()
       } else if (x > (width * 2) / 3) {

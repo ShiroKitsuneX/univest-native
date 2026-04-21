@@ -1,9 +1,13 @@
 import { View, Text, TouchableOpacity } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import {
+  createBottomTabNavigator,
+  type BottomTabBarProps,
+} from '@react-navigation/bottom-tabs'
 import {
   useNavigation,
   getFocusedRouteNameFromRoute,
+  type RouteProp,
 } from '@react-navigation/native'
 import { useTheme } from '@/theme/useTheme'
 import { AVATAR_COLORS } from '@/theme/avatar'
@@ -13,25 +17,38 @@ import { useCoursesStore } from '@/stores/coursesStore'
 import { FeedScreen } from '@/screens/feed/FeedScreen'
 import { NotasScreen } from '@/screens/notas/NotasScreen'
 import { PerfilScreen } from '@/screens/perfil/PerfilScreen'
-import { MainCtx, useMain } from '@/navigation/mainContext'
+import { MainCtx, useMain, type MainHandlers } from '@/navigation/mainContext'
 import { ExplorarStack } from '@/navigation/ExplorarStack'
 
 const Tab = createBottomTabNavigator()
 
-const TAB_META = [
+type TabMeta = { name: string; id: string; ic: string; l: string }
+
+const TAB_META: TabMeta[] = [
   { name: 'FeedTab', id: 'feed', ic: '🏠', l: 'Feed' },
   { name: 'ExplorarTab', id: 'explorar', ic: '🔍', l: 'Explorar' },
   { name: 'NotasTab', id: 'notas', ic: '📊', l: 'Notas' },
   { name: 'PerfilTab', id: 'perfil', ic: '👤', l: 'Perfil' },
 ]
 
-function TabHeader({ route }) {
+type Nav = {
+  navigate: (name: string, params?: object) => void
+}
+
+function TabHeader({
+  route,
+}: {
+  route: RouteProp<Record<string, object | undefined>, string>
+}) {
   const insets = useSafeAreaInsets()
   const { T } = useTheme()
   const { onOpenSettings } = useMain()
   const av = useProfileStore(s => s.av)
   const avBgIdx = useProfileStore(s => s.avBgIdx)
-  const uType = useOnboardingStore(s => s.uType)
+  const uType = useOnboardingStore(s => s.uType) as
+    | { emoji?: string; label?: string }
+    | null
+    | undefined
 
   const subtitle =
     route.name === 'ExplorarTab'
@@ -103,11 +120,12 @@ function TabHeader({ route }) {
   )
 }
 
-function TabBar({ state, navigation }) {
+function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets()
   const { T } = useTheme()
   const fbIcons = useCoursesStore(s => s.fbIcons)
-  const getIcon = (id, fallback) => fbIcons[id] || fallback
+  const getIcon = (id: string, fallback: string): string =>
+    fbIcons[id] || fallback
   const { onTabPress } = useMain()
 
   return (
@@ -124,6 +142,7 @@ function TabBar({ state, navigation }) {
     >
       {state.routes.map((route, idx) => {
         const meta = TAB_META.find(m => m.name === route.name)
+        if (!meta) return null
         const active = state.index === idx
         return (
           <TouchableOpacity
@@ -164,19 +183,19 @@ function TabBar({ state, navigation }) {
   )
 }
 
-const goUniDetail = navigation =>
+const goUniDetail = (navigation: Nav): void =>
   navigation.navigate('ExplorarTab', { screen: 'UniversityDetail' })
 
 function FeedTab() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<Nav>()
   const h = useMain()
   return (
     <FeedScreen
       refreshing={h.refreshing}
       onRefresh={h.onRefresh}
       goExplorar={() => navigation.navigate('ExplorarTab')}
-      onSelectUni={u => {
-        h.onSelectUni(u)
+      onSelectUni={(u: unknown) => {
+        h.onSelectUni?.(u)
         goUniDetail(navigation)
       }}
       onShare={h.onShare}
@@ -192,7 +211,7 @@ function NotasTab() {
 }
 
 function PerfilTab() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<Nav>()
   const h = useMain()
   return (
     <PerfilScreen
@@ -208,8 +227,8 @@ function PerfilTab() {
       }
       onAddGoal={h.onAddGoal}
       onOpenEvent={h.onOpenEvent}
-      onSelectUni={u => {
-        h.onSelectUni(u)
+      onSelectUni={(u: unknown) => {
+        h.onSelectUni?.(u)
         goUniDetail(navigation)
       }}
       goNotas={() => navigation.navigate('NotasTab')}
@@ -217,11 +236,16 @@ function PerfilTab() {
   )
 }
 
-export function MainTabs({ handlers }) {
+type Props = {
+  handlers: MainHandlers
+}
+
+export function MainTabs({ handlers }: Props) {
   const { T } = useTheme()
   return (
     <MainCtx.Provider value={handlers}>
       <Tab.Navigator
+        id="MainTabs"
         screenOptions={{
           header: ({ route }) => <TabHeader route={route} />,
           sceneStyle: { backgroundColor: T.bg },

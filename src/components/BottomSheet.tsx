@@ -1,6 +1,15 @@
+import type { ReactNode } from 'react'
 import { View, Modal, ScrollView, TouchableOpacity } from 'react-native'
+import type { ThemeColors } from '@/theme/palette'
 
-export function BottomSheet({ visible, onClose, children, T }) {
+type Props = {
+  visible: boolean
+  onClose: () => void
+  children: ReactNode
+  T: ThemeColors
+}
+
+export function BottomSheet({ visible, onClose, children, T }: Props) {
   return (
     <Modal
       visible={visible}

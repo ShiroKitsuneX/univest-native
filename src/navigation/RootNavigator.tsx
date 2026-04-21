@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useAuthStore } from '@/stores/authStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
@@ -8,7 +9,11 @@ import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen'
 
 const Stack = createNativeStackNavigator()
 
-export function RootNavigator({ Main }) {
+type Props = {
+  Main: ComponentType<object>
+}
+
+export function RootNavigator({ Main }: Props) {
   useBootstrap()
 
   const bootstrapped = useAuthStore(s => s.bootstrapped)
@@ -21,7 +26,10 @@ export function RootNavigator({ Main }) {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
+    <Stack.Navigator
+      id="Root"
+      screenOptions={{ headerShown: false, animation: 'none' }}
+    >
       {!currentUser ? (
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
       ) : !done ? (

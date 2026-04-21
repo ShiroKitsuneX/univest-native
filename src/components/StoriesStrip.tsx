@@ -1,18 +1,32 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
-import { useStoriesStore } from '@/stores/storiesStore'
+import { useStoriesStore, type Story } from '@/stores/storiesStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { StoryCircle } from '@/components/StoryCircle'
 
-export function StoriesStrip({ onStoryPress, goExplorar }) {
-  const { T, isDark } = useTheme()
+type Group = {
+  uniId: string
+  uniName: string
+  uniColor: string
+  stories: Story[]
+  latestTimestamp: number
+}
+
+type Props = {
+  onStoryPress: (group: Group) => void
+  goExplorar: () => void
+}
+
+export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
+  const { T } = useTheme()
 
   const stories = useStoriesStore(s => s.stories)
   const viewedIds = useStoriesStore(s => s.viewedIds)
-  const isViewed = useStoriesStore(s => s.isViewed)
-  const fol = useUniversitiesStore(s => s.unis).filter(u => u.followed)
+  const fol = useUniversitiesStore(s =>
+    s.unis.filter((u: { followed?: boolean }) => u.followed)
+  )
 
-  const groupedStories = stories.reduce((acc, story) => {
+  const groupedStories = stories.reduce<Group[]>((acc, story) => {
     const existing = acc.find(g => g.uniId === story.uniId)
     if (existing) {
       existing.stories.push(story)
@@ -36,7 +50,7 @@ export function StoriesStrip({ onStoryPress, goExplorar }) {
     return null
   }
 
-  const hasUnviewed = uniId => {
+  const hasUnviewed = (uniId: string): boolean => {
     const group = groupedStories.find(g => g.uniId === uniId)
     if (!group) return false
     return group.stories.some(s => !viewedIds[s.id])

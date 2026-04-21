@@ -1,14 +1,22 @@
 import { View, Text, TouchableOpacity } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 
+type Props = {
+  uniName: string
+  uniColor: string
+  isViewed: boolean
+  onPress: () => void
+  size?: number
+}
+
 export function StoryCircle({
   uniName,
   uniColor,
   isViewed,
   onPress,
   size = 64,
-}) {
-  const { T, isDark } = useTheme()
+}: Props) {
+  const { T } = useTheme()
 
   const ringColor = isViewed ? T.muted : uniColor
   const ringWidth = isViewed ? 2 : 2.5

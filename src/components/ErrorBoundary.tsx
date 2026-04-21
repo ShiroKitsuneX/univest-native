@@ -1,24 +1,27 @@
-import { Component } from 'react'
+import { Component, type ReactNode, type ErrorInfo } from 'react'
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import { logger } from '@/services/logger'
 
-export class ErrorBoundary extends Component {
-  constructor(props) {
+type Props = { children: ReactNode }
+type State = { err: Error | null }
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props)
     this.state = { err: null }
   }
 
-  static getDerivedStateFromError(err) {
+  static getDerivedStateFromError(err: Error): State {
     return { err }
   }
 
-  componentDidCatch(err, info) {
+  componentDidCatch(err: Error, info: ErrorInfo): void {
     logger.error('ErrorBoundary caught:', err, info?.componentStack)
   }
 
-  reset = () => this.setState({ err: null })
+  reset = (): void => this.setState({ err: null })
 
-  render() {
+  render(): ReactNode {
     if (!this.state.err) return this.props.children
     const msg = this.state.err?.message || String(this.state.err)
     return (

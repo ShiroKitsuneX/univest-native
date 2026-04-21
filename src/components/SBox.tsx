@@ -1,6 +1,14 @@
 import { View, Text, TextInput, TouchableOpacity } from 'react-native'
+import type { ThemeColors } from '@/theme/palette'
 
-export function SBox({ val, set, ph, T }) {
+type Props = {
+  val: string
+  set: (v: string) => void
+  ph: string
+  T: ThemeColors
+}
+
+export function SBox({ val, set, ph, T }: Props) {
   return (
     <View
       style={{

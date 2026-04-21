@@ -11,8 +11,13 @@ import { useMain } from '@/navigation/mainContext'
 
 const Stack = createNativeStackNavigator()
 
+type Nav = {
+  navigate: (name: string, params?: object) => void
+  goBack: () => void
+}
+
 function UniversityListRoute() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<Nav>()
   const h = useMain()
   return (
     <ExplorarScreen
@@ -20,8 +25,8 @@ function UniversityListRoute() {
       onRefresh={h.onRefresh}
       onOpenLocation={h.onOpenLocation}
       onOpenDiscover={h.onOpenDiscover}
-      onSelectUni={u => {
-        h.onSelectUni(u)
+      onSelectUni={(u: unknown) => {
+        h.onSelectUni?.(u)
         navigation.navigate('UniversityDetail')
       }}
     />
@@ -29,7 +34,7 @@ function UniversityListRoute() {
 }
 
 function UniversityDetailRoute() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<Nav>()
   const h = useMain()
   const selUni = useUniversitiesStore(s => s.selUni)
   const setSU = useUniversitiesStore(s => s.setSelUni)
@@ -48,7 +53,7 @@ function UniversityDetailRoute() {
 }
 
 function ExamsListRoute() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<Nav>()
   const h = useMain()
   const selUni = useUniversitiesStore(s => s.selUni)
   return (
@@ -61,19 +66,19 @@ function ExamsListRoute() {
 }
 
 function BooksListRoute() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<Nav>()
   return <BooksListScreen onBack={() => navigation.goBack()} />
 }
 
 function FollowingRoute() {
-  const navigation = useNavigation()
+  const navigation = useNavigation<Nav>()
   const h = useMain()
   return (
     <FollowingScreen
       onBack={() => navigation.goBack()}
       onExplore={() => navigation.navigate('UniversityList')}
-      onSelectUni={u => {
-        h.onSelectUni(u)
+      onSelectUni={(u: unknown) => {
+        h.onSelectUni?.(u)
         navigation.navigate('UniversityDetail')
       }}
     />
@@ -84,6 +89,7 @@ export function ExplorarStack() {
   const { T } = useTheme()
   return (
     <Stack.Navigator
+      id="ExplorarStack"
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
