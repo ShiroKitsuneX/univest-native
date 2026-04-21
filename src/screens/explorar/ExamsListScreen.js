@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { useTheme } from "../../theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,22 +13,25 @@ export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
 
   const lbl = { color: T.muted, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 };
 
+  const { upcoming, filteredYears } = useMemo(() => {
+    const allExams = selUni?.exams || [];
+    const up = allExams.filter(e => e.status === "upcoming");
+    const past = allExams.filter(e => e.status === "past");
+    const years = [...new Set(past.map(e => e.year))].sort((a, b) => examSort === "newest" ? b - a : a - b);
+    const fy = years.map(year => ({
+      year,
+      exams: past.filter(e => e.year === year).filter(e =>
+        !examSearch ||
+        e.subject.toLowerCase().includes(examSearch.toLowerCase()) ||
+        e.phase.toLowerCase().includes(examSearch.toLowerCase())
+      )
+    })).filter(g => !examSearch || g.exams.length > 0);
+    return { upcoming: up, filteredYears: fy };
+  }, [selUni?.exams, examSort, examSearch]);
+
   if (!selUni?.exams) return null;
-  const allExams = selUni.exams;
-  const upcoming = allExams.filter(e => e.status === "upcoming");
-  const past = allExams.filter(e => e.status === "past");
-  const years = [...new Set(past.map(e => e.year))].sort((a, b) => examSort === "newest" ? b - a : a - b);
 
   const toggleYear = (year) => setExpandedYears(prev => ({ ...prev, [year]: !prev[year] }));
-
-  const filteredYears = years.map(year => ({
-    year,
-    exams: past.filter(e => e.year === year).filter(e =>
-      !examSearch ||
-      e.subject.toLowerCase().includes(examSearch.toLowerCase()) ||
-      e.phase.toLowerCase().includes(examSearch.toLowerCase())
-    )
-  })).filter(g => !examSearch || g.exams.length > 0);
 
   return (
     <View style={{ flex:1, backgroundColor:T.bg }}>

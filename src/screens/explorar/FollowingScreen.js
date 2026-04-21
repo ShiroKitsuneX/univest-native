@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useTheme } from "../../theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,11 +13,11 @@ export function FollowingScreen({ onBack, onExplore, onSelectUni }) {
   const uniSort = useUniversitiesStore(s => s.uniSort);
   const uniPrefs = useUniversitiesStore(s => s.uniPrefs);
 
-  const fol = unis.filter(u => u.followed).sort((a, b) => {
+  const fol = useMemo(() => unis.filter(u => u.followed).sort((a, b) => {
     if (uniSort === "pref") return (uniPrefs[b.id] || 5) - (uniPrefs[a.id] || 5);
     const gm = s => getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || "DEZ");
     return gm(a.prova) - gm(b.prova);
-  });
+  }), [unis, uniSort, uniPrefs]);
 
   return (
     <View style={{ flex:1, backgroundColor:T.bg }}>

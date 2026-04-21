@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Linking, Dimensions } from "react-native";
 import { useTheme } from "../../theme/useTheme";
 import { BarChart } from "react-native-chart-kit";
@@ -22,14 +22,14 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
 
   const last = gs[gs.length - 1];
   const avg = g => Math.round((g.s.l + g.s.h + g.s.n + g.s.m) / 4);
-  const tgt = NOTAS_CORTE.filter(n => n.curso === c1).reduce((a, b) => Math.max(a, b.nota), 70);
-  const radar = last ? ENEM_SUBJECTS.map(sub => ({ subject: sub.short, v: subjectScore(last.s, sub.k), fullMark: 100 })) : [];
+  const tgt = useMemo(() => NOTAS_CORTE.filter(n => n.curso === c1).reduce((a, b) => Math.max(a, b.nota), 70), [c1]);
+  const radar = useMemo(() => last ? ENEM_SUBJECTS.map(sub => ({ subject: sub.short, v: subjectScore(last.s, sub.k), fullMark: 100 })) : [], [last]);
   const weak = radar.length ? radar.reduce((a, b) => a.v < b.v ? a : b) : null;
-  const bars = gs.map(g => {
+  const bars = useMemo(() => gs.map(g => {
     const row = { name: g.ex.length > 12 ? g.ex.slice(0, 12) + "…" : g.ex };
     ENEM_SUBJECTS.forEach(sub => { if (sub.k !== "r") row[sub.long] = g.s[sub.k]; });
     return row;
-  });
+  }), [gs]);
   const chartConfig = {
     backgroundGradientFrom: T.card,
     backgroundGradientTo: T.card,
@@ -39,11 +39,15 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
     style: { borderRadius: 16 },
     propsForDots: { r: "4", strokeWidth: "1", stroke: T.accent },
   };
-  const uCourses = [c1, c2].filter(Boolean);
-  const filtN = NOTAS_CORTE.filter(n => {
-    if (nSrch) return n.curso.toLowerCase().includes(nSrch.toLowerCase()) || n.uni.toLowerCase().includes(nSrch.toLowerCase());
-    return uCourses.length === 0 || uCourses.some(c => c && n.curso === c);
-  });
+  const filtN = useMemo(() => {
+    const uCourses = [c1, c2].filter(Boolean);
+    return NOTAS_CORTE.filter(n => {
+      if (nSrch) return n.curso.toLowerCase().includes(nSrch.toLowerCase()) || n.uni.toLowerCase().includes(nSrch.toLowerCase());
+      return uCourses.length === 0 || uCourses.some(c => c && n.curso === c);
+    });
+  }, [c1, c2, nSrch]);
+
+  const filteredGrades = useMemo(() => gs.filter(g => gradeFilter === "all" || g.type === gradeFilter), [gs, gradeFilter]);
 
   const cd = (extra = {}) => ({ backgroundColor: T.card, borderRadius: 18, borderWidth: 1, borderColor: T.border, ...extra });
   const lbl = { color: T.muted, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 };
@@ -128,7 +132,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
           </TouchableOpacity>
         ))}
       </View>
-      {gs.filter(g=>gradeFilter==="all"||g.type===gradeFilter).length===0 ? (
+      {filteredGrades.length===0 ? (
         <View style={{ ...cd(), padding:24, alignItems:"center" }}>
           <Text style={{ fontSize:32, marginBottom:10 }}>📝</Text>
           <Text style={{ color:T.text, fontSize:14, fontWeight:"700", marginBottom:4 }}>Nenhuma nota ainda</Text>
@@ -251,7 +255,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                 <Text style={{ color:T.muted, fontSize:10, marginTop:8 }}>Comparando com as 5 primeiras notas de corte</Text>
               </View>
             )}
-            {gs.filter(g=>gradeFilter==="all"||g.type===gradeFilter).map((g,i,arr)=>(
+            {filteredGrades.map((g,i,arr)=>(
               <View key={g.id} style={{ flexDirection:"row", alignItems:"center", gap:10, paddingVertical:9, borderBottomWidth:i<arr.length-1?1:0, borderColor:T.border }}>
                 <View style={{ width:32, height:32, borderRadius:16, backgroundColor:g.type==="simulado"?T.acBg:T.card2, alignItems:"center", justifyContent:"center" }}>
                   <Text style={{ fontSize:14 }}>{g.type==="simulado"?"📋":"📝"}</Text>

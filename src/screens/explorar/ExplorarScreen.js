@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
 import { useTheme } from "../../theme/useTheme";
 import { GEO_DATA } from "../../data/geo";
@@ -24,26 +24,37 @@ export function ExplorarScreen({ refreshing, onRefresh, onOpenLocation, onOpenDi
   const getStateDisplayName = (id) => getState(id)?.name || "";
   const userStudyState = studyStateId ? getStateDisplayName(studyStateId) : null;
 
-  let filtU = [];
-  try {
-    filtU = unis.filter(u => {
-      if (!u || !u.state || !u.name) return false;
-      const q = removeAccents(query.toLowerCase());
-      const stateName = removeAccents(getStateDisplayName(u.state) || "");
-      const matchesSearch =
-        removeAccents(u.name.toLowerCase()).includes(q) ||
-        (u.fullName && removeAccents(u.fullName.toLowerCase()).includes(q)) ||
-        (u.city && removeAccents(u.city.toLowerCase()).includes(q)) ||
-        (u.state.toLowerCase() === q) ||
-        stateName.includes(q) ||
-        (u.courses && u.courses.some(c => removeAccents(c.toLowerCase()).includes(q)));
-      const matchesFilter = fSt === "Todos" || u.state === fSt;
-      return matchesSearch && matchesFilter;
-    });
-  } catch (e) {
-    logger.warn("Filter error:", e.message);
-    filtU = [];
-  }
+  const filtU = useMemo(() => {
+    try {
+      return unis.filter(u => {
+        if (!u || !u.state || !u.name) return false;
+        const q = removeAccents(query.toLowerCase());
+        const stateName = removeAccents(getStateDisplayName(u.state) || "");
+        const matchesSearch =
+          removeAccents(u.name.toLowerCase()).includes(q) ||
+          (u.fullName && removeAccents(u.fullName.toLowerCase()).includes(q)) ||
+          (u.city && removeAccents(u.city.toLowerCase()).includes(q)) ||
+          (u.state.toLowerCase() === q) ||
+          stateName.includes(q) ||
+          (u.courses && u.courses.some(c => removeAccents(c.toLowerCase()).includes(q)));
+        const matchesFilter = fSt === "Todos" || u.state === fSt;
+        return matchesSearch && matchesFilter;
+      });
+    } catch (e) {
+      logger.warn("Filter error:", e.message);
+      return [];
+    }
+  }, [unis, query, fSt, states]);
+
+  const filterChips = useMemo(() => {
+    const allStates = [...new Set(unis.map(u => u.state))].filter(Boolean);
+    const validStates = allStates.filter(s => s && s.length === 2 && /^[A-Z]{2}$/.test(s));
+    const chips = ["Todos"];
+    if (studyStateId) chips.push("🎯 " + studyStateId);
+    chips.push(...validStates.sort());
+    return chips;
+  }, [unis, studyStateId]);
+
   const hasSearch = query.length > 0;
 
   const cd = (extra = {}) => ({ backgroundColor: T.card, borderRadius: 18, borderWidth: 1, borderColor: T.border, ...extra });
@@ -81,23 +92,15 @@ export function ExplorarScreen({ refreshing, onRefresh, onOpenLocation, onOpenDi
       )}
       <View style={{ height:10 }} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:10 }}>
-        {(() => {
-          const allStates = [...new Set(unis.map(u => u.state))].filter(Boolean);
-          const validStates = allStates.filter(s => s && s.length === 2 && /^[A-Z]{2}$/.test(s));
-          const studyStateCode = studyStateId ? studyStateId : null;
-          const filterChips = ["Todos"];
-          if (studyStateCode) filterChips.push("🎯 " + studyStateCode);
-          filterChips.push(...validStates.sort());
-          return filterChips.map(s => {
-            const chipValue = s.replace("🎯 ","");
-            const isSelected = fSt === chipValue;
-            return (
-              <TouchableOpacity key={s} onPress={()=>setFSt(isSelected ? "Todos" : chipValue)} style={{ paddingHorizontal:13, paddingVertical:7, borderRadius:20, backgroundColor:isSelected?T.accent:T.card2, marginRight:7, borderWidth:1, borderColor:isSelected?T.accent:T.border }}>
-                <Text style={{ color:isSelected?AT:T.sub, fontSize:12, fontWeight:"700" }}>{s}</Text>
-              </TouchableOpacity>
-            );
-          });
-        })()}
+        {filterChips.map(s => {
+          const chipValue = s.replace("🎯 ","");
+          const isSelected = fSt === chipValue;
+          return (
+            <TouchableOpacity key={s} onPress={()=>setFSt(isSelected ? "Todos" : chipValue)} style={{ paddingHorizontal:13, paddingVertical:7, borderRadius:20, backgroundColor:isSelected?T.accent:T.card2, marginRight:7, borderWidth:1, borderColor:isSelected?T.accent:T.border }}>
+              <Text style={{ color:isSelected?AT:T.sub, fontSize:12, fontWeight:"700" }}>{s}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
       <View style={{ gap:9 }}>
         {filtU.map(u=>(

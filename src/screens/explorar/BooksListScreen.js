@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { useTheme } from "../../theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,23 +16,29 @@ export function BooksListScreen({ onBack }) {
   const [booksSearch, setBooksSearch] = useState("");
   const [bookMenu, setBookMenu] = useState(null);
 
-  const allBooks = [];
-  unis.forEach(uni => {
-    if (uni.books && Array.isArray(uni.books) && !Array.isArray(uni.books[0])) {
-      uni.books.forEach(book => {
-        allBooks.push({ id: `${uni.id}-${book}`, book, uni });
-      });
-    }
-  });
+  const filteredBooks = useMemo(() => {
+    const allBooks = [];
+    unis.forEach(uni => {
+      if (uni.books && Array.isArray(uni.books) && !Array.isArray(uni.books[0])) {
+        uni.books.forEach(book => {
+          allBooks.push({ id: `${uni.id}-${book}`, book, uni });
+        });
+      }
+    });
+    return allBooks.filter(b =>
+      !booksSearch ||
+      b.book.toLowerCase().includes(booksSearch.toLowerCase()) ||
+      b.uni.name.toLowerCase().includes(booksSearch.toLowerCase())
+    );
+  }, [unis, booksSearch]);
 
-  const filteredBooks = allBooks.filter(b =>
-    !booksSearch ||
-    b.book.toLowerCase().includes(booksSearch.toLowerCase()) ||
-    b.uni.name.toLowerCase().includes(booksSearch.toLowerCase())
-  );
-
-  const readCount = Object.values(readBooks).filter(s => s === "read").length;
-  const readingCount = Object.values(readBooks).filter(s => s === "reading").length;
+  const { readCount, readingCount } = useMemo(() => {
+    const values = Object.values(readBooks);
+    return {
+      readCount: values.filter(s => s === "read").length,
+      readingCount: values.filter(s => s === "reading").length,
+    };
+  }, [readBooks]);
 
   const persistReadBooks = (newRead) => setReadBooks(newRead);
 

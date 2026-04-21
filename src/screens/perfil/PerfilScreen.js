@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { useTheme } from "../../theme/useTheme";
 import { AVATAR_COLORS } from "../../theme/avatar";
@@ -54,8 +54,8 @@ export function PerfilScreen({
 
   const last = gs[gs.length - 1];
   const avg = g => Math.round((g.s.l + g.s.h + g.s.n + g.s.m) / 4);
-  const tgt = NOTAS_CORTE.filter(n => n.curso === c1).reduce((a, b) => Math.max(a, b.nota), 70);
-  const followedCount = unis.filter(u => u.followed).length;
+  const tgt = useMemo(() => NOTAS_CORTE.filter(n => n.curso === c1).reduce((a, b) => Math.max(a, b.nota), 70), [c1]);
+  const followedCount = useMemo(() => unis.filter(u => u.followed).length, [unis]);
 
   const cd = (extra = {}) => ({ backgroundColor: T.card, borderRadius: 18, borderWidth: 1, borderColor: T.border, ...extra });
   const lbl = { color: T.muted, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 };

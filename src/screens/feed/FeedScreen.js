@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView, Alert, RefreshControl,
 } from "react-native";
@@ -59,17 +59,17 @@ export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onS
 
   const cd = (extra = {}) => ({ backgroundColor: T.card, borderRadius: 18, borderWidth: 1, borderColor: T.border, ...extra });
 
-  const fol = unis.filter(u => u.followed).sort((a, b) => {
+  const fol = useMemo(() => unis.filter(u => u.followed).sort((a, b) => {
     if (uniSort === "pref") return (uniPrefs[b.id] || 5) - (uniPrefs[a.id] || 5);
     const gm = s => getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || "DEZ");
     return gm(a.prova) - gm(b.prova);
-  });
+  }), [unis, uniSort, uniPrefs]);
   const feedItems = posts.length ? posts : FEED;
 
-  const upcoming = goalsUnis.flatMap(g => (g.exams || []).filter(e => e.status === "upcoming").map(e => ({ ...e, uni: g })))
+  const upcoming = useMemo(() => goalsUnis.flatMap(g => (g.exams || []).filter(e => e.status === "upcoming").map(e => ({ ...e, uni: g })))
     .map(e => ({ ...e, daysUntil: Math.ceil((new Date(e.date) - new Date()) / 86400000) }))
     .filter(e => e.daysUntil >= 0 && e.daysUntil <= 180)
-    .sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 5);
+    .sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 5), [goalsUnis]);
 
   const toggleLike = (item) => {
     if (!currentUser) { Alert.alert("Atenção", "Faça login para curtir"); return; }
