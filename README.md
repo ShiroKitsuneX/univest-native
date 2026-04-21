@@ -70,12 +70,3 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
 _____________________________________________
-
-*********************************************
-Now whenever you want to rebuild after changes, just run:
-./build-and-run.sh
-Or from anywhere:
-/Users/App/repos/univest-native/build-and-run.sh
-*********************************************
-Save Everything
-*********************************************

@@ -1,31 +1,25 @@
 import { useState, useCallback } from "react";
 import {
-  View, Text, TouchableOpacity,
-  Alert, Appearance, StatusBar,
+  View, Alert, Appearance, StatusBar, StyleSheet,
 } from "react-native";
-import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { db } from "./src/firebase/config";
 import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
 import { DK, LT } from "./src/theme/palette";
-import { AVATAR_COLORS } from "./src/theme/avatar";
 import { logout } from "./src/services/auth";
-import { useCoursesStore } from "./src/stores/coursesStore";
 import { usePostsStore } from "./src/stores/postsStore";
 import { useUniversitiesStore } from "./src/stores/universitiesStore";
 import { useOnboardingStore } from "./src/stores/onboardingStore";
 import { useProfileStore } from "./src/stores/profileStore";
 import { useAuthStore } from "./src/stores/authStore";
 import { RootNavigator } from "./src/navigation/RootNavigator";
-import { FeedScreen } from "./src/screens/feed/FeedScreen";
-import { NotasScreen } from "./src/screens/notas/NotasScreen";
-import { ExplorarScreen } from "./src/screens/explorar/ExplorarScreen";
+import { MainTabs } from "./src/navigation/MainTabs";
 import { FollowingScreen } from "./src/screens/explorar/FollowingScreen";
 import { BooksListScreen } from "./src/screens/explorar/BooksListScreen";
 import { ExamsListScreen } from "./src/screens/explorar/ExamsListScreen";
 import { UniversityDetailScreen } from "./src/screens/explorar/UniversityDetailScreen";
-import { PerfilScreen } from "./src/screens/perfil/PerfilScreen";
 import { ShareModal } from "./src/modals/ShareModal";
 import { UniSortModal } from "./src/modals/UniSortModal";
 import { AddGradeModal } from "./src/modals/AddGradeModal";
@@ -41,7 +35,6 @@ import { GoalsModal } from "./src/modals/GoalsModal";
 import { SettingsModal } from "./src/modals/SettingsModal";
 
 function MainApp() {
-  const insets = useSafeAreaInsets();
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
   const isDark = theme==="auto" ? colorScheme==="dark" : theme==="dark";
@@ -52,21 +45,14 @@ function MainApp() {
 
   const setStep = useOnboardingStore(s => s.setStep);
   const setDone = useOnboardingStore(s => s.setDone);
-  const uType = useOnboardingStore(s => s.uType);
   const setC1 = useOnboardingStore(s => s.setC1);
   const setC2 = useOnboardingStore(s => s.setC2);
 
-  const [tab, setTab] = useState("feed");
-  const unis = useUniversitiesStore(s => s.unis);
   const setUnis = useUniversitiesStore(s => s.setUnis);
-  const fbIcons = useCoursesStore(s => s.fbIcons);
   const selUni = useUniversitiesStore(s => s.selUni);
   const setSU = useUniversitiesStore(s => s.setSelUni);
   const [goalsModal, setGoalsModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  const av = useProfileStore(s => s.av);
-  const avBgIdx = useProfileStore(s => s.avBgIdx);
 
   const [mCfg,  setMcfg]  = useState(false);
   const [mPho,  setMpho]  = useState(false);
@@ -75,7 +61,6 @@ function MainApp() {
   const [mEv,   setMev]   = useState(null);
   const [mExam, setMexam] = useState(null);
   const [showExamsPage, setShowExamsPage] = useState(false);
-
   const [showBooksPage, setShowBooksPage] = useState(false);
   const [showFollowingPage, setShowFollowingPage] = useState(false);
   const [mGr,   setMgr]   = useState(false);
@@ -84,8 +69,6 @@ function MainApp() {
   const [mUni,  setMUni]  = useState(false);
   const [mLoc,  setMloc]  = useState(false);
   const [mSaved, setMSaved] = useState(false);
-
-  const getIcon = (id, fallback) => fbIcons[id] || fallback;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -137,133 +120,64 @@ function MainApp() {
     }
   };
 
-  // ── MAIN APP ──
-  const SBar = () => (
-    <View style={{ backgroundColor:T.bg, paddingHorizontal:20, paddingTop:insets.top+4, paddingBottom:10, flexDirection:"row", alignItems:"center" }}>
-      <View style={{ width:36 }} />
-      <View style={{ flex: 1, alignItems: "center" }}>
-        <Text style={{ fontSize:22, fontWeight:"800", color:T.text }}>Uni<Text style={{ color:T.accent }}>Vest</Text></Text>
-      </View>
-      {tab==="perfil" ? (
-        <TouchableOpacity onPress={()=>setMcfg(true)} style={{ width:36, height:36, borderRadius:18, backgroundColor:T.card2, borderWidth:1, borderColor:T.border, alignItems:"center", justifyContent:"center" }}>
-          <Text style={{ fontSize:14 }}>⚙️</Text>
-        </TouchableOpacity>
-      ) : tab==="feed" ? (
-        <View style={{ width:36, height:36, borderRadius:18, backgroundColor:AVATAR_COLORS[avBgIdx][0], alignItems:"center", justifyContent:"center" }}>
-          <Text style={{ fontSize:18 }}>{av}</Text>
-        </View>
-      ) : <View style={{ width:36 }} />}
-    </View>
-  );
+  const handlers = {
+    refreshing,
+    onRefresh,
+    onOpenSettings: () => setMcfg(true),
+    onShare: (item) => setMshr(item),
+    onOpenLocation: () => setMloc(true),
+    onOpenDiscover: () => setMdisc(true),
+    onEditCourses: () => setMedit(true),
+    onAddGrade: () => setMgr(true),
+    onChangePhoto: () => setMpho(true),
+    onChangeName: () => { setMcfg(false); setMnome(true); },
+    onShowFollowing: () => setShowFollowingPage(true),
+    onShowSaved: () => setMSaved(true),
+    onShowBooks: () => setShowBooksPage(true),
+    onAddGoal: () => setGoalsModal(true),
+    onOpenEvent: (ev) => setMev(ev),
+    onSelectUni: (u) => setSU(u),
+  };
 
-  const BNav = () => (
-    <View style={{ backgroundColor:T.nav, borderTopWidth:1, borderColor:T.border, paddingBottom:insets.bottom, flexDirection:"row", paddingHorizontal:8, paddingTop:6 }}>
-      {[{id:"feed",ic:"🏠",l:"Feed"},{id:"explorar",ic:"🔍",l:"Explorar"},{id:"notas",ic:"📊",l:"Notas"},{id:"perfil",ic:"👤",l:"Perfil"}].map(t=>{
-        const active = tab===t.id;
-        return (
-          <TouchableOpacity key={t.id} onPress={()=>{setTab(t.id);setSU(null);setShowBooksPage(false);setShowFollowingPage(false);}} style={{ flex:1, alignItems:"center", paddingVertical:6 }}>
-            <View style={{ paddingHorizontal:16, paddingVertical:5, borderRadius:20, backgroundColor:active?T.acBg:"transparent", alignItems:"center", marginBottom:2 }}>
-              <Text style={{ fontSize:20 }}>{getIcon("tab_"+t.id,t.ic)}</Text>
-            </View>
-            <Text style={{ fontSize:10, fontWeight:active?"800":"500", color:active?T.accent:T.muted }}>{t.l}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-
-  const renderExamsPage = () => (
-    <ExamsListScreen
-      selUni={selUni}
-      onBack={() => setShowExamsPage(false)}
-      onSelectExam={(exam) => setMexam(exam)}
-    />
-  );
-
-  const renderBooksPage = () => (
-    <BooksListScreen
-      onBack={() => setShowBooksPage(false)}
-    />
-  );
-
-  const renderFollowingPage = () => (
-    <FollowingScreen
-      onBack={() => setShowFollowingPage(false)}
-      onExplore={() => { setShowFollowingPage(false); setTab("explorar"); }}
-      onSelectUni={(u) => { setSU(u); setTab("explorar"); setShowFollowingPage(false); }}
-    />
-  );
-
-  const renderUniDetail = () => (
-    <UniversityDetailScreen
-      selUni={selUni}
-      onBack={() => setSU(null)}
-      onToggleFollow={toggleFollow}
-      onShowExams={() => setShowExamsPage(true)}
-    />
-  );
-
-  const renderFeed = () => (
-    <FeedScreen
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      goExplorar={() => setTab("explorar")}
-      onSelectUni={(u) => { setSU(u); setTab("explorar"); }}
-      onShare={(item) => setMshr(item)}
-    />
-  );
-
-
-  const renderExplorar = () => (
-    <ExplorarScreen
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      onOpenLocation={() => setMloc(true)}
-      onOpenDiscover={() => setMdisc(true)}
-      onSelectUni={(u) => setSU(u)}
-    />
-  );
-
-  const renderNotas = () => (
-    <NotasScreen
-      onEditCourses={() => setMedit(true)}
-      onAddGrade={() => setMgr(true)}
-    />
-  );
-
-  const renderPerfil = () => (
-    <PerfilScreen
-      onChangePhoto={() => setMpho(true)}
-      onChangeName={() => { setMcfg(false); setMnome(true); }}
-      onEditCourses={() => setMedit(true)}
-      onShowFollowing={() => setShowFollowingPage(true)}
-      onShowSaved={() => setMSaved(true)}
-      onShowBooks={() => setShowBooksPage(true)}
-      onAddGoal={() => setGoalsModal(true)}
-      onOpenEvent={(ev) => setMev(ev)}
-      onSelectUni={(u) => { setSU(u); setTab('explorar'); }}
-      goNotas={() => setTab('notas')}
-    />
-  );
+  const overlayStyle = [StyleSheet.absoluteFill, { backgroundColor: T.bg }];
 
   return (
     <View style={{ flex:1, backgroundColor:T.bg }}>
       <StatusBar barStyle={isDark?"light-content":"dark-content"} />
-      {!showExamsPage && !showBooksPage && <SBar />}
-      {!selUni && !showExamsPage && !showBooksPage && (
-        <View style={{ paddingHorizontal:20, paddingTop:0, paddingBottom:6 }}>
-          <Text style={{ color:T.sub, fontSize:11 }}>{tab==="explorar"?"Encontre sua universidade":tab==="notas"?"Notas de corte & suas provas":`${uType?.emoji||"👤"} ${uType?.label||"Meu Perfil"}`}</Text>
+      <MainTabs handlers={handlers} />
+      {showExamsPage && selUni && (
+        <View style={overlayStyle}>
+          <ExamsListScreen
+            selUni={selUni}
+            onBack={() => setShowExamsPage(false)}
+            onSelectExam={(exam) => setMexam(exam)}
+          />
         </View>
       )}
-      {showExamsPage && selUni ? renderExamsPage() : showBooksPage ? renderBooksPage() : showFollowingPage ? renderFollowingPage() : selUni ? renderUniDetail() : (
-        <>
-          {tab==="feed"     && renderFeed()}
-          {tab==="explorar" && renderExplorar()}
-          {tab==="notas"    && renderNotas()}
-          {tab==="perfil"   && renderPerfil()}
-        </>
+      {showBooksPage && (
+        <View style={overlayStyle}>
+          <BooksListScreen onBack={() => setShowBooksPage(false)} />
+        </View>
       )}
-      <BNav />
+      {showFollowingPage && (
+        <View style={overlayStyle}>
+          <FollowingScreen
+            onBack={() => setShowFollowingPage(false)}
+            onExplore={() => setShowFollowingPage(false)}
+            onSelectUni={(u) => { setSU(u); setShowFollowingPage(false); }}
+          />
+        </View>
+      )}
+      {selUni && !showExamsPage && (
+        <View style={overlayStyle}>
+          <UniversityDetailScreen
+            selUni={selUni}
+            onBack={() => setSU(null)}
+            onToggleFollow={toggleFollow}
+            onShowExams={() => setShowExamsPage(true)}
+          />
+        </View>
+      )}
 
       <SettingsModal visible={mCfg} onClose={()=>setMcfg(false)} onOpenName={()=>setMnome(true)} onOpenPhoto={()=>setMpho(true)} onOpenEditCourses={()=>setMedit(true)} onOpenLocation={()=>setMloc(true)} onOpenGoals={()=>setGoalsModal(true)} onLogout={handleLogout} />
 
