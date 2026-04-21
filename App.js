@@ -8,6 +8,7 @@ import { db } from "./src/firebase/config";
 import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
 import { useTheme } from "./src/theme/useTheme";
+import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { logout } from "./src/services/auth";
 import { usePostsStore } from "./src/stores/postsStore";
 import { useUniversitiesStore } from "./src/stores/universitiesStore";
@@ -28,6 +29,7 @@ import { EditCoursesModal } from "./src/modals/EditCoursesModal";
 import { LocationSettingsModal } from "./src/modals/LocationSettingsModal";
 import { GoalsModal } from "./src/modals/GoalsModal";
 import { SettingsModal } from "./src/modals/SettingsModal";
+import { logger } from "./src/services/logger";
 
 function MainApp() {
   const { T, isDark } = useTheme();
@@ -97,7 +99,7 @@ function MainApp() {
         await setDoc(uniRef,{followersCount:increment(isFollowing?1:-1)},{merge:true}).catch(()=>{});
       }
     } catch(err){
-      console.log("toggleFollow error:", err?.message);
+      logger.warn("toggleFollow error:", err?.message);
       setUnis(prev=>prev.map(u=>u.name===uni.name?{...u,followed:!isFollowing,followersCount:(u.followersCount||0)+(isFollowing?-1:1)}:u));
       if(selUni?.name===uni.name) setSU(p=>({...p,followed:!isFollowing}));
       setUserData(prev => {
@@ -178,8 +180,10 @@ function ThemedNavigation() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <ThemedNavigation />
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <ThemedNavigation />
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

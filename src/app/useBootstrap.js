@@ -10,6 +10,7 @@ import { usePostsStore } from "../stores/postsStore";
 import { useUniversitiesStore } from "../stores/universitiesStore";
 import { useCoursesStore } from "../stores/coursesStore";
 import { useGeoStore } from "../stores/geoStore";
+import { logger } from "../services/logger";
 
 export function useBootstrap() {
   useEffect(() => {
@@ -44,7 +45,7 @@ export function useBootstrap() {
             setUserData({ followedUnis: [] });
             setStep(1); setDone(false);
           }
-        } catch (e) { console.log("Error loading user data:", e.message); }
+        } catch (e) { logger.warn("Error loading user data:", e.message); }
       } else { setCurrentUser(null); setUserData(null); }
       setAuthLoading(false);
     });

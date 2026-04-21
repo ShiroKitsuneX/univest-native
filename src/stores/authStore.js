@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { onAuthChange } from "../services/auth";
 import { fetchUserDoc } from "../services/firestore";
 import { saveLocalUserData } from "../services/storage";
+import { logger } from "../services/logger";
 
 export const useAuthStore = create((set) => ({
   currentUser: null,
@@ -33,7 +34,7 @@ export const useAuthStore = create((set) => ({
         onUserDoc?.(null, false);
       }
     } catch (e) {
-      console.log("Error loading user data:", e.message);
+      logger.warn("Error loading user data:", e.message);
     } finally {
       set({ authLoading: false });
     }

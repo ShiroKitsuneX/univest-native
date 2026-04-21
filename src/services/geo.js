@@ -1,6 +1,7 @@
 import { collection, doc, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { GEO_DATA } from "../data/geo";
+import { logger } from "./logger";
 
 export const seedGeoData = async () => {
   try {
@@ -22,9 +23,9 @@ export const seedGeoData = async () => {
     });
 
     await batch.commit();
-    console.log("Geo data seeded successfully!");
+    logger.warn("Geo data seeded successfully!");
   } catch (e) {
-    console.log("Error seeding geo data:", e.message);
+    logger.warn("Error seeding geo data:", e.message);
   }
 };
 

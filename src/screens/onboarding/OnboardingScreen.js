@@ -13,6 +13,7 @@ import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useCoursesStore } from "../../stores/coursesStore";
 import { useAuthStore } from "../../stores/authStore";
+import { logger } from "../../services/logger";
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -63,7 +64,7 @@ export function OnboardingScreen() {
         updatedAt: new Date().toISOString(),
       };
       await setDoc(doc(db, "usuarios", currentUser.uid), dataToSave, { merge: true });
-    } catch (e) { console.log("Error saving onboarding:", e.message); }
+    } catch (e) { logger.warn("Error saving onboarding:", e.message); }
   };
 
   const filteredUnis = unis.filter(u => !uSrch || u.name.toLowerCase().includes(uSrch.toLowerCase()) || u.fullName.toLowerCase().includes(uSrch.toLowerCase()));

@@ -8,6 +8,7 @@ import { removeAccents } from "../../utils/string";
 import { useProfileStore } from "../../stores/profileStore";
 import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useGeoStore } from "../../stores/geoStore";
+import { logger } from "../../services/logger";
 
 export function ExplorarScreen({ refreshing, onRefresh, onOpenLocation, onOpenDiscover, onSelectUni }) {
   const { T, isDark, AT } = useTheme();
@@ -40,7 +41,7 @@ export function ExplorarScreen({ refreshing, onRefresh, onOpenLocation, onOpenDi
       return matchesSearch && matchesFilter;
     });
   } catch (e) {
-    console.log("Filter error:", e.message);
+    logger.warn("Filter error:", e.message);
     filtU = [];
   }
   const hasSearch = query.length > 0;

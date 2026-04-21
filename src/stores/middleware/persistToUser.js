@@ -3,6 +3,7 @@ import { db } from "../../firebase/config";
 import { useAuthStore } from "../authStore";
 import { loadLocalUserData, saveLocalUserData } from "../../services/storage";
 
+import { logger } from "../../services/logger";
 // Zustand middleware that mirrors a whitelist of store keys to AsyncStorage
 // and to /usuarios/{uid}. Debounced to coalesce bursty updates into one write.
 //
@@ -40,7 +41,7 @@ export const persistToUser = (initializer, { keys, serialize, debounceMs = 500 }
             { merge: true },
           );
         }
-      } catch (e) { console.log("persistToUser flush:", e.message); }
+      } catch (e) { logger.warn("persistToUser flush:", e.message); }
     };
 
     api.__suspendPersist = () => { suspended++; };

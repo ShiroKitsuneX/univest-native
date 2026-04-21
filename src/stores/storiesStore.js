@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { STORIES } from "../data/stories";
+import { logger } from "../services/logger";
 
 export const useStoriesStore = create((set, get) => ({
   stories: [],
@@ -38,7 +39,7 @@ export const useStoriesStore = create((set, get) => ({
       const activeStories = STORIES.filter(s => new Date(s.expiresAt) > now);
       set({ stories: activeStories });
     } catch (e) {
-      console.log("Error loading stories:", e);
+      logger.warn("Error loading stories:", e);
     } finally {
       set({ loading: false });
     }

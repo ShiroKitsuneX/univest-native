@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { GEO_DATA } from "../data/geo";
 import { seedGeoData, fetchGeoCollections } from "../services/geo";
+import { logger } from "../services/logger";
 
 export const useGeoStore = create((set, get) => ({
   countries: [],
@@ -20,7 +21,7 @@ export const useGeoStore = create((set, get) => ({
         loaded: true,
       });
     } catch (e) {
-      console.log("Error loading geo data:", e.message);
+      logger.warn("Error loading geo data:", e.message);
       set({ loaded: true });
     }
   },
