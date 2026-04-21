@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Appearance } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
 import { GEO_DATA } from "../data/geo";
 import { useProfileStore } from "../stores/profileStore";
 import { useGeoStore } from "../stores/geoStore";
 
 export function LocationSettingsModal({ visible, onClose }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const countryId = useProfileStore(s => s.countryId);
   const setCountryId = useProfileStore(s => s.setCountryId);

@@ -1,16 +1,11 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Appearance } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { useTheme } from "../../theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DK, LT } from "../../theme/palette";
-import { useProfileStore } from "../../stores/profileStore";
 
 export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
   const insets = useSafeAreaInsets();
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const [examSearch, setExamSearch] = useState("");
   const [examSort, setExamSort] = useState("newest");

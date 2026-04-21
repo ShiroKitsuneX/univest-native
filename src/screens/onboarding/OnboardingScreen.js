@@ -1,15 +1,14 @@
 import { useState } from "react";
 import {
-  View, Text, TouchableOpacity, ScrollView, Appearance, StatusBar,
+  View, Text, TouchableOpacity, ScrollView, StatusBar,
 } from "react-native";
+import { useTheme } from "../../theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { DK, LT } from "../../theme/palette";
 import { USER_TYPES } from "../../data/userTypes";
 import { ALL_COURSES } from "../../data/areas";
 import { SBox } from "../../components/SBox";
-import { useProfileStore } from "../../stores/profileStore";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useCoursesStore } from "../../stores/coursesStore";
@@ -17,11 +16,7 @@ import { useAuthStore } from "../../stores/authStore";
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const step = useOnboardingStore(s => s.step);
   const uType = useOnboardingStore(s => s.uType);

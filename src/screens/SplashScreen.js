@@ -1,10 +1,8 @@
-import { View, Text, ActivityIndicator, StatusBar, Appearance } from "react-native";
-import { useProfileStore } from "../stores/profileStore";
+import { View, Text, ActivityIndicator, StatusBar } from "react-native";
+import { useIsDark } from "../theme/useTheme";
 
 export function SplashScreen() {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
+  const isDark = useIsDark();
 
   return (
     <View style={{ flex:1, backgroundColor:isDark?"#0d1117":"#f0f4fb", justifyContent:"center", alignItems:"center", padding:32 }}>

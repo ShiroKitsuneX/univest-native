@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, RefreshControl, Appearance } from "react-native";
-import { DK, LT } from "../../theme/palette";
+import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
+import { useTheme } from "../../theme/useTheme";
 import { GEO_DATA } from "../../data/geo";
 import { SBox } from "../../components/SBox";
 import { fmtCount } from "../../utils/format";
@@ -10,11 +10,7 @@ import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useGeoStore } from "../../stores/geoStore";
 
 export function ExplorarScreen({ refreshing, onRefresh, onOpenLocation, onOpenDiscover, onSelectUni }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const studyStateId = useProfileStore(s => s.studyStateId);
   const unis = useUniversitiesStore(s => s.unis);

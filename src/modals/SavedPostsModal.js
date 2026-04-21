@@ -1,16 +1,12 @@
-import { View, Text, TouchableOpacity, ScrollView, Appearance } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
 import { FEED } from "../data/feed";
-import { useProfileStore } from "../stores/profileStore";
 import { usePostsStore } from "../stores/postsStore";
 import { useUniversitiesStore } from "../stores/universitiesStore";
 
 export function SavedPostsModal({ visible, onClose, onSelectPost }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
 
   const posts = usePostsStore(s => s.posts);
   const saved = usePostsStore(s => s.saved);

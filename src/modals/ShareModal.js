@@ -1,13 +1,9 @@
-import { View, Text, TouchableOpacity, Alert, Linking, Appearance } from "react-native";
+import { View, Text, TouchableOpacity, Alert, Linking } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
-import { useProfileStore } from "../stores/profileStore";
 
 export function ShareModal({ item, onClose }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
 
   return (
     <BottomSheet visible={!!item} onClose={onClose} T={T}>

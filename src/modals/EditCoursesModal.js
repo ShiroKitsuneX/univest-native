@@ -1,19 +1,14 @@
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Appearance } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
 import { SBox } from "../components/SBox";
-import { DK, LT } from "../theme/palette";
 import { ALL_COURSES } from "../data/areas";
-import { useProfileStore } from "../stores/profileStore";
 import { useOnboardingStore } from "../stores/onboardingStore";
 import { useCoursesStore } from "../stores/coursesStore";
 
 export function EditCoursesModal({ visible, onClose, onSave }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const c1 = useOnboardingStore(s => s.c1);
   const c2 = useOnboardingStore(s => s.c2);

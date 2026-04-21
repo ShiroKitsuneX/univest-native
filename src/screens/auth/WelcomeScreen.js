@@ -1,25 +1,20 @@
 import { useRef, useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  Modal, Appearance, Platform, StatusBar, KeyboardAvoidingView,
+  Modal, Platform, StatusBar, KeyboardAvoidingView,
   Animated, LayoutAnimation,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DK, LT } from "../../theme/palette";
+import { useTheme } from "../../theme/useTheme";
 import { validatePassword } from "../../utils/validation";
 import { signIn, signUp, resetPassword, getAuthErrorMessage } from "../../services/auth";
-import { useProfileStore } from "../../stores/profileStore";
 import { useCoursesStore } from "../../stores/coursesStore";
 
 const INITIAL_TOUCHED = { email:false, nome:false, sobrenome:false, senha:false, confirmarSenha:false, nascimento:false };
 
 export function WelcomeScreen() {
   const insets = useSafeAreaInsets();
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
   const getIcon = (id, fallback) => useCoursesStore.getState().getIcon(id, fallback);
 
   const [showLogin, setShowLogin] = useState(false);

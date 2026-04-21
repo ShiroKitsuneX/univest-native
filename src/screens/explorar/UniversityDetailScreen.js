@@ -1,16 +1,11 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Linking, Appearance } from "react-native";
-import { DK, LT } from "../../theme/palette";
+import { View, Text, TouchableOpacity, ScrollView, Linking } from "react-native";
+import { useTheme } from "../../theme/useTheme";
 import { fmtCount } from "../../utils/format";
-import { useProfileStore } from "../../stores/profileStore";
 import { useProgressStore } from "../../stores/progressStore";
 
 export function UniversityDetailScreen({ selUni, onBack, onToggleFollow, onShowExams }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const readBooks = useProgressStore(s => s.readBooks);
   const setReadBooks = useProgressStore(s => s.setReadBooks);

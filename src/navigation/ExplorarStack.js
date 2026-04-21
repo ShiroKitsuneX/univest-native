@@ -1,8 +1,6 @@
-import { Appearance } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
-import { DK, LT } from "../theme/palette";
-import { useProfileStore } from "../stores/profileStore";
+import { useTheme } from "../theme/useTheme";
 import { useUniversitiesStore } from "../stores/universitiesStore";
 import { ExplorarScreen } from "../screens/explorar/ExplorarScreen";
 import { UniversityDetailScreen } from "../screens/explorar/UniversityDetailScreen";
@@ -74,10 +72,7 @@ function FollowingRoute() {
 }
 
 export function ExplorarStack() {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T } = useTheme();
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right", contentStyle: { backgroundColor: T.bg } }}>
       <Stack.Screen name="UniversityList" component={UniversityListRoute} />

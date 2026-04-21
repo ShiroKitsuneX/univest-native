@@ -1,15 +1,11 @@
 import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, Appearance } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
 import { useProfileStore } from "../stores/profileStore";
 
 export function EditNameModal({ visible, onClose }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const nome = useProfileStore(s => s.nome);
   const setNome = useProfileStore(s => s.setNome);

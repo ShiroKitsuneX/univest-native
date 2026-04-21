@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Appearance } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
 import { AREAS } from "../data/areas";
 import { NOTAS_CORTE } from "../data/notasCorte";
-import { useProfileStore } from "../stores/profileStore";
 
 export function DiscoverCoursesModal({ visible, onClose, onPickCourse }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
 
   const [dArea, setDarea] = useState(null);
 

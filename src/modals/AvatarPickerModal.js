@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Appearance } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
 import { AVATAR_PRESETS, AVATAR_COLORS } from "../theme/avatar";
 import { useProfileStore } from "../stores/profileStore";
 
 export function AvatarPickerModal({ visible, onClose }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const av = useProfileStore(s => s.av);
   const setAv = useProfileStore(s => s.setAv);

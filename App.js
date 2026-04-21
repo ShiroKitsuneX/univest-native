@@ -1,18 +1,17 @@
 import { useState, useCallback } from "react";
 import {
-  View, Alert, Appearance, StatusBar,
+  View, Alert, StatusBar,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { db } from "./src/firebase/config";
 import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
-import { DK, LT } from "./src/theme/palette";
+import { useTheme } from "./src/theme/useTheme";
 import { logout } from "./src/services/auth";
 import { usePostsStore } from "./src/stores/postsStore";
 import { useUniversitiesStore } from "./src/stores/universitiesStore";
 import { useOnboardingStore } from "./src/stores/onboardingStore";
-import { useProfileStore } from "./src/stores/profileStore";
 import { useAuthStore } from "./src/stores/authStore";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { MainTabs } from "./src/navigation/MainTabs";
@@ -31,10 +30,7 @@ import { GoalsModal } from "./src/modals/GoalsModal";
 import { SettingsModal } from "./src/modals/SettingsModal";
 
 function MainApp() {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme==="auto" ? colorScheme==="dark" : theme==="dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
 
   const currentUser = useAuthStore(s => s.currentUser);
   const setUserData = useAuthStore(s => s.setUserData);
@@ -169,10 +165,7 @@ function MainApp() {
 }
 
 function ThemedNavigation() {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
   const navTheme = isDark
     ? { ...DarkTheme,    colors: { ...DarkTheme.colors,    background: T.bg, card: T.bg, text: T.text, border: T.border, primary: T.accent } }
     : { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: T.bg, card: T.bg, text: T.text, border: T.border, primary: T.accent } };

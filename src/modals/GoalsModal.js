@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Appearance } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
 import { removeAccents } from "../utils/string";
-import { useProfileStore } from "../stores/profileStore";
 import { useUniversitiesStore } from "../stores/universitiesStore";
 
 export function GoalsModal({ visible, onClose }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const fbUnis = useUniversitiesStore(s => s.fbUnis);
   const goalsUnis = useUniversitiesStore(s => s.goalsUnis);

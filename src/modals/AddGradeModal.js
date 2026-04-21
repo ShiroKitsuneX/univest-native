@@ -1,14 +1,10 @@
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Appearance } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
 import { useProfileStore } from "../stores/profileStore";
 
 export function AddGradeModal({ visible, onClose }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const gs = useProfileStore(s => s.gs);
   const setGs = useProfileStore(s => s.setGs);

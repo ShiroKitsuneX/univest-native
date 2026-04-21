@@ -1,12 +1,8 @@
-import { View, Text, TouchableOpacity, Appearance } from "react-native";
-import { useProfileStore } from "../stores/profileStore";
-import { DK, LT } from "../theme/palette";
+import { View, Text, TouchableOpacity } from "react-native";
+import { useTheme } from "../theme/useTheme";
 
 export function StoryCircle({ uniName, uniColor, isViewed, onPress, size = 64 }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
 
   const ringColor = isViewed ? T.muted : uniColor;
   const ringWidth = isViewed ? 2 : 2.5;

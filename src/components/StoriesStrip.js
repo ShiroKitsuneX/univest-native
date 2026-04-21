@@ -1,15 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity, Appearance } from "react-native";
-import { DK, LT } from "../theme/palette";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { useTheme } from "../theme/useTheme";
 import { useStoriesStore } from "../stores/storiesStore";
-import { useProfileStore } from "../stores/profileStore";
 import { useUniversitiesStore } from "../stores/universitiesStore";
 import { StoryCircle } from "./StoryCircle";
 
 export function StoriesStrip({ onStoryPress, goExplorar }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
   
   const stories = useStoriesStore(s => s.stories);
   const viewedIds = useStoriesStore(s => s.viewedIds);

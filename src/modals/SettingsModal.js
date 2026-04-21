@@ -1,16 +1,13 @@
-import { View, Text, TouchableOpacity, Appearance } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { BottomSheet } from "../components/BottomSheet";
-import { DK, LT } from "../theme/palette";
+import { useTheme } from "../theme/useTheme";
 import { useProfileStore } from "../stores/profileStore";
 import { useAuthStore } from "../stores/authStore";
 
 export function SettingsModal({ visible, onClose, onOpenName, onOpenPhoto, onOpenEditCourses, onOpenLocation, onOpenGoals, onLogout }) {
-  const colorScheme = Appearance.getColorScheme();
+  const { T, AT } = useTheme();
   const theme = useProfileStore(s => s.theme);
   const setTheme = useProfileStore(s => s.setTheme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
 
   const nome = useProfileStore(s => s.nome);
   const sobrenome = useProfileStore(s => s.sobrenome);

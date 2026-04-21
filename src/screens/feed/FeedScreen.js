@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import {
-  View, Text, TouchableOpacity, ScrollView, Appearance, Alert, RefreshControl,
+  View, Text, TouchableOpacity, ScrollView, Alert, RefreshControl,
 } from "react-native";
+import { useTheme } from "../../theme/useTheme";
 import {
   doc, setDoc, deleteDoc, updateDoc, increment, addDoc, collection, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { DK, LT, TAG_D, TAG_L } from "../../theme/palette";
+import { TAG_D, TAG_L } from "../../theme/palette";
 import { FEED } from "../../data/feed";
 import { timeAgo, fmtCount } from "../../utils/format";
 import { getMonthFromKey } from "../../utils/dates";
-import { useProfileStore } from "../../stores/profileStore";
 import { usePostsStore } from "../../stores/postsStore";
 import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useAuthStore } from "../../stores/authStore";
@@ -19,10 +19,7 @@ import { StoriesStrip } from "../../components/StoriesStrip";
 import { StoryViewer } from "../../components/StoryViewer";
 
 export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onShare }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
   const TG = isDark ? TAG_D : TAG_L;
 
   const stories = useStoriesStore(s => s.stories);

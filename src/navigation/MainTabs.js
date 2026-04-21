@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, Appearance } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useNavigation, getFocusedRouteNameFromRoute } from "@react-navigation/native";
-import { DK, LT } from "../theme/palette";
+import { useTheme } from "../theme/useTheme";
 import { AVATAR_COLORS } from "../theme/avatar";
 import { useProfileStore } from "../stores/profileStore";
 import { useOnboardingStore } from "../stores/onboardingStore";
@@ -21,13 +21,6 @@ const TAB_META = [
   { name: "NotasTab",    id: "notas",    ic: "📊", l: "Notas" },
   { name: "PerfilTab",   id: "perfil",   ic: "👤", l: "Perfil" },
 ];
-
-function useTheme() {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  return { T: isDark ? DK : LT, isDark };
-}
 
 function TabHeader({ route }) {
   const insets = useSafeAreaInsets();

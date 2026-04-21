@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Linking, Dimensions, Appearance } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Linking, Dimensions } from "react-native";
+import { useTheme } from "../../theme/useTheme";
 import { BarChart } from "react-native-chart-kit";
-import { DK, LT } from "../../theme/palette";
 import { NOTAS_CORTE } from "../../data/notasCorte";
 import { ENEM_SUBJECTS, subjectScore } from "../../data/subjects";
 import { SBox } from "../../components/SBox";
@@ -9,11 +9,7 @@ import { useProfileStore } from "../../stores/profileStore";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 
 export function NotasScreen({ onEditCourses, onAddGrade }) {
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
-  const AT = isDark ? "#000" : "#fff";
+  const { T, isDark, AT } = useTheme();
 
   const c1 = useOnboardingStore(s => s.c1);
   const c2 = useOnboardingStore(s => s.c2);

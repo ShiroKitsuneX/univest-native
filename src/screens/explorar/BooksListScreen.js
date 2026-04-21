@@ -1,17 +1,13 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Appearance } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { useTheme } from "../../theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { DK, LT } from "../../theme/palette";
-import { useProfileStore } from "../../stores/profileStore";
 import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useProgressStore } from "../../stores/progressStore";
 
 export function BooksListScreen({ onBack }) {
   const insets = useSafeAreaInsets();
-  const colorScheme = Appearance.getColorScheme();
-  const theme = useProfileStore(s => s.theme);
-  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
-  const T = isDark ? DK : LT;
+  const { T, isDark } = useTheme();
 
   const unis = useUniversitiesStore(s => s.unis);
   const readBooks = useProgressStore(s => s.readBooks);
