@@ -71,7 +71,7 @@ function MainApp() {
       if (currentUser) {
         await usePostsStore.getState().loadLikesFor(currentUser.uid);
       }
-    } catch {}
+    } catch (e) { logger.warn("onRefresh:", e?.message); }
     setRefreshing(false);
   }, [currentUser]);
 

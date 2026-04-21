@@ -17,6 +17,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { useStoriesStore } from "../../stores/storiesStore";
 import { StoriesStrip } from "../../components/StoriesStrip";
 import { StoryViewer } from "../../components/StoryViewer";
+import { logger } from "../../services/logger";
 
 export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onShare }) {
   const { T, isDark } = useTheme();
@@ -82,7 +83,7 @@ export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onS
         const lkRef = doc(db, "posts", item.id, "likes", currentUser.uid);
         if (newLiked) { await setDoc(lkRef, { timestamp: serverTimestamp() }); await updateDoc(postRef, { likesCount: increment(1) }); }
         else { await deleteDoc(lkRef); await updateDoc(postRef, { likesCount: increment(-1) }); }
-      } catch {}
+      } catch (e) { logger.warn("toggleLike:", e?.message); }
     })();
   };
 
@@ -101,7 +102,7 @@ export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onS
             postId: item.id, postTitle: item.title, reportedBy: currentUser?.uid || "anon",
             reason: "user_report", createdAt: serverTimestamp(),
           });
-        } catch {}
+        } catch (e) { logger.warn("reportItem:", e?.message); }
         Alert.alert("Obrigado!", "Report enviado para análise.");
       } },
     ]);
