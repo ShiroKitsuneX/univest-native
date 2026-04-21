@@ -1,107 +1,118 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
-  View, Text, Image, TouchableOpacity, Dimensions, StyleSheet,
-  StatusBar, Animated, Modal, PanResponder,
-} from "react-native";
-import { useStoriesStore } from "@/stores/storiesStore";
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+  StyleSheet,
+  StatusBar,
+  Animated,
+  Modal,
+  PanResponder,
+} from 'react-native'
+import { useStoriesStore } from '@/stores/storiesStore'
 
-const { width } = Dimensions.get("window");
-const STORY_DURATION = 5000;
-const SWIPE_THRESHOLD = 50;
+const { width } = Dimensions.get('window')
+const STORY_DURATION = 5000
+const SWIPE_THRESHOLD = 50
 
 export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const animationRef = useRef(null);
-  const imageLoadedRef = useRef(false);
-  
-  const markViewed = useStoriesStore(s => s.markViewed);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex)
+  const progressAnim = useRef(new Animated.Value(0)).current
+  const animationRef = useRef(null)
+  const imageLoadedRef = useRef(false)
 
-  const currentStory = stories[currentIndex];
-  const isLastStory = currentIndex === stories.length - 1;
-  const isFirstStory = currentIndex === 0;
+  const markViewed = useStoriesStore(s => s.markViewed)
+
+  const currentStory = stories[currentIndex]
+  const isLastStory = currentIndex === stories.length - 1
+  const isFirstStory = currentIndex === 0
 
   const stopAnimation = useCallback(() => {
     if (animationRef.current) {
-      animationRef.current.stop();
-      animationRef.current = null;
+      animationRef.current.stop()
+      animationRef.current = null
     }
-  }, []);
+  }, [])
 
   const resetAnimation = useCallback(() => {
-    stopAnimation();
-    progressAnim.setValue(0);
-    imageLoadedRef.current = false;
-  }, [stopAnimation, progressAnim]);
+    stopAnimation()
+    progressAnim.setValue(0)
+    imageLoadedRef.current = false
+  }, [stopAnimation, progressAnim])
 
   const goToNext = useCallback(() => {
-    stopAnimation();
+    stopAnimation()
     if (isLastStory) {
-      onClose();
+      onClose()
     } else {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex(prev => prev + 1)
     }
-  }, [isLastStory, onClose, stopAnimation]);
+  }, [isLastStory, onClose, stopAnimation])
 
   const goToPrev = useCallback(() => {
-    stopAnimation();
+    stopAnimation()
     if (!isFirstStory) {
-      setCurrentIndex(prev => prev - 1);
+      setCurrentIndex(prev => prev - 1)
     }
-  }, [isFirstStory, stopAnimation]);
+  }, [isFirstStory, stopAnimation])
 
   useEffect(() => {
-    if (!visible || !currentStory) return;
-    
-    markViewed(currentStory.id);
-    resetAnimation();
-    imageLoadedRef.current = true;
-    
+    if (!visible || !currentStory) return
+
+    markViewed(currentStory.id)
+    resetAnimation()
+    imageLoadedRef.current = true
+
     animationRef.current = Animated.timing(progressAnim, {
       toValue: 1,
       duration: STORY_DURATION,
       useNativeDriver: false,
-    });
-    
+    })
+
     animationRef.current.start(({ finished }) => {
       if (finished && imageLoadedRef.current && !isLastStory) {
-        setCurrentIndex(prev => prev + 1);
+        setCurrentIndex(prev => prev + 1)
       } else if (finished && imageLoadedRef.current && isLastStory) {
-        onClose();
+        onClose()
       }
-    });
+    })
 
     return () => {
-      stopAnimation();
-    };
-  }, [visible, currentIndex, currentStory]);
-
-  const handleTap = useCallback((x) => {
-    if (x < width / 3) {
-      goToPrev();
-    } else if (x > (width * 2) / 3) {
-      goToNext();
+      stopAnimation()
     }
-  }, [goToPrev, goToNext]);
+  }, [visible, currentIndex, currentStory])
+
+  const handleTap = useCallback(
+    x => {
+      if (x < width / 3) {
+        goToPrev()
+      } else if (x > (width * 2) / 3) {
+        goToNext()
+      }
+    },
+    [goToPrev, goToNext]
+  )
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderRelease: (_, gestureState) => {
-        const { dx, dy } = gestureState;
+        const { dx, dy } = gestureState
         if (dx <= -SWIPE_THRESHOLD) {
-          goToNext();
+          goToNext()
         } else if (dx >= SWIPE_THRESHOLD) {
-          goToPrev();
+          goToPrev()
         } else if (dy >= SWIPE_THRESHOLD) {
-          onClose();
+          onClose()
         }
       },
     })
-  ).current;
+  ).current
 
-  if (!visible || !currentStory) return null;
+  if (!visible || !currentStory) return null
 
   return (
     <Modal
@@ -113,11 +124,11 @@ export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
     >
       <View style={styles.container} {...panResponder.panHandlers}>
         <StatusBar barStyle="light-content" />
-        
-        <TouchableOpacity 
-          activeOpacity={1} 
+
+        <TouchableOpacity
+          activeOpacity={1}
           style={styles.imageContainer}
-          onPress={(e) => handleTap(e.nativeEvent.locationX)}
+          onPress={e => handleTap(e.nativeEvent.locationX)}
         >
           <Image
             source={{ uri: currentStory.imageUrl }}
@@ -125,11 +136,16 @@ export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
             resizeMode="cover"
           />
         </TouchableOpacity>
-        
+
         <View style={styles.overlay}>
           <View style={styles.header}>
             <View style={styles.uniInfo}>
-              <View style={[styles.uniAvatar, { backgroundColor: currentStory.uniColor }]}>
+              <View
+                style={[
+                  styles.uniAvatar,
+                  { backgroundColor: currentStory.uniColor },
+                ]}
+              >
                 <Text style={styles.uniInitial}>
                   {currentStory.uniName.slice(0, 2).toUpperCase()}
                 </Text>
@@ -140,7 +156,7 @@ export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
               <Text style={styles.closeText}>✕</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.progressContainer}>
             {stories.map((s, i) => (
               <View key={s.id} style={styles.progressBarBg}>
@@ -153,7 +169,7 @@ export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
                       {
                         width: progressAnim.interpolate({
                           inputRange: [0, 1],
-                          outputRange: ["0%", "100%"],
+                          outputRange: ['0%', '100%'],
                         }),
                       },
                     ]}
@@ -167,23 +183,23 @@ export function StoryViewer({ visible, stories, initialIndex = 0, onClose }) {
         </View>
       </View>
     </Modal>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: '#000',
   },
   imageContainer: {
     flex: 1,
   },
   image: {
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
   },
   overlay: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
@@ -191,65 +207,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
   uniInfo: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   uniAvatar: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   uniInitial: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: '800',
   },
   uniName: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   closeButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   closeText: {
-    color: "#fff",
+    color: '#fff',
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   progressContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 4,
   },
   progressBarBg: {
     flex: 1,
     height: 2,
-    backgroundColor: "rgba(255,255,255,0.3)",
+    backgroundColor: 'rgba(255,255,255,0.3)',
     borderRadius: 1,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   progressBarFill: {
-    height: "100%",
-    backgroundColor: "#fff",
+    height: '100%',
+    backgroundColor: '#fff',
     borderRadius: 1,
   },
   progressBarEmpty: {
-    height: "100%",
-    backgroundColor: "transparent",
+    height: '100%',
+    backgroundColor: 'transparent',
     borderRadius: 1,
   },
-});
+})

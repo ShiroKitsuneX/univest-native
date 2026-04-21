@@ -1,27 +1,27 @@
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useAuthStore } from "@/stores/authStore";
-import { useOnboardingStore } from "@/stores/onboardingStore";
-import { useBootstrap } from "@/app/useBootstrap";
-import { SplashScreen } from "@/screens/SplashScreen";
-import { WelcomeScreen } from "@/screens/auth/WelcomeScreen";
-import { OnboardingScreen } from "@/screens/onboarding/OnboardingScreen";
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { useAuthStore } from '@/stores/authStore'
+import { useOnboardingStore } from '@/stores/onboardingStore'
+import { useBootstrap } from '@/app/useBootstrap'
+import { SplashScreen } from '@/screens/SplashScreen'
+import { WelcomeScreen } from '@/screens/auth/WelcomeScreen'
+import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen'
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator()
 
 export function RootNavigator({ Main }) {
-  useBootstrap();
+  useBootstrap()
 
-  const bootstrapped = useAuthStore(s => s.bootstrapped);
-  const authLoading = useAuthStore(s => s.authLoading);
-  const currentUser = useAuthStore(s => s.currentUser);
-  const done = useOnboardingStore(s => s.done);
+  const bootstrapped = useAuthStore(s => s.bootstrapped)
+  const authLoading = useAuthStore(s => s.authLoading)
+  const currentUser = useAuthStore(s => s.currentUser)
+  const done = useOnboardingStore(s => s.done)
 
   if (!bootstrapped || authLoading) {
-    return <SplashScreen />;
+    return <SplashScreen />
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false, animation: "none" }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>
       {!currentUser ? (
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
       ) : !done ? (
@@ -30,5 +30,5 @@ export function RootNavigator({ Main }) {
         <Stack.Screen name="Main" component={Main} />
       )}
     </Stack.Navigator>
-  );
+  )
 }
