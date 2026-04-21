@@ -3,10 +3,54 @@ import { UNIVERSITIES } from '@/data/universities'
 import { fetchUniversities } from '@/services/firestore'
 import { persistToUser } from '@/stores/middleware/persistToUser'
 
-export const useUniversitiesStore = create(
-  persistToUser(
+export type University = {
+  id?: string | number
+  name: string
+  followed?: boolean
+  followersCount?: number
+  books?: unknown[]
+  exams?: unknown[]
+  [key: string]: unknown
+}
+
+type UniversitiesState = {
+  unis: University[]
+  fbUnis: University[]
+  selUni: University | null
+  goalsUnis: University[]
+  uniPrefs: Record<string, unknown>
+  uniSort: string
+
+  setUnis: (
+    unis: University[] | ((prev: University[]) => University[])
+  ) => void
+  setFbUnis: (
+    v: University[] | ((prev: University[]) => University[])
+  ) => void
+  setSelUni: (
+    selUni:
+      | University
+      | null
+      | ((prev: University | null) => University | null)
+  ) => void
+  setGoalsUnis: (
+    v: University[] | ((prev: University[]) => University[])
+  ) => void
+  setUniPrefs: (
+    v:
+      | Record<string, unknown>
+      | ((prev: Record<string, unknown>) => Record<string, unknown>)
+  ) => void
+  setUniSort: (uniSort: string) => void
+  load: () => Promise<University[]>
+  applyFollowedUnis: (followedUnis?: string[]) => void
+  hydrate: (d: { goalsUnis?: University[] }) => void
+}
+
+export const useUniversitiesStore = create<UniversitiesState>(
+  persistToUser<UniversitiesState>(
     (set, get, api) => ({
-      unis: UNIVERSITIES,
+      unis: UNIVERSITIES as University[],
       fbUnis: [],
       selUni: null,
       goalsUnis: [],
@@ -41,10 +85,12 @@ export const useUniversitiesStore = create(
 
       load: async () => {
         try {
-          const unisList = await fetchUniversities()
+          const unisList = (await fetchUniversities()) as University[]
           if (unisList.length) {
             const merged = unisList.map(fbU => {
-              const localU = UNIVERSITIES.find(lU => lU.name === fbU.name)
+              const localU = (UNIVERSITIES as University[]).find(
+                lU => lU.name === fbU.name
+              )
               return localU
                 ? {
                     ...fbU,
@@ -64,7 +110,7 @@ export const useUniversitiesStore = create(
 
       applyFollowedUnis: (followedUnis = []) => {
         const { fbUnis } = get()
-        const source = fbUnis.length ? fbUnis : UNIVERSITIES
+        const source = fbUnis.length ? fbUnis : (UNIVERSITIES as University[])
         set({
           unis: source.map(u => ({
             ...u,
@@ -74,11 +120,11 @@ export const useUniversitiesStore = create(
       },
 
       hydrate: d => {
-        api.__suspendPersist()
+        ;(api as any).__suspendPersist()
         try {
           if (d.goalsUnis) set({ goalsUnis: d.goalsUnis })
         } finally {
-          api.__resumePersist()
+          ;(api as any).__resumePersist()
         }
       },
     }),

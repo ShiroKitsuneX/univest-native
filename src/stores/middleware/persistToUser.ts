@@ -1,27 +1,44 @@
 import { doc, setDoc } from 'firebase/firestore'
+import type { StateCreator } from 'zustand'
 import { db } from '@/firebase/config'
 import { useAuthStore } from '@/stores/authStore'
 import { loadLocalUserData, saveLocalUserData } from '@/services/storage'
-
 import { logger } from '@/services/logger'
+
 // Zustand middleware that mirrors a whitelist of store keys to AsyncStorage
 // and to /usuarios/{uid}. Debounced to coalesce bursty updates into one write.
 // Wrapped stores must gate their hydrate action with api.__suspendPersist() /
 // __resumePersist() so Firestore loads don't echo straight back to Firestore.
+
+export type PersistApi = {
+  __suspendPersist: () => void
+  __resumePersist: () => void
+  __flushPersist: () => Promise<void>
+}
+
+type PersistOptions<T> = {
+  keys: (keyof T & string)[]
+  serialize?: (s: T) => Record<string, unknown>
+  debounceMs?: number
+}
+
 export const persistToUser =
-  (initializer, { keys, serialize, debounceMs = 500 }) =>
+  <T extends object>(
+    initializer: StateCreator<T, [], []>,
+    { keys, serialize, debounceMs = 500 }: PersistOptions<T>
+  ): StateCreator<T, [], []> =>
   (set, get, api) => {
     let suspended = 0
-    let timer = null
-    let prev = null
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let prev: Partial<T> | null = null
 
-    const pick = s => {
-      const out = {}
+    const pick = (s: T): Partial<T> => {
+      const out: Partial<T> = {}
       for (const k of keys) out[k] = s[k]
       return out
     }
 
-    const flush = async () => {
+    const flush = async (): Promise<void> => {
       const slice = serialize ? serialize(get()) : pick(get())
       try {
         const existing = (await loadLocalUserData()) || {}
@@ -34,19 +51,20 @@ export const persistToUser =
             { merge: true }
           )
         }
-      } catch (e) {
-        logger.warn('persistToUser flush:', e.message)
+      } catch (e: unknown) {
+        logger.warn('persistToUser flush:', (e as Error)?.message)
       }
     }
 
-    api.__suspendPersist = () => {
+    const persistApi = api as unknown as PersistApi
+    persistApi.__suspendPersist = () => {
       suspended++
     }
-    api.__resumePersist = () => {
+    persistApi.__resumePersist = () => {
       suspended = Math.max(0, suspended - 1)
       if (suspended === 0) prev = pick(get())
     }
-    api.__flushPersist = flush
+    persistApi.__flushPersist = flush
 
     const state = initializer(set, get, api)
 
@@ -57,7 +75,7 @@ export const persistToUser =
         const next = pick(curr)
         let changed = false
         for (const k of keys)
-          if (next[k] !== prev[k]) {
+          if (next[k] !== (prev as Partial<T>)[k]) {
             changed = true
             break
           }

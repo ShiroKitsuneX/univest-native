@@ -3,8 +3,39 @@ import { FEED } from '@/data/feed'
 import { fetchPosts, fetchPostLikes } from '@/services/firestore'
 import { persistToUser } from '@/stores/middleware/persistToUser'
 
-export const usePostsStore = create(
-  persistToUser(
+export type Post = {
+  id: string | number
+  likesCount?: number
+  likes?: number
+  sharesCount?: number
+  [key: string]: unknown
+}
+
+type PostsState = {
+  posts: Post[]
+  liked: Record<string, boolean>
+  saved: Record<string, boolean>
+  loaded: boolean
+
+  load: () => Promise<Post[]>
+  loadLikesFor: (uid: string) => Promise<Record<string, boolean>>
+  setLiked: (
+    v:
+      | Record<string, boolean>
+      | ((prev: Record<string, boolean>) => Record<string, boolean>)
+  ) => void
+  setSaved: (
+    v:
+      | Record<string, boolean>
+      | ((prev: Record<string, boolean>) => Record<string, boolean>)
+  ) => void
+  setLikeDelta: (id: Post['id'], delta: number) => void
+  setShareDelta: (id: Post['id'], delta: number) => void
+  hydrate: (d: { saved?: Record<string, boolean>; liked?: Record<string, boolean> }) => void
+}
+
+export const usePostsStore = create<PostsState>(
+  persistToUser<PostsState>(
     (set, get, api) => ({
       posts: [],
       liked: {},
@@ -13,16 +44,16 @@ export const usePostsStore = create(
 
       load: async () => {
         try {
-          const f = await fetchPosts()
+          const f = (await fetchPosts()) as Post[]
           if (f.length) {
             set({ posts: f, loaded: true })
             return f
           }
-          set({ posts: FEED, loaded: true })
-          return FEED
+          set({ posts: FEED as Post[], loaded: true })
+          return FEED as Post[]
         } catch {
-          set({ posts: FEED, loaded: true })
-          return FEED
+          set({ posts: FEED as Post[], loaded: true })
+          return FEED as Post[]
         }
       },
 
@@ -30,7 +61,10 @@ export const usePostsStore = create(
         const { posts } = get()
         if (!uid || !posts.length) return {}
         try {
-          const lk = await fetchPostLikes(posts, uid)
+          const lk = (await fetchPostLikes(posts, uid)) as Record<
+            string,
+            boolean
+          >
           if (Object.keys(lk).length) set({ liked: lk })
           return lk
         } catch {
@@ -66,16 +100,16 @@ export const usePostsStore = create(
         })),
 
       hydrate: d => {
-        api.__suspendPersist()
+        ;(api as any).__suspendPersist()
         try {
           set(state => {
-            const next = {}
+            const next: Partial<PostsState> = {}
             if (d.saved) next.saved = d.saved
             if (d.liked) next.liked = d.liked
             return { ...state, ...next }
           })
         } finally {
-          api.__resumePersist()
+          ;(api as any).__resumePersist()
         }
       },
     }),

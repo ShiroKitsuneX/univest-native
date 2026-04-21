@@ -1,10 +1,34 @@
 import { create } from 'zustand'
+import type { User } from 'firebase/auth'
 import { onAuthChange } from '@/services/auth'
 import { fetchUserDoc } from '@/services/firestore'
 import { saveLocalUserData } from '@/services/storage'
 import { logger } from '@/services/logger'
 
-export const useAuthStore = create(set => ({
+export type UserData = {
+  followedUnis?: string[]
+  [key: string]: unknown
+}
+
+type AuthState = {
+  currentUser: User | null
+  userData: UserData | null
+  authLoading: boolean
+  bootstrapped: boolean
+
+  setCurrentUser: (currentUser: User | null) => void
+  setUserData: (
+    userData: UserData | null | ((prev: UserData | null) => UserData | null)
+  ) => void
+  setAuthLoading: (authLoading: boolean) => void
+  setBootstrapped: (bootstrapped: boolean) => void
+
+  subscribe: (
+    onUserDoc?: (data: UserData | null, existed: boolean) => void
+  ) => () => void
+}
+
+export const useAuthStore = create<AuthState>(set => ({
   currentUser: null,
   userData: null,
   authLoading: true,
@@ -21,14 +45,14 @@ export const useAuthStore = create(set => ({
   setBootstrapped: bootstrapped => set({ bootstrapped }),
 
   subscribe: onUserDoc =>
-    onAuthChange(async user => {
+    onAuthChange(async (user: User | null) => {
       if (!user) {
         set({ currentUser: null, userData: null, authLoading: false })
         return
       }
       set({ currentUser: user })
       try {
-        const fbData = await fetchUserDoc(user.uid)
+        const fbData = (await fetchUserDoc(user.uid)) as UserData | null
         if (fbData) {
           await saveLocalUserData(fbData)
           set({ userData: fbData })
@@ -37,8 +61,8 @@ export const useAuthStore = create(set => ({
           set({ userData: { followedUnis: [] } })
           onUserDoc?.(null, false)
         }
-      } catch (e) {
-        logger.warn('Error loading user data:', e.message)
+      } catch (e: unknown) {
+        logger.warn('Error loading user data:', (e as Error)?.message)
       } finally {
         set({ authLoading: false })
       }

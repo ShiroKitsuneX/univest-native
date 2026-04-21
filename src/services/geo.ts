@@ -1,35 +1,49 @@
-import { collection, doc, getDocs, writeBatch } from 'firebase/firestore'
+import {
+  collection,
+  doc,
+  getDocs,
+  writeBatch,
+  type DocumentData,
+} from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { GEO_DATA } from '@/data/geo'
 import { logger } from '@/services/logger'
 
-export const seedGeoData = async () => {
+type GeoDoc = { id: string } & DocumentData
+
+type GeoCollections = {
+  countries: GeoDoc[]
+  states: GeoDoc[]
+  cities: GeoDoc[]
+}
+
+export const seedGeoData = async (): Promise<void> => {
   try {
     const countriesSnap = await getDocs(collection(db, 'countries'))
     if (!countriesSnap.empty) return
 
     const batch = writeBatch(db)
 
-    GEO_DATA.countries.forEach(c => {
+    GEO_DATA.countries.forEach((c: { id: string }) => {
       batch.set(doc(db, 'countries', c.id), c)
     })
 
-    GEO_DATA.states.forEach(s => {
+    GEO_DATA.states.forEach((s: { id: string }) => {
       batch.set(doc(db, 'states', s.id), s)
     })
 
-    GEO_DATA.cities.forEach(c => {
+    GEO_DATA.cities.forEach((c: { id: string }) => {
       batch.set(doc(db, 'cities', c.id), c)
     })
 
     await batch.commit()
     logger.warn('Geo data seeded successfully!')
-  } catch (e) {
-    logger.warn('Error seeding geo data:', e.message)
+  } catch (e: unknown) {
+    logger.warn('Error seeding geo data:', (e as Error)?.message)
   }
 }
 
-export const fetchGeoCollections = async () => {
+export const fetchGeoCollections = async (): Promise<GeoCollections> => {
   const [countriesSnap, statesSnap, citiesSnap] = await Promise.all([
     getDocs(collection(db, 'countries')),
     getDocs(collection(db, 'states')),

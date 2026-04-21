@@ -2,7 +2,17 @@ import { create } from 'zustand'
 import { ALL_COURSES } from '@/data/areas'
 import { fetchCourses, fetchIcons } from '@/services/firestore'
 
-export const useCoursesStore = create((set, get) => ({
+type CoursesState = {
+  fbCourses: string[]
+  fbIcons: Record<string, string>
+  loaded: boolean
+
+  load: () => Promise<void>
+  getCourses: () => string[]
+  getIcon: (id: string, fallback?: string) => string | undefined
+}
+
+export const useCoursesStore = create<CoursesState>((set, get) => ({
   fbCourses: [],
   fbIcons: {},
   loaded: false,

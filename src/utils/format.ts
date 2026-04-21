@@ -1,12 +1,26 @@
-export const timeAgo = timestamp => {
+type FirestoreTimestampLike = {
+  toMillis?: () => number
+  seconds?: number
+}
+
+type TimeAgoInput =
+  | number
+  | string
+  | Date
+  | FirestoreTimestampLike
+  | null
+  | undefined
+
+export const timeAgo = (timestamp: TimeAgoInput): string => {
   if (!timestamp) return ''
   const now = Date.now()
+  const t = timestamp as FirestoreTimestampLike
   const ms =
     typeof timestamp === 'number'
       ? timestamp
-      : timestamp?.toMillis?.() || timestamp?.seconds
-        ? timestamp.seconds * 1000
-        : new Date(timestamp).getTime()
+      : t?.toMillis?.() || t?.seconds
+        ? (t.seconds as number) * 1000
+        : new Date(timestamp as string | number | Date).getTime()
   if (!ms || isNaN(ms)) return ''
   const diff = now - ms
   const mins = Math.floor(diff / 60000)
@@ -17,11 +31,11 @@ export const timeAgo = timestamp => {
   const days = Math.floor(hrs / 24)
   if (days < 2) return `${days}d atrás`
   const d = new Date(ms)
-  const pad = n => n.toString().padStart(2, '0')
+  const pad = (n: number): string => n.toString().padStart(2, '0')
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-export const fmtCount = n => {
+export const fmtCount = (n: number | string | null | undefined): string => {
   if (typeof n === 'string') return n
   if (!n || isNaN(n)) return '0'
   if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'

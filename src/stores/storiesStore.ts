@@ -1,16 +1,48 @@
 import { create } from 'zustand'
-import { STORIES } from '@/data/stories'
 import { logger } from '@/services/logger'
 
-export const useStoriesStore = create((set, get) => ({
+export type Story = {
+  id: string
+  uniId: string
+  uniName: string
+  uniColor: string
+  imageUrl: string
+  createdAt: string
+  expiresAt: string
+  viewsCount: number
+}
+
+export type GroupedStories = {
+  uniId: string
+  uniName: string
+  uniColor: string
+  stories: Story[]
+  latestTimestamp: number
+}
+
+type StoriesState = {
+  stories: Story[]
+  viewedIds: Record<string, number>
+  loading: boolean
+
+  setStories: (stories: Story[]) => void
+  setViewedIds: (ids: Record<string, number>) => void
+  setLoading: (loading: boolean) => void
+  isViewed: (storyId: string) => boolean
+  markViewed: (storyId: string) => void
+  markMultipleViewed: (storyIds: string[]) => void
+  load: () => Promise<void>
+  getStoriesByUni: (uniId: string) => Story[]
+  getGroupedStories: () => GroupedStories[]
+}
+
+export const useStoriesStore = create<StoriesState>((set, get) => ({
   stories: [],
   viewedIds: {},
   loading: false,
 
   setStories: stories => set({ stories }),
-
   setViewedIds: ids => set({ viewedIds: ids }),
-
   setLoading: loading => set({ loading }),
 
   isViewed: storyId => {
@@ -26,7 +58,7 @@ export const useStoriesStore = create((set, get) => ({
 
   markMultipleViewed: storyIds => {
     const now = Date.now()
-    const updates = {}
+    const updates: Record<string, number> = {}
     storyIds.forEach(id => {
       updates[id] = now
     })
@@ -36,11 +68,13 @@ export const useStoriesStore = create((set, get) => ({
   load: async () => {
     set({ loading: true })
     try {
-      const { STORIES } = await import('../data/stories')
+      const { STORIES } = await import('@/data/stories')
       const now = new Date()
-      const activeStories = STORIES.filter(s => new Date(s.expiresAt) > now)
+      const activeStories = (STORIES as Story[]).filter(
+        s => new Date(s.expiresAt) > now
+      )
       set({ stories: activeStories })
-    } catch (e) {
+    } catch (e: unknown) {
       logger.warn('Error loading stories:', e)
     } finally {
       set({ loading: false })
@@ -54,7 +88,7 @@ export const useStoriesStore = create((set, get) => ({
 
   getGroupedStories: () => {
     const { stories } = get()
-    const grouped = {}
+    const grouped: Record<string, GroupedStories> = {}
     stories.forEach(story => {
       if (!grouped[story.uniId]) {
         grouped[story.uniId] = {

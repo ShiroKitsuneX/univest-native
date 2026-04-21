@@ -5,8 +5,8 @@
       "ES2022"
     ],
     "jsx": "react-native",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,

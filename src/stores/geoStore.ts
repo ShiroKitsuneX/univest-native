@@ -3,7 +3,25 @@ import { GEO_DATA } from '@/data/geo'
 import { seedGeoData, fetchGeoCollections } from '@/services/geo'
 import { logger } from '@/services/logger'
 
-export const useGeoStore = create((set, get) => ({
+export type Country = { id: string; name: string }
+export type GeoState_State = { id: string; name: string; countryId: string }
+export type City = { id: string; name: string; stateId: string }
+
+type GeoState = {
+  countries: Country[]
+  states: GeoState_State[]
+  cities: City[]
+  loaded: boolean
+
+  load: () => Promise<void>
+  getCountry: (id: string) => Country | undefined
+  getState: (id: string) => GeoState_State | undefined
+  getCity: (id: string) => City | undefined
+  getStatesForCountry: (cid: string) => GeoState_State[]
+  getCitiesForState: (sid: string) => City[]
+}
+
+export const useGeoStore = create<GeoState>((set, get) => ({
   countries: [],
   states: [],
   cities: [],
@@ -15,13 +33,13 @@ export const useGeoStore = create((set, get) => ({
       await seedGeoData()
       const { countries, states, cities } = await fetchGeoCollections()
       set({
-        countries: countries.length ? countries : [],
-        states: states.length ? states : [],
-        cities: cities.length ? cities : [],
+        countries: (countries.length ? countries : []) as Country[],
+        states: (states.length ? states : []) as GeoState_State[],
+        cities: (cities.length ? cities : []) as City[],
         loaded: true,
       })
-    } catch (e) {
-      logger.warn('Error loading geo data:', e.message)
+    } catch (e: unknown) {
+      logger.warn('Error loading geo data:', (e as Error)?.message)
       set({ loaded: true })
     }
   },

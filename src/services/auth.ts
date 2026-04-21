@@ -5,14 +5,28 @@ import {
   signOut,
   sendEmailVerification,
   sendPasswordResetEmail,
+  type User,
+  type UserCredential,
 } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
 
-export const onAuthChange = cb => onAuthStateChanged(auth, cb)
+export const onAuthChange = (cb: (user: User | null) => void): (() => void) =>
+  onAuthStateChanged(auth, cb)
 
-export const signIn = (email, password) =>
+export const signIn = (
+  email: string,
+  password: string
+): Promise<UserCredential> =>
   signInWithEmailAndPassword(auth, email, password)
+
+type SignUpInput = {
+  email: string
+  password: string
+  nome: string
+  sobrenome?: string
+  dataNascimento: string
+}
 
 export const signUp = async ({
   email,
@@ -20,7 +34,7 @@ export const signUp = async ({
   nome,
   sobrenome,
   dataNascimento,
-}) => {
+}: SignUpInput): Promise<UserCredential> => {
   const cred = await createUserWithEmailAndPassword(auth, email, password)
   await setDoc(doc(db, 'usuarios', cred.user.uid), {
     email: cred.user.email,
@@ -36,12 +50,16 @@ export const signUp = async ({
   return cred
 }
 
-export const resetPassword = email => sendPasswordResetEmail(auth, email)
+export const resetPassword = (email: string): Promise<void> =>
+  sendPasswordResetEmail(auth, email)
 
-export const logout = () => signOut(auth)
+export const logout = (): Promise<void> => signOut(auth)
 
-export const getAuthErrorMessage = (err, mode) => {
-  const code = err.code || ''
+export const getAuthErrorMessage = (
+  err: { code?: string } | Error,
+  mode: 'login' | 'signup'
+): string => {
+  const code = (err as { code?: string }).code || ''
   if (code.includes('user-not-found') || code.includes('wrong-password'))
     return 'E-mail ou senha incorretos'
   if (code.includes('email-already-in-use')) return 'E-mail já cadastrado'

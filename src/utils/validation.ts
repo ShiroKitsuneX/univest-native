@@ -1,4 +1,4 @@
-export const validatePassword = pwd => {
+export const validatePassword = (pwd: string | undefined | null): string => {
   if (!pwd) return 'Senha é obrigatória'
   if (pwd.length < 8) return 'Mínimo 8 caracteres'
   if (pwd.length > 64) return 'Máximo 64 caracteres'
