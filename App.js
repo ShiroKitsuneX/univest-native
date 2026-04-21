@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import {
-  View, Alert, Appearance, StatusBar, StyleSheet,
+  View, Alert, Appearance, StatusBar,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
@@ -16,10 +16,6 @@ import { useProfileStore } from "./src/stores/profileStore";
 import { useAuthStore } from "./src/stores/authStore";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { MainTabs } from "./src/navigation/MainTabs";
-import { FollowingScreen } from "./src/screens/explorar/FollowingScreen";
-import { BooksListScreen } from "./src/screens/explorar/BooksListScreen";
-import { ExamsListScreen } from "./src/screens/explorar/ExamsListScreen";
-import { UniversityDetailScreen } from "./src/screens/explorar/UniversityDetailScreen";
 import { ShareModal } from "./src/modals/ShareModal";
 import { UniSortModal } from "./src/modals/UniSortModal";
 import { AddGradeModal } from "./src/modals/AddGradeModal";
@@ -60,9 +56,6 @@ function MainApp() {
   const [mNome, setMnome] = useState(false);
   const [mEv,   setMev]   = useState(null);
   const [mExam, setMexam] = useState(null);
-  const [showExamsPage, setShowExamsPage] = useState(false);
-  const [showBooksPage, setShowBooksPage] = useState(false);
-  const [showFollowingPage, setShowFollowingPage] = useState(false);
   const [mGr,   setMgr]   = useState(false);
   const [mShr,  setMshr]  = useState(null);
   const [mDisc, setMdisc] = useState(false);
@@ -131,53 +124,18 @@ function MainApp() {
     onAddGrade: () => setMgr(true),
     onChangePhoto: () => setMpho(true),
     onChangeName: () => { setMcfg(false); setMnome(true); },
-    onShowFollowing: () => setShowFollowingPage(true),
     onShowSaved: () => setMSaved(true),
-    onShowBooks: () => setShowBooksPage(true),
     onAddGoal: () => setGoalsModal(true),
     onOpenEvent: (ev) => setMev(ev),
+    onOpenExam: (exam) => setMexam(exam),
     onSelectUni: (u) => setSU(u),
+    onToggleFollow: toggleFollow,
   };
-
-  const overlayStyle = [StyleSheet.absoluteFill, { backgroundColor: T.bg }];
 
   return (
     <View style={{ flex:1, backgroundColor:T.bg }}>
       <StatusBar barStyle={isDark?"light-content":"dark-content"} />
       <MainTabs handlers={handlers} />
-      {showExamsPage && selUni && (
-        <View style={overlayStyle}>
-          <ExamsListScreen
-            selUni={selUni}
-            onBack={() => setShowExamsPage(false)}
-            onSelectExam={(exam) => setMexam(exam)}
-          />
-        </View>
-      )}
-      {showBooksPage && (
-        <View style={overlayStyle}>
-          <BooksListScreen onBack={() => setShowBooksPage(false)} />
-        </View>
-      )}
-      {showFollowingPage && (
-        <View style={overlayStyle}>
-          <FollowingScreen
-            onBack={() => setShowFollowingPage(false)}
-            onExplore={() => setShowFollowingPage(false)}
-            onSelectUni={(u) => { setSU(u); setShowFollowingPage(false); }}
-          />
-        </View>
-      )}
-      {selUni && !showExamsPage && (
-        <View style={overlayStyle}>
-          <UniversityDetailScreen
-            selUni={selUni}
-            onBack={() => setSU(null)}
-            onToggleFollow={toggleFollow}
-            onShowExams={() => setShowExamsPage(true)}
-          />
-        </View>
-      )}
 
       <SettingsModal visible={mCfg} onClose={()=>setMcfg(false)} onOpenName={()=>setMnome(true)} onOpenPhoto={()=>setMpho(true)} onOpenEditCourses={()=>setMedit(true)} onOpenLocation={()=>setMloc(true)} onOpenGoals={()=>setGoalsModal(true)} onLogout={handleLogout} />
 

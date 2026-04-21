@@ -1,21 +1,19 @@
-import { createContext, useContext } from "react";
 import { View, Text, TouchableOpacity, Appearance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import { DK, LT } from "../theme/palette";
 import { AVATAR_COLORS } from "../theme/avatar";
 import { useProfileStore } from "../stores/profileStore";
 import { useOnboardingStore } from "../stores/onboardingStore";
 import { useCoursesStore } from "../stores/coursesStore";
 import { FeedScreen } from "../screens/feed/FeedScreen";
-import { ExplorarScreen } from "../screens/explorar/ExplorarScreen";
 import { NotasScreen } from "../screens/notas/NotasScreen";
 import { PerfilScreen } from "../screens/perfil/PerfilScreen";
+import { MainCtx, useMain } from "./mainContext";
+import { ExplorarStack } from "./ExplorarStack";
 
 const Tab = createBottomTabNavigator();
-const MainCtx = createContext(null);
-const useMain = () => useContext(MainCtx);
 
 const TAB_META = [
   { name: "FeedTab",     id: "feed",     ic: "🏠", l: "Feed" },
@@ -105,6 +103,8 @@ function TabBar({ state, navigation }) {
   );
 }
 
+const goUniDetail = (navigation) => navigation.navigate("ExplorarTab", { screen: "UniversityDetail" });
+
 function FeedTab() {
   const navigation = useNavigation();
   const h = useMain();
@@ -113,21 +113,8 @@ function FeedTab() {
       refreshing={h.refreshing}
       onRefresh={h.onRefresh}
       goExplorar={() => navigation.navigate("ExplorarTab")}
-      onSelectUni={(u) => { h.onSelectUni(u); navigation.navigate("ExplorarTab"); }}
+      onSelectUni={(u) => { h.onSelectUni(u); goUniDetail(navigation); }}
       onShare={h.onShare}
-    />
-  );
-}
-
-function ExplorarTab() {
-  const h = useMain();
-  return (
-    <ExplorarScreen
-      refreshing={h.refreshing}
-      onRefresh={h.onRefresh}
-      onOpenLocation={h.onOpenLocation}
-      onOpenDiscover={h.onOpenDiscover}
-      onSelectUni={h.onSelectUni}
     />
   );
 }
@@ -150,12 +137,12 @@ function PerfilTab() {
       onChangePhoto={h.onChangePhoto}
       onChangeName={h.onChangeName}
       onEditCourses={h.onEditCourses}
-      onShowFollowing={h.onShowFollowing}
+      onShowFollowing={() => navigation.navigate("ExplorarTab", { screen: "Following" })}
       onShowSaved={h.onShowSaved}
-      onShowBooks={h.onShowBooks}
+      onShowBooks={() => navigation.navigate("ExplorarTab", { screen: "BooksList" })}
       onAddGoal={h.onAddGoal}
       onOpenEvent={h.onOpenEvent}
-      onSelectUni={(u) => { h.onSelectUni(u); navigation.navigate("ExplorarTab"); }}
+      onSelectUni={(u) => { h.onSelectUni(u); goUniDetail(navigation); }}
       goNotas={() => navigation.navigate("NotasTab")}
     />
   );
@@ -171,7 +158,14 @@ export function MainTabs({ handlers }) {
         tabBar={(props) => <TabBar {...props} />}
       >
         <Tab.Screen name="FeedTab" component={FeedTab} />
-        <Tab.Screen name="ExplorarTab" component={ExplorarTab} />
+        <Tab.Screen
+          name="ExplorarTab"
+          component={ExplorarStack}
+          options={({ route }) => {
+            const focused = getFocusedRouteNameFromRoute(route) ?? "UniversityList";
+            return { headerShown: focused === "UniversityList" };
+          }}
+        />
         <Tab.Screen name="NotasTab" component={NotasTab} />
         <Tab.Screen name="PerfilTab" component={PerfilTab} />
       </Tab.Navigator>

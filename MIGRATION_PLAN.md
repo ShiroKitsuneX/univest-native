@@ -563,7 +563,7 @@ Phase B was scaffolded (`RootNavigator` exists, wraps `<MainApp/>`) but the bool
 
 - ✅ **F.1** — `RootNavigator` is now the splash/welcome/onboarding/main gate. Bootstrap effects (local load, `onAuthChange`, courses/geo/unis load, followed-unis apply, posts load) lifted into `useBootstrap` hook. `SplashScreen` extracted. `OnboardingScreen` reads its setters from the store directly (no more `h*` prop drill). App.js 399 → 307 lines.
 - ✅ **F.2** — `MainTabs` (bottom-tabs navigator) owns the tab bar and header. `tab`/`setTab`, `SBar`, `BNav` deleted from MainApp. Handlers flow into tabs via context. Overlay pages render as absolute-fill siblings so the tab navigator stays mounted (state preserved across overlay open/close).
-- ⏳ **F.3** — `ExplorarStack`: convert `selUni` / `showExamsPage` / `showBooksPage` / `showFollowingPage` absolute overlays into real stack routes.
+- ✅ **F.3** — `ExplorarStack` (native-stack) owns `UniversityList` / `UniversityDetail` / `ExamsList` / `BooksList` / `Following`. The 4 overlay booleans deleted; their mutation sites now do `navigation.navigate("ExplorarTab", { screen: "..." })`. Cross-tab nav from Feed/Perfil also uses stack nav. Tab header hides on non-root Explorar routes. App.js 221 → 179 lines.
 - ⏳ **F.4** — `PerfilStack` routes; optional `ExamDetail` / `EventDetail` modal→route lift.
 
 ---
