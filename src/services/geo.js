@@ -1,7 +1,7 @@
 import { collection, doc, getDocs, writeBatch } from "firebase/firestore";
-import { db } from "../firebase/config";
-import { GEO_DATA } from "../data/geo";
-import { logger } from "./logger";
+import { db } from "@/firebase/config";
+import { GEO_DATA } from "@/data/geo";
+import { logger } from "@/services/logger";
 
 export const seedGeoData = async () => {
   try {

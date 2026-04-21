@@ -1,9 +1,9 @@
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "../../firebase/config";
-import { useAuthStore } from "../authStore";
-import { loadLocalUserData, saveLocalUserData } from "../../services/storage";
+import { db } from "@/firebase/config";
+import { useAuthStore } from "@/stores/authStore";
+import { loadLocalUserData, saveLocalUserData } from "@/services/storage";
 
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 // Zustand middleware that mirrors a whitelist of store keys to AsyncStorage
 // and to /usuarios/{uid}. Debounced to coalesce bursty updates into one write.
 // Wrapped stores must gate their hydrate action with api.__suspendPersist() /

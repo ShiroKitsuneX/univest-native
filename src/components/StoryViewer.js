@@ -3,7 +3,7 @@ import {
   View, Text, Image, TouchableOpacity, Dimensions, StyleSheet,
   StatusBar, Animated, Modal, PanResponder,
 } from "react-native";
-import { useStoriesStore } from "../stores/storiesStore";
+import { useStoriesStore } from "@/stores/storiesStore";
 
 const { width } = Dimensions.get("window");
 const STORY_DURATION = 5000;

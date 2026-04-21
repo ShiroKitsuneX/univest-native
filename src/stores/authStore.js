@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import { onAuthChange } from "../services/auth";
-import { fetchUserDoc } from "../services/firestore";
-import { saveLocalUserData } from "../services/storage";
-import { logger } from "../services/logger";
+import { onAuthChange } from "@/services/auth";
+import { fetchUserDoc } from "@/services/firestore";
+import { saveLocalUserData } from "@/services/storage";
+import { logger } from "@/services/logger";
 
 export const useAuthStore = create((set) => ({
   currentUser: null,

@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { UNIVERSITIES } from "../data/universities";
-import { fetchUniversities } from "../services/firestore";
-import { persistToUser } from "./middleware/persistToUser";
+import { UNIVERSITIES } from "@/data/universities";
+import { fetchUniversities } from "@/services/firestore";
+import { persistToUser } from "@/stores/middleware/persistToUser";
 
 export const useUniversitiesStore = create(persistToUser((set, get, api) => ({
   unis: UNIVERSITIES,

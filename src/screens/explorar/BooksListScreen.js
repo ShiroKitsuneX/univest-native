@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
-import { useTheme } from "../../theme/useTheme";
+import { useTheme } from "@/theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useUniversitiesStore } from "../../stores/universitiesStore";
-import { useProgressStore } from "../../stores/progressStore";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
+import { useProgressStore } from "@/stores/progressStore";
 
 export function BooksListScreen({ onBack }) {
   const insets = useSafeAreaInsets();

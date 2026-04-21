@@ -1,9 +1,9 @@
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
-import { FEED } from "../data/feed";
-import { usePostsStore } from "../stores/postsStore";
-import { useUniversitiesStore } from "../stores/universitiesStore";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
+import { FEED } from "@/data/feed";
+import { usePostsStore } from "@/stores/postsStore";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
 
 export function SavedPostsModal({ visible, onClose, onSelectPost }) {
   const { T, isDark } = useTheme();

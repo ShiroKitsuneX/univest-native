@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persistToUser } from "./middleware/persistToUser";
+import { persistToUser } from "@/stores/middleware/persistToUser";
 
 const INITIAL_GRADES = [
   { id: 1, ex: "FUVEST Simulado 1", dt: "Mar/2025", type: "simulado", s: { l: 62, h: 70, n: 58, m: 55, r: 680 } },

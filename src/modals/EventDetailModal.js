@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Linking } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
 
 export function EventDetailModal({ event, onClose }) {
   const { T, isDark, AT } = useTheme();

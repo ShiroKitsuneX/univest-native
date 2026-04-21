@@ -5,10 +5,10 @@ import {
   Animated, LayoutAnimation,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "../../theme/useTheme";
-import { validatePassword } from "../../utils/validation";
-import { signIn, signUp, resetPassword, getAuthErrorMessage } from "../../services/auth";
-import { useCoursesStore } from "../../stores/coursesStore";
+import { useTheme } from "@/theme/useTheme";
+import { validatePassword } from "@/utils/validation";
+import { signIn, signUp, resetPassword, getAuthErrorMessage } from "@/services/auth";
+import { useCoursesStore } from "@/stores/coursesStore";
 
 const INITIAL_TOUCHED = { email:false, nome:false, sobrenome:false, senha:false, confirmarSenha:false, nascimento:false };
 

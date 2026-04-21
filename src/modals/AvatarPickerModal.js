@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
-import { AVATAR_PRESETS, AVATAR_COLORS } from "../theme/avatar";
-import { useProfileStore } from "../stores/profileStore";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
+import { AVATAR_PRESETS, AVATAR_COLORS } from "@/theme/avatar";
+import { useProfileStore } from "@/stores/profileStore";
 
 export function AvatarPickerModal({ visible, onClose }) {
   const { T, isDark, AT } = useTheme();

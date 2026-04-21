@@ -1,14 +1,14 @@
 import { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from "react-native";
-import { useTheme } from "../../theme/useTheme";
-import { GEO_DATA } from "../../data/geo";
-import { SBox } from "../../components/SBox";
-import { fmtCount } from "../../utils/format";
-import { removeAccents } from "../../utils/string";
-import { useProfileStore } from "../../stores/profileStore";
-import { useUniversitiesStore } from "../../stores/universitiesStore";
-import { useGeoStore } from "../../stores/geoStore";
-import { logger } from "../../services/logger";
+import { useTheme } from "@/theme/useTheme";
+import { GEO_DATA } from "@/data/geo";
+import { SBox } from "@/components/SBox";
+import { fmtCount } from "@/utils/format";
+import { removeAccents } from "@/utils/string";
+import { useProfileStore } from "@/stores/profileStore";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
+import { useGeoStore } from "@/stores/geoStore";
+import { logger } from "@/services/logger";
 
 export function ExplorarScreen({ refreshing, onRefresh, onOpenLocation, onOpenDiscover, onSelectUni }) {
   const { T, isDark, AT } = useTheme();

@@ -1,10 +1,10 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useAuthStore } from "../stores/authStore";
-import { useOnboardingStore } from "../stores/onboardingStore";
-import { useBootstrap } from "../app/useBootstrap";
-import { SplashScreen } from "../screens/SplashScreen";
-import { WelcomeScreen } from "../screens/auth/WelcomeScreen";
-import { OnboardingScreen } from "../screens/onboarding/OnboardingScreen";
+import { useAuthStore } from "@/stores/authStore";
+import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useBootstrap } from "@/app/useBootstrap";
+import { SplashScreen } from "@/screens/SplashScreen";
+import { WelcomeScreen } from "@/screens/auth/WelcomeScreen";
+import { OnboardingScreen } from "@/screens/onboarding/OnboardingScreen";
 
 const Stack = createNativeStackNavigator();
 

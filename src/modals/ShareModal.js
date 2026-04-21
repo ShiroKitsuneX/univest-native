@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Alert, Linking } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
 
 export function ShareModal({ item, onClose }) {
   const { T, isDark } = useTheme();

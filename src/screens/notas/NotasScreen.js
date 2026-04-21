@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Linking, Dimensions } from "react-native";
-import { useTheme } from "../../theme/useTheme";
+import { useTheme } from "@/theme/useTheme";
 import { BarChart } from "react-native-chart-kit";
-import { NOTAS_CORTE } from "../../data/notasCorte";
-import { ENEM_SUBJECTS, subjectScore } from "../../data/subjects";
-import { SBox } from "../../components/SBox";
-import { useProfileStore } from "../../stores/profileStore";
-import { useOnboardingStore } from "../../stores/onboardingStore";
+import { NOTAS_CORTE } from "@/data/notasCorte";
+import { ENEM_SUBJECTS, subjectScore } from "@/data/subjects";
+import { SBox } from "@/components/SBox";
+import { useProfileStore } from "@/stores/profileStore";
+import { useOnboardingStore } from "@/stores/onboardingStore";
 
 export function NotasScreen({ onEditCourses, onAddGrade }) {
   const { T, isDark, AT } = useTheme();

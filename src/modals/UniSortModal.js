@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
-import { getMonthFromKey } from "../utils/dates";
-import { useUniversitiesStore } from "../stores/universitiesStore";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
+import { getMonthFromKey } from "@/utils/dates";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
 
 export function UniSortModal({ visible, onClose }) {
   const { T, isDark, AT } = useTheme();

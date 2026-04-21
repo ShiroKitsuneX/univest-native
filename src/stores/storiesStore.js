@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { STORIES } from "../data/stories";
-import { logger } from "../services/logger";
+import { STORIES } from "@/data/stories";
+import { logger } from "@/services/logger";
 
 export const useStoriesStore = create((set, get) => ({
   stories: [],

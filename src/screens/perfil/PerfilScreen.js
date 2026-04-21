@@ -1,16 +1,16 @@
 import { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { useTheme } from "../../theme/useTheme";
-import { AVATAR_COLORS } from "../../theme/avatar";
-import { EVENTS } from "../../data/events";
-import { GEO_DATA } from "../../data/geo";
-import { NOTAS_CORTE } from "../../data/notasCorte";
-import { useProfileStore } from "../../stores/profileStore";
-import { useOnboardingStore } from "../../stores/onboardingStore";
-import { useUniversitiesStore } from "../../stores/universitiesStore";
-import { useProgressStore } from "../../stores/progressStore";
-import { usePostsStore } from "../../stores/postsStore";
-import { useGeoStore } from "../../stores/geoStore";
+import { useTheme } from "@/theme/useTheme";
+import { AVATAR_COLORS } from "@/theme/avatar";
+import { EVENTS } from "@/data/events";
+import { GEO_DATA } from "@/data/geo";
+import { NOTAS_CORTE } from "@/data/notasCorte";
+import { useProfileStore } from "@/stores/profileStore";
+import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
+import { useProgressStore } from "@/stores/progressStore";
+import { usePostsStore } from "@/stores/postsStore";
+import { useGeoStore } from "@/stores/geoStore";
 
 export function PerfilScreen({
   onChangePhoto,

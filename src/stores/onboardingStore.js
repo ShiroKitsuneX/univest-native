@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { USER_TYPES } from "../data/userTypes";
-import { persistToUser } from "./middleware/persistToUser";
+import { USER_TYPES } from "@/data/userTypes";
+import { persistToUser } from "@/stores/middleware/persistToUser";
 
 const PERSIST_KEYS = ["step", "done", "uType", "c1", "c2"];
 

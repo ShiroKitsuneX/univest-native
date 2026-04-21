@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Linking } from "react-native";
-import { useTheme } from "../../theme/useTheme";
-import { fmtCount } from "../../utils/format";
-import { useProgressStore } from "../../stores/progressStore";
+import { useTheme } from "@/theme/useTheme";
+import { fmtCount } from "@/utils/format";
+import { useProgressStore } from "@/stores/progressStore";
 
 export function UniversityDetailScreen({ selUni, onBack, onToggleFollow, onShowExams }) {
   const { T, isDark, AT } = useTheme();

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
-import { removeAccents } from "../utils/string";
-import { useUniversitiesStore } from "../stores/universitiesStore";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
+import { removeAccents } from "@/utils/string";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
 
 export function GoalsModal({ visible, onClose }) {
   const { T, isDark, AT } = useTheme();

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
-import { useTheme } from "../../theme/useTheme";
+import { useTheme } from "@/theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export function ExamsListScreen({ selUni, onBack, onSelectExam }) {

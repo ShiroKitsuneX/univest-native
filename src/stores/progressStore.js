@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persistToUser } from "./middleware/persistToUser";
+import { persistToUser } from "@/stores/middleware/persistToUser";
 
 export const useProgressStore = create(persistToUser((set, get, api) => ({
   readBooks: {},

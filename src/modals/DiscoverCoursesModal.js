@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
-import { AREAS } from "../data/areas";
-import { NOTAS_CORTE } from "../data/notasCorte";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
+import { AREAS } from "@/data/areas";
+import { NOTAS_CORTE } from "@/data/notasCorte";
 
 export function DiscoverCoursesModal({ visible, onClose, onPickCourse }) {
   const { T, isDark } = useTheme();

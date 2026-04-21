@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { useTheme } from "../../theme/useTheme";
+import { useTheme } from "@/theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getMonthFromKey } from "../../utils/dates";
-import { useUniversitiesStore } from "../../stores/universitiesStore";
+import { getMonthFromKey } from "@/utils/dates";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
 
 export function FollowingScreen({ onBack, onExplore, onSelectUni }) {
   const insets = useSafeAreaInsets();

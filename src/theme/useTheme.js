@@ -1,6 +1,6 @@
 import { useColorScheme } from "react-native";
-import { useProfileStore } from "../stores/profileStore";
-import { DK, LT } from "./palette";
+import { useProfileStore } from "@/stores/profileStore";
+import { DK, LT } from "@/theme/palette";
 
 export function useIsDark() {
   const colorScheme = useColorScheme();

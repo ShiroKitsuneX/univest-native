@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
-import { SBox } from "../components/SBox";
-import { ALL_COURSES } from "../data/areas";
-import { useOnboardingStore } from "../stores/onboardingStore";
-import { useCoursesStore } from "../stores/coursesStore";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
+import { SBox } from "@/components/SBox";
+import { ALL_COURSES } from "@/data/areas";
+import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useCoursesStore } from "@/stores/coursesStore";
 
 export function EditCoursesModal({ visible, onClose, onSave }) {
   const { T, isDark, AT } = useTheme();

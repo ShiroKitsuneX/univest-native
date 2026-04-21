@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { GEO_DATA } from "../data/geo";
-import { seedGeoData, fetchGeoCollections } from "../services/geo";
-import { logger } from "../services/logger";
+import { GEO_DATA } from "@/data/geo";
+import { seedGeoData, fetchGeoCollections } from "@/services/geo";
+import { logger } from "@/services/logger";
 
 export const useGeoStore = create((set, get) => ({
   countries: [],

@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator, StatusBar } from "react-native";
-import { useIsDark } from "../theme/useTheme";
+import { useIsDark } from "@/theme/useTheme";
 
 export function SplashScreen() {
   const isDark = useIsDark();

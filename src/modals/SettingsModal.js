@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { BottomSheet } from "../components/BottomSheet";
-import { useTheme } from "../theme/useTheme";
-import { useProfileStore } from "../stores/profileStore";
-import { useAuthStore } from "../stores/authStore";
+import { BottomSheet } from "@/components/BottomSheet";
+import { useTheme } from "@/theme/useTheme";
+import { useProfileStore } from "@/stores/profileStore";
+import { useAuthStore } from "@/stores/authStore";
 
 export function SettingsModal({ visible, onClose, onOpenName, onOpenPhoto, onOpenEditCourses, onOpenLocation, onOpenGoals, onLogout }) {
   const { T, AT } = useTheme();

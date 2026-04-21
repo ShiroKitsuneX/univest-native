@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { useTheme } from "../theme/useTheme";
+import { useTheme } from "@/theme/useTheme";
 
 export function StoryCircle({ uniName, uniColor, isViewed, onPress, size = 64 }) {
   const { T, isDark } = useTheme();

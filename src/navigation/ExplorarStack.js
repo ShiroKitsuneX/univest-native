@@ -1,13 +1,13 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
-import { useTheme } from "../theme/useTheme";
-import { useUniversitiesStore } from "../stores/universitiesStore";
-import { ExplorarScreen } from "../screens/explorar/ExplorarScreen";
-import { UniversityDetailScreen } from "../screens/explorar/UniversityDetailScreen";
-import { ExamsListScreen } from "../screens/explorar/ExamsListScreen";
-import { BooksListScreen } from "../screens/explorar/BooksListScreen";
-import { FollowingScreen } from "../screens/explorar/FollowingScreen";
-import { useMain } from "./mainContext";
+import { useTheme } from "@/theme/useTheme";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
+import { ExplorarScreen } from "@/screens/explorar/ExplorarScreen";
+import { UniversityDetailScreen } from "@/screens/explorar/UniversityDetailScreen";
+import { ExamsListScreen } from "@/screens/explorar/ExamsListScreen";
+import { BooksListScreen } from "@/screens/explorar/BooksListScreen";
+import { FollowingScreen } from "@/screens/explorar/FollowingScreen";
+import { useMain } from "@/navigation/mainContext";
 
 const Stack = createNativeStackNavigator();
 

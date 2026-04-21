@@ -2,18 +2,18 @@ import { useState } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView, StatusBar,
 } from "react-native";
-import { useTheme } from "../../theme/useTheme";
+import { useTheme } from "@/theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setDoc, doc } from "firebase/firestore";
-import { db } from "../../firebase/config";
-import { USER_TYPES } from "../../data/userTypes";
-import { ALL_COURSES } from "../../data/areas";
-import { SBox } from "../../components/SBox";
-import { useOnboardingStore } from "../../stores/onboardingStore";
-import { useUniversitiesStore } from "../../stores/universitiesStore";
-import { useCoursesStore } from "../../stores/coursesStore";
-import { useAuthStore } from "../../stores/authStore";
-import { logger } from "../../services/logger";
+import { db } from "@/firebase/config";
+import { USER_TYPES } from "@/data/userTypes";
+import { ALL_COURSES } from "@/data/areas";
+import { SBox } from "@/components/SBox";
+import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
+import { useCoursesStore } from "@/stores/coursesStore";
+import { useAuthStore } from "@/stores/authStore";
+import { logger } from "@/services/logger";
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets();

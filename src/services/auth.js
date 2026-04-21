@@ -7,7 +7,7 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "../firebase/config";
+import { auth, db } from "@/firebase/config";
 
 export const onAuthChange = (cb) => onAuthStateChanged(auth, cb);
 

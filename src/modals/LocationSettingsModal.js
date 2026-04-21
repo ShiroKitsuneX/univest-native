@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { BottomSheet } from "../components/BottomSheet";
-import { GEO_DATA } from "../data/geo";
-import { useProfileStore } from "../stores/profileStore";
-import { useGeoStore } from "../stores/geoStore";
+import { useTheme } from "@/theme/useTheme";
+import { BottomSheet } from "@/components/BottomSheet";
+import { GEO_DATA } from "@/data/geo";
+import { useProfileStore } from "@/stores/profileStore";
+import { useGeoStore } from "@/stores/geoStore";
 
 export function LocationSettingsModal({ visible, onClose }) {
   const { T, isDark, AT } = useTheme();

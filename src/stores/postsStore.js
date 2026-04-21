@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { FEED } from "../data/feed";
-import { fetchPosts, fetchPostLikes } from "../services/firestore";
-import { persistToUser } from "./middleware/persistToUser";
+import { FEED } from "@/data/feed";
+import { fetchPosts, fetchPostLikes } from "@/services/firestore";
+import { persistToUser } from "@/stores/middleware/persistToUser";
 
 export const usePostsStore = create(persistToUser((set, get, api) => ({
   posts: [],

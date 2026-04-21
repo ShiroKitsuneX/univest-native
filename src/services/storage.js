@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { logger } from "./logger";
+import { logger } from "@/services/logger";
 
 const STORAGE_KEY = "univest_user";
 

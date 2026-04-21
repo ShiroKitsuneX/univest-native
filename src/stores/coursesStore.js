@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { ALL_COURSES } from "../data/areas";
-import { fetchCourses, fetchIcons } from "../services/firestore";
+import { ALL_COURSES } from "@/data/areas";
+import { fetchCourses, fetchIcons } from "@/services/firestore";
 
 export const useCoursesStore = create((set, get) => ({
   fbCourses: [],

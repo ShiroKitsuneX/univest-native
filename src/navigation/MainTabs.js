@@ -2,16 +2,16 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useNavigation, getFocusedRouteNameFromRoute } from "@react-navigation/native";
-import { useTheme } from "../theme/useTheme";
-import { AVATAR_COLORS } from "../theme/avatar";
-import { useProfileStore } from "../stores/profileStore";
-import { useOnboardingStore } from "../stores/onboardingStore";
-import { useCoursesStore } from "../stores/coursesStore";
-import { FeedScreen } from "../screens/feed/FeedScreen";
-import { NotasScreen } from "../screens/notas/NotasScreen";
-import { PerfilScreen } from "../screens/perfil/PerfilScreen";
-import { MainCtx, useMain } from "./mainContext";
-import { ExplorarStack } from "./ExplorarStack";
+import { useTheme } from "@/theme/useTheme";
+import { AVATAR_COLORS } from "@/theme/avatar";
+import { useProfileStore } from "@/stores/profileStore";
+import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useCoursesStore } from "@/stores/coursesStore";
+import { FeedScreen } from "@/screens/feed/FeedScreen";
+import { NotasScreen } from "@/screens/notas/NotasScreen";
+import { PerfilScreen } from "@/screens/perfil/PerfilScreen";
+import { MainCtx, useMain } from "@/navigation/mainContext";
+import { ExplorarStack } from "@/navigation/ExplorarStack";
 
 const Tab = createBottomTabNavigator();
 

@@ -1,8 +1,8 @@
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { useTheme } from "../theme/useTheme";
-import { useStoriesStore } from "../stores/storiesStore";
-import { useUniversitiesStore } from "../stores/universitiesStore";
-import { StoryCircle } from "./StoryCircle";
+import { useTheme } from "@/theme/useTheme";
+import { useStoriesStore } from "@/stores/storiesStore";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
+import { StoryCircle } from "@/components/StoryCircle";
 
 export function StoriesStrip({ onStoryPress, goExplorar }) {
   const { T, isDark } = useTheme();

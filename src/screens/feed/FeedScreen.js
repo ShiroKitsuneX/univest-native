@@ -2,22 +2,22 @@ import { useState, useEffect, useMemo } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView, Alert, RefreshControl,
 } from "react-native";
-import { useTheme } from "../../theme/useTheme";
+import { useTheme } from "@/theme/useTheme";
 import {
   doc, setDoc, deleteDoc, updateDoc, increment, addDoc, collection, serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../../firebase/config";
-import { TAG_D, TAG_L } from "../../theme/palette";
-import { FEED } from "../../data/feed";
-import { timeAgo, fmtCount } from "../../utils/format";
-import { getMonthFromKey } from "../../utils/dates";
-import { usePostsStore } from "../../stores/postsStore";
-import { useUniversitiesStore } from "../../stores/universitiesStore";
-import { useAuthStore } from "../../stores/authStore";
-import { useStoriesStore } from "../../stores/storiesStore";
-import { StoriesStrip } from "../../components/StoriesStrip";
-import { StoryViewer } from "../../components/StoryViewer";
-import { logger } from "../../services/logger";
+import { db } from "@/firebase/config";
+import { TAG_D, TAG_L } from "@/theme/palette";
+import { FEED } from "@/data/feed";
+import { timeAgo, fmtCount } from "@/utils/format";
+import { getMonthFromKey } from "@/utils/dates";
+import { usePostsStore } from "@/stores/postsStore";
+import { useUniversitiesStore } from "@/stores/universitiesStore";
+import { useAuthStore } from "@/stores/authStore";
+import { useStoriesStore } from "@/stores/storiesStore";
+import { StoriesStrip } from "@/components/StoriesStrip";
+import { StoryViewer } from "@/components/StoryViewer";
+import { logger } from "@/services/logger";
 
 export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onShare }) {
   const { T, isDark } = useTheme();
