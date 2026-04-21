@@ -572,6 +572,10 @@ Phase B was scaffolded (`RootNavigator` exists, wraps `<MainApp/>`) but the bool
 
 Once the structure is clean, tighten quality. Don't do any of this before C/D/E/F — premature optimization on a moving target.
 
+### Progress
+
+- ✅ **G.a (resilience)** — `src/theme/useTheme.js` centralizes theme derivation on top of React Native's live `useColorScheme()`; 29 files migrated off `Appearance.getColorScheme()` so OS theme changes propagate without restart. `ErrorBoundary` wraps the root and shows a retry screen instead of a blank crash. `src/services/logger.js` gates console output on `__DEV__`; 9 `console.log("...error")` catch sites now call `logger.warn`.
+
 ### G.1 TypeScript migration (optional but recommended)
 
 - Add `tsconfig.json` with `strict: true`, `jsx: react-native`.
