@@ -575,6 +575,8 @@ Once the structure is clean, tighten quality. Don't do any of this before C/D/E/
 ### Progress
 
 - ✅ **G.a (resilience)** — `src/theme/useTheme.js` centralizes theme derivation on top of React Native's live `useColorScheme()`; 29 files migrated off `Appearance.getColorScheme()` so OS theme changes propagate without restart. `ErrorBoundary` wraps the root and shows a retry screen instead of a blank crash. `src/services/logger.js` gates console output on `__DEV__`; 9 `console.log("...error")` catch sites now call `logger.warn`.
+- ✅ **G.c (perf)** — `useMemo` wraps derived data pipelines across 7 screens: Feed (`fol`, `upcoming`), Explorar (`filtU`, `filterChips`), Notas (`tgt`, `radar`, `bars`, `filtN`, `filteredGrades`), ExamsList (`upcoming`, `filteredYears`), Following (`fol`), BooksList (`filteredBooks`, `readCount`/`readingCount`), Perfil (`tgt`, `followedCount`). Prevents filter/sort/map recomputation on unrelated re-renders.
+- ⏭️ **G.b (path alias)** — deferred: `babel-plugin-module-resolver` requires `npm install` + Metro cache clear; best done alongside a round of manual sim testing.
 
 ### G.1 TypeScript migration (optional but recommended)
 
