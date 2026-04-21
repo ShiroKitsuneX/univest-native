@@ -1,19 +1,15 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Appearance } from "react-native";
-import { db } from "../../firebase/config";
-import { doc, setDoc } from "firebase/firestore";
 import { DK, LT } from "../../theme/palette";
 import { AVATAR_COLORS } from "../../theme/avatar";
 import { EVENTS } from "../../data/events";
 import { GEO_DATA } from "../../data/geo";
 import { NOTAS_CORTE } from "../../data/notasCorte";
-import { saveLocalUserData } from "../../services/storage";
 import { useProfileStore } from "../../stores/profileStore";
 import { useOnboardingStore } from "../../stores/onboardingStore";
 import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useProgressStore } from "../../stores/progressStore";
 import { usePostsStore } from "../../stores/postsStore";
-import { useAuthStore } from "../../stores/authStore";
 import { useGeoStore } from "../../stores/geoStore";
 
 export function PerfilScreen({
@@ -27,7 +23,6 @@ export function PerfilScreen({
   onOpenEvent,
   onSelectUni,
   goNotas,
-  currentData,
 }) {
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
@@ -56,7 +51,6 @@ export function PerfilScreen({
   const setReadBooks = useProgressStore(s => s.setReadBooks);
   const completedTodos = useProgressStore(s => s.completedTodos);
   const setCompletedTodos = useProgressStore(s => s.setCompletedTodos);
-  const currentUser = useAuthStore(s => s.currentUser);
   const cities = useGeoStore(s => s.cities);
 
   const getCity = (id) => cities.find(c => c.id === id) || GEO_DATA.cities.find(c => c.id === id);
@@ -179,8 +173,6 @@ export function PerfilScreen({
             setReadBooks={setReadBooks}
             completedTodos={completedTodos}
             setCompletedTodos={setCompletedTodos}
-            currentUser={currentUser}
-            currentData={currentData}
             onSelectUni={onSelectUni}
           />
         )}
@@ -235,14 +227,10 @@ export function PerfilScreen({
   );
 }
 
-function GoalsList({ goalsUnis, unis, T, AT, readBooks, setReadBooks, completedTodos, setCompletedTodos, currentUser, currentData, onSelectUni }) {
+function GoalsList({ goalsUnis, unis, T, AT, readBooks, setReadBooks, completedTodos, setCompletedTodos, onSelectUni }) {
   const [bookMenu, setBookMenu] = useState(null);
 
-  const persistReadBooks = (newRead) => {
-    setReadBooks(newRead);
-    saveLocalUserData({ ...currentData(), readBooks: newRead });
-    if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-  };
+  const persistReadBooks = (newRead) => setReadBooks(newRead);
 
   return (
     <View>
@@ -289,12 +277,7 @@ function GoalsList({ goalsUnis, unis, T, AT, readBooks, setReadBooks, completedT
                       if (todo.type === "book") {
                         setBookMenu(showMenu ? null : todo.bookKey);
                       } else {
-                        const newCompleted = {...completedTodos, [todo.id]: !completedTodos[todo.id]};
-                        setCompletedTodos(newCompleted);
-                        saveLocalUserData({...currentData(), goalsUnis, completedTodos: newCompleted});
-                        if (currentUser) {
-                          setDoc(doc(db,"usuarios",currentUser.uid),{completedTodos:newCompleted,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-                        }
+                        setCompletedTodos({...completedTodos, [todo.id]: !completedTodos[todo.id]});
                       }
                     }} activeOpacity={0.7} style={{
                       paddingVertical:6,

@@ -543,9 +543,9 @@ Each store's `hydrate(fbData)` is a ~5-line action that pulls its own keys.
 ### Progress
 
 - ✅ **E.1** — Per-store `hydrate(d)` actions added (profile/progress/posts/universities); onboardingStore split into `hydrateFromLocal` / `hydrateFromFb` to preserve the `done===true`/`false`/neither branching. App.js local-load cascade (24 lines) and onAuthChange cascade (24 lines) each collapsed to 4 hydrate calls. App.js 528 → 490 lines.
-- ⏳ **E.2** — `persistToUser` middleware (not wrapped on any store yet).
-- ⏳ **E.3** — Wrap `profileStore`; drop inline `setDoc` from Avatar / EditName / Location / Settings-theme.
-- ⏳ **E.4** — Wrap remaining stores; delete `currentData` / `syncUserData` / `h*` wrappers and all `currentData` prop drilling.
+- ✅ **E.2** — `persistToUser` middleware landed (suspend/resume, debounced Firestore + AsyncStorage flush, optional `serialize`).
+- ✅ **E.3** — `profileStore` wrapped; inline `setDoc` dropped from Avatar / EditName / Location / Settings-theme.
+- ✅ **E.4** — `onboarding` / `universities` / `progress` / `posts` stores wrapped; `currentData` / `syncUserData` / `h*` wrappers and all `currentData` prop drilling deleted. App.js 490 → 399 lines.
 
 ---
 

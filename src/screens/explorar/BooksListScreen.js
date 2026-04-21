@@ -1,16 +1,12 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Appearance } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { doc, setDoc } from "firebase/firestore";
-import { db } from "../../firebase/config";
 import { DK, LT } from "../../theme/palette";
-import { saveLocalUserData } from "../../services/storage";
 import { useProfileStore } from "../../stores/profileStore";
 import { useUniversitiesStore } from "../../stores/universitiesStore";
 import { useProgressStore } from "../../stores/progressStore";
-import { useAuthStore } from "../../stores/authStore";
 
-export function BooksListScreen({ onBack, currentData }) {
+export function BooksListScreen({ onBack }) {
   const insets = useSafeAreaInsets();
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
@@ -20,7 +16,6 @@ export function BooksListScreen({ onBack, currentData }) {
   const unis = useUniversitiesStore(s => s.unis);
   const readBooks = useProgressStore(s => s.readBooks);
   const setReadBooks = useProgressStore(s => s.setReadBooks);
-  const currentUser = useAuthStore(s => s.currentUser);
 
   const [booksSearch, setBooksSearch] = useState("");
   const [bookMenu, setBookMenu] = useState(null);
@@ -43,11 +38,7 @@ export function BooksListScreen({ onBack, currentData }) {
   const readCount = Object.values(readBooks).filter(s => s === "read").length;
   const readingCount = Object.values(readBooks).filter(s => s === "reading").length;
 
-  const persistReadBooks = (newRead) => {
-    setReadBooks(newRead);
-    saveLocalUserData({ ...currentData(), readBooks: newRead });
-    if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-  };
+  const persistReadBooks = (newRead) => setReadBooks(newRead);
 
   return (
     <View style={{ flex:1, backgroundColor:T.bg }}>

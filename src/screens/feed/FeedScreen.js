@@ -10,7 +10,6 @@ import { DK, LT, TAG_D, TAG_L } from "../../theme/palette";
 import { FEED } from "../../data/feed";
 import { timeAgo, fmtCount } from "../../utils/format";
 import { getMonthFromKey } from "../../utils/dates";
-import { saveLocalUserData } from "../../services/storage";
 import { useProfileStore } from "../../stores/profileStore";
 import { usePostsStore } from "../../stores/postsStore";
 import { useUniversitiesStore } from "../../stores/universitiesStore";
@@ -19,7 +18,7 @@ import { useStoriesStore } from "../../stores/storiesStore";
 import { StoriesStrip } from "../../components/StoriesStrip";
 import { StoryViewer } from "../../components/StoryViewer";
 
-export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onShare, currentData }) {
+export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onShare }) {
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
   const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
@@ -80,7 +79,6 @@ export function FeedScreen({ refreshing, onRefresh, goExplorar, onSelectUni, onS
     const newLiked = !liked[item.id];
     setLiked(p => ({ ...p, [item.id]: newLiked }));
     usePostsStore.getState().setLikeDelta(item.id, newLiked ? 1 : -1);
-    saveLocalUserData(currentData());
     (async () => {
       try {
         const postRef = doc(db, "posts", item.id);

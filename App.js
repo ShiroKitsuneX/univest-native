@@ -9,7 +9,6 @@ import { NavigationContainer } from "@react-navigation/native";
 import { db } from "./src/firebase/config";
 import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
-import { ALL_COURSES } from "./src/data/areas";
 import { DK, LT } from "./src/theme/palette";
 import { AVATAR_COLORS } from "./src/theme/avatar";
 import { loadLocalUserData, saveLocalUserData } from "./src/services/storage";
@@ -75,7 +74,6 @@ function MainApp() {
   const unis = useUniversitiesStore(s => s.unis);
   const setUnis = useUniversitiesStore(s => s.setUnis);
   const fbUnis = useUniversitiesStore(s => s.fbUnis);
-  const fbCourses = useCoursesStore(s => s.fbCourses);
   const fbIcons = useCoursesStore(s => s.fbIcons);
   const selUni = useUniversitiesStore(s => s.selUni);
   const setSU = useUniversitiesStore(s => s.setSelUni);
@@ -207,10 +205,6 @@ function MainApp() {
       Alert.alert("Erro","Não foi possível seguir. " + (err?.message||""));
     }
   };
-
-  const coursesToUse = fbCourses.length ? fbCourses : ALL_COURSES;
-
-  const cd = (extra={}) => ({ backgroundColor:T.card, borderRadius:18, borderWidth:1, borderColor:T.border, ...extra });
 
   if (!onboardingLoaded || authLoading) {
     return (

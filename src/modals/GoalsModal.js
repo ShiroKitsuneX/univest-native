@@ -1,16 +1,12 @@
 import { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Appearance } from "react-native";
-import { doc, setDoc } from "firebase/firestore";
 import { BottomSheet } from "../components/BottomSheet";
 import { DK, LT } from "../theme/palette";
-import { db } from "../firebase/config";
 import { removeAccents } from "../utils/string";
-import { saveLocalUserData } from "../services/storage";
 import { useProfileStore } from "../stores/profileStore";
-import { useAuthStore } from "../stores/authStore";
 import { useUniversitiesStore } from "../stores/universitiesStore";
 
-export function GoalsModal({ visible, onClose, currentData }) {
+export function GoalsModal({ visible, onClose }) {
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
   const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
@@ -20,7 +16,6 @@ export function GoalsModal({ visible, onClose, currentData }) {
   const fbUnis = useUniversitiesStore(s => s.fbUnis);
   const goalsUnis = useUniversitiesStore(s => s.goalsUnis);
   const setGoalsUnis = useUniversitiesStore(s => s.setGoalsUnis);
-  const currentUser = useAuthStore(s => s.currentUser);
 
   const [goalsSearch, setGoalsSearch] = useState("");
 
@@ -78,13 +73,7 @@ export function GoalsModal({ visible, onClose, currentData }) {
           })()}
         </ScrollView>
         {goalsUnis.length > 0 && (
-          <TouchableOpacity onPress={() => {
-            saveLocalUserData({...currentData(), goalsUnis});
-            if (currentUser) {
-              setDoc(doc(db,"usuarios",currentUser.uid),{goalsUnis,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-            }
-            onClose();
-          }} style={{ marginTop:16, padding:16, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
+          <TouchableOpacity onPress={onClose} style={{ marginTop:16, padding:16, borderRadius:16, backgroundColor:T.accent, alignItems:"center" }}>
             <Text style={{ color:AT, fontSize:15, fontWeight:"800" }}>Salvar Metas ({goalsUnis.length})</Text>
           </TouchableOpacity>
         )}

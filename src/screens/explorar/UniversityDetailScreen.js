@@ -1,15 +1,11 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Linking, Appearance } from "react-native";
-import { doc, setDoc } from "firebase/firestore";
-import { db } from "../../firebase/config";
 import { DK, LT } from "../../theme/palette";
 import { fmtCount } from "../../utils/format";
-import { saveLocalUserData } from "../../services/storage";
 import { useProfileStore } from "../../stores/profileStore";
 import { useProgressStore } from "../../stores/progressStore";
-import { useAuthStore } from "../../stores/authStore";
 
-export function UniversityDetailScreen({ selUni, onBack, onToggleFollow, onShowExams, currentData }) {
+export function UniversityDetailScreen({ selUni, onBack, onToggleFollow, onShowExams }) {
   const colorScheme = Appearance.getColorScheme();
   const theme = useProfileStore(s => s.theme);
   const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
@@ -18,7 +14,6 @@ export function UniversityDetailScreen({ selUni, onBack, onToggleFollow, onShowE
 
   const readBooks = useProgressStore(s => s.readBooks);
   const setReadBooks = useProgressStore(s => s.setReadBooks);
-  const currentUser = useAuthStore(s => s.currentUser);
 
   const [selectedBookYear, setSelectedBookYear] = useState(null);
   const [bookMenu, setBookMenu] = useState(null);
@@ -26,11 +21,7 @@ export function UniversityDetailScreen({ selUni, onBack, onToggleFollow, onShowE
   const lbl = { color: T.muted, fontSize: 10, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.8 };
   const cd = (st = {}) => ({ backgroundColor: T.card, borderRadius: 14, borderWidth: 1, borderColor: T.border, ...st });
 
-  const persistReadBooks = (newRead) => {
-    setReadBooks(newRead);
-    saveLocalUserData({ ...currentData(), readBooks: newRead });
-    if (currentUser) setDoc(doc(db,"usuarios",currentUser.uid),{readBooks:newRead,updatedAt:new Date().toISOString()},{merge:true}).catch(()=>{});
-  };
+  const persistReadBooks = (newRead) => setReadBooks(newRead);
 
   return (
     <ScrollView style={{ flex:1 }}>
