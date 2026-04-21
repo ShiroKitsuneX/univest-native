@@ -27,15 +27,15 @@ Everything above is pure cut-and-paste. Zero behavioral risk.
 
 ### Additional utilities added (risk-free)
 
-| File | Purpose |
-|------|---------|
-| `src/utils/dates.js` | Date helpers: daysUntil, formatDate, getMonthName, isToday/isPast/isFuture |
-| `src/utils/goals.js` | Goal helpers: buildGoalTodos, getTodoStatus, getUpcomingExam, getGoalProgress |
-| `src/utils/filter.js` | Filter/sort helpers: sortByDate, filterBySearch, groupBy, uniqueBy |
-| `src/data/constants.js` | App-wide constants: TAB_NAMES, EXAM_TYPES, BOOK_STATUS, SORT_OPTIONS |
-| `src/data/subjects.js` | ENEM subject metadata (k/short/long/color) + `subjectScore(s, k)` that normalizes Redação to 0–100 |
-| `src/components/Chip.js` | Reusable filter chip component |
-| `src/components/EmptyState.js` | Reusable empty state placeholder |
+| File | Purpose | Status |
+|------|---------|--------|
+| `src/utils/dates.js` | Date helpers — only `getMonthFromKey` survived G.d; the rest were never imported | ✂️ trimmed in G.d |
+| `src/utils/goals.js` | Goal helpers — never consumed (goal logic lives in screens) | ❌ deleted in G.d |
+| `src/utils/filter.js` | Filter/sort helpers — never consumed (screens inline their filters) | ❌ deleted in G.d |
+| `src/data/constants.js` | App-wide constants — never referenced | ❌ deleted in G.d |
+| `src/data/subjects.js` | ENEM subject metadata (k/short/long/color) + `subjectScore(s, k)` that normalizes Redação to 0–100 | ✅ in use |
+| `src/components/Chip.js` | Reusable filter chip — never used (chips are inline) | ❌ deleted in G.d |
+| `src/components/EmptyState.js` | Reusable empty-state placeholder — never used | ❌ deleted in G.d |
 
 ### Phase A complete (✅)
 
@@ -576,7 +576,9 @@ Once the structure is clean, tighten quality. Don't do any of this before C/D/E/
 
 - ✅ **G.a (resilience)** — `src/theme/useTheme.js` centralizes theme derivation on top of React Native's live `useColorScheme()`; 29 files migrated off `Appearance.getColorScheme()` so OS theme changes propagate without restart. `ErrorBoundary` wraps the root and shows a retry screen instead of a blank crash. `src/services/logger.js` gates console output on `__DEV__`; 9 `console.log("...error")` catch sites now call `logger.warn`.
 - ✅ **G.c (perf)** — `useMemo` wraps derived data pipelines across 7 screens: Feed (`fol`, `upcoming`), Explorar (`filtU`, `filterChips`), Notas (`tgt`, `radar`, `bars`, `filtN`, `filteredGrades`), ExamsList (`upcoming`, `filteredYears`), Following (`fol`), BooksList (`filteredBooks`, `readCount`/`readingCount`), Perfil (`tgt`, `followedCount`). Prevents filter/sort/map recomputation on unrelated re-renders.
+- ✅ **G.d (deadcode sweep)** — Removed 5 fully-unused modules (`utils/filter.js`, `utils/goals.js`, `components/Chip.js`, `components/EmptyState.js`, `data/constants.js`) and trimmed partial exports (`utils/dates.js` → only `getMonthFromKey`; `services/firestore.js` dropped `saveUserDoc`; `data/stories.js` dropped `STORIES_SCHEMA`). −290 LOC, 0 UI impact. Pre-existing utility stubs from phases 3–4 were speculative; nothing in the live tree referenced them.
 - ⏭️ **G.b (path alias)** — deferred: `babel-plugin-module-resolver` requires `npm install` + Metro cache clear; best done alongside a round of manual sim testing.
+- ⏭️ **G.1 / G.5 / G.6** — deferred (TypeScript migration, Jest + @testing-library/react-native, ESLint/Prettier) — all require `npm install` of new toolchains; batch with the path-alias work when you're ready to sim-test.
 
 ### G.1 TypeScript migration (optional but recommended)
 
@@ -646,12 +648,12 @@ Every phase should be a separate PR (or at least a separate commit) so you can:
 | Phase | Status | Rough size | Risk |
 |---|---|---|---|
 | A — Zustand stores | ✅ done | ~9 stores, ~400 lines cut from App.js | Medium (state migrations subtle) |
-| B — React Navigation (scaffolding) | 🟡 scaffolded | `RootNavigator` + `linking`; stacks deferred to F | Low (shim only) |
+| B — React Navigation (scaffolding) | ✅ done | `RootNavigator` + `linking`; stacks landed in F | Low (shim only) |
 | C — Screen split (main tabs + sub-pages) | ✅ done | 11 screens, ~1,900 lines moved | High (many cuts, easy to drop a prop) |
 | C.1 — Deadwood sweep | ✅ done | Absorbed into D extractions (per-modal orphan cleanup) | Trivial |
 | D — Modal extraction | ✅ done | 13 modals under `src/modals/`, App.js 1,174 → 528 | Low per modal, medium aggregate |
-| E — Persistence middleware & auth cascade | ⏳ pending | 1 middleware + 7 `hydrate` actions; ~150 lines removed | Medium (touches every store's write path) |
-| F — React Navigation execution (was B) | ⏳ pending | ~6 navigator files; kills 4 page booleans | Low if staged, High if rushed |
-| G — Polish (was D) | ⏳ pending | Incremental, indefinite | Low per change |
+| E — Persistence middleware & auth cascade | ✅ done | `persistToUser` middleware + 5 `hydrate` actions; inline `setDoc` sites eliminated; App.js 528 → 399 | Medium (touches every store's write path) |
+| F — React Navigation execution (was B) | ✅ done | `RootNavigator` / `MainTabs` / `ExplorarStack` landed; 4 page booleans deleted; App.js 399 → 179. F.4 (PerfilStack) skipped — every Perfil destination is a modal | Low if staged, High if rushed |
+| G — Polish (was D) | 🟡 partial | G.a (resilience) + G.c (perf) + G.d (deadcode) done. G.b (path alias) + G.1/G.5/G.6 (TS/Jest/ESLint) deferred — all need `npm install` | Low per change |
 
-Execution order: **C.1 → D → E → F → G**. D and E can interleave per-modal if you prefer smaller PRs. Don't start G until D+E+F are merged and stable.
+Execution order: **C.1 → D → E → F → G**. D and E can interleave per-modal if you prefer smaller PRs. Remaining G items (path alias, TS, tests, lint) are all gated on `npm install` + Metro cache clear and are best batched with a round of manual sim-testing.
