@@ -50,14 +50,3 @@ export const STORIES = [
     viewsCount: 289,
   },
 ];
-
-export const STORIES_SCHEMA = {
-  id: "string",
-  uniId: "string",
-  uniName: "string",
-  uniColor: "string",
-  imageUrl: "string",
-  createdAt: "timestamp",
-  expiresAt: "timestamp",
-  viewsCount: "number",
-};

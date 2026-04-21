@@ -6,16 +6,8 @@ import { loadLocalUserData, saveLocalUserData } from "../../services/storage";
 import { logger } from "../../services/logger";
 // Zustand middleware that mirrors a whitelist of store keys to AsyncStorage
 // and to /usuarios/{uid}. Debounced to coalesce bursty updates into one write.
-//
-// Wrapped stores must gate their `hydrate(d)` action with
-// api.__suspendPersist() / __resumePersist() so Firestore loads don't echo
-// straight back to Firestore.
-//
-// Usage:
-//   export const useFoo = create(persistToUser(
-//     (set, get, api) => ({ ... }),
-//     { keys: ["theme", "av"], serialize: (s) => ({ theme: s.theme, grades: s.gs }), debounceMs: 500 }
-//   ));
+// Wrapped stores must gate their hydrate action with api.__suspendPersist() /
+// __resumePersist() so Firestore loads don't echo straight back to Firestore.
 export const persistToUser = (initializer, { keys, serialize, debounceMs = 500 }) =>
   (set, get, api) => {
     let suspended = 0;

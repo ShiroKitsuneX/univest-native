@@ -1,17 +1,10 @@
-import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
 
 export const fetchUserDoc = async (uid) => {
   const snap = await getDoc(doc(db, "usuarios", uid));
   return snap.exists() ? snap.data() : null;
 };
-
-export const saveUserDoc = (uid, data, { merge = true } = {}) =>
-  setDoc(
-    doc(db, "usuarios", uid),
-    { ...data, updatedAt: new Date().toISOString() },
-    { merge },
-  );
 
 export const fetchUniversities = async () => {
   const snap = await getDocs(collection(db, "universidades"));
