@@ -149,11 +149,13 @@ function PerfilTab() {
 }
 
 export function MainTabs({ handlers }) {
+  const { T } = useTheme();
   return (
     <MainCtx.Provider value={handlers}>
       <Tab.Navigator
         screenOptions={{
           header: ({ route }) => <TabHeader route={route} />,
+          sceneStyle: { backgroundColor: T.bg },
         }}
         tabBar={(props) => <TabBar {...props} />}
       >

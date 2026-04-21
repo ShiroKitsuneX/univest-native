@@ -3,7 +3,7 @@ import {
   View, Alert, Appearance, StatusBar,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { db } from "./src/firebase/config";
 import { doc, setDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
@@ -168,12 +168,25 @@ function MainApp() {
   );
 }
 
+function ThemedNavigation() {
+  const colorScheme = Appearance.getColorScheme();
+  const theme = useProfileStore(s => s.theme);
+  const isDark = theme === "auto" ? colorScheme === "dark" : theme === "dark";
+  const T = isDark ? DK : LT;
+  const navTheme = isDark
+    ? { ...DarkTheme,    colors: { ...DarkTheme.colors,    background: T.bg, card: T.bg, text: T.text, border: T.border, primary: T.accent } }
+    : { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: T.bg, card: T.bg, text: T.text, border: T.border, primary: T.accent } };
+  return (
+    <NavigationContainer theme={navTheme}>
+      <RootNavigator Main={MainApp} />
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <RootNavigator Main={MainApp} />
-      </NavigationContainer>
+      <ThemedNavigation />
     </SafeAreaProvider>
   );
 }
