@@ -26,10 +26,14 @@ The codebase is in a hybrid state.
 
 ### Remaining Debts
 
-- `src/screens/onboarding/OnboardingScreen.tsx` still writes directly to Firestore
 - `src/services/firestore.ts` still centralizes several unrelated query families
 - `src/stores/middleware/persistToUser.ts` still performs remote writes from infrastructure middleware
 - root-level services still mix temporary legacy responsibilities with domain logic
+
+### Recently Fixed
+
+- OnboardingScreen now uses onboardingService/repository
+- App.tsx toggleFollow now uses universityService
 
 This guide must support the current code while forcing all new work toward a cleaner end state.
 

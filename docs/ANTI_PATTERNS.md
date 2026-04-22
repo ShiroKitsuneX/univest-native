@@ -22,12 +22,12 @@ Hidden ownership, duplicated behavior, and mixed concepts are not.
 
 ### Current Evidence
 
-- `src/screens/onboarding/OnboardingScreen.tsx`
+- None - onboarding write moved to `src/features/onboarding/`
 
 ### Correct Direction
 
 Move all new backend behavior to repositories and services.
-Remove remaining UI-level Firebase access as the next cleanup step.
+All Firebase access now goes through feature repositories.
 
 ## 2. Generic Backend Buckets
 
@@ -213,10 +213,7 @@ Push domain behavior down into features.
 
 ### Current Evidence
 
-- `src/screens/ExplorarScreen`
-- `src/screens/FeedScreen`
-- `src/screens/NotasScreen`
-- `src/screens/PerfilScreen`
+- None - empty directories deleted
 
 ### Why It Is Dangerous
 

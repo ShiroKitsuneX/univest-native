@@ -57,13 +57,17 @@ The codebase is already in a meaningful transition toward a better structure.
 ### Current Structural Debts
 
 - architecture is hybrid: root-level `services/` and `stores/` still coexist with feature repositories and services
-- `OnboardingScreen.tsx` still writes directly to Firestore
 - `persistToUser` still performs remote writes from store infrastructure
 - generic `src/services/firestore.ts` still owns several cross-domain queries
 - feature-owned modals still live in a global `src/modals/` folder
-- empty duplicate folders still exist under `src/screens/ExplorarScreen`, `FeedScreen`, `NotasScreen`, and `PerfilScreen`
-- the repo still mixes `.js`, `.ts`, and `.tsx`
+- the repo still mixes `.js`, `.ts`, and `.tsx` (seed data is .js)
 - some naming remains highly abbreviated and easy for AI tools to misread
+
+### Recently Fixed
+
+- OnboardingScreen now uses onboardingService/repository
+- toggleFollow in App.tsx now uses universityService
+- Empty duplicate screen directories deleted
 
 This document must support the current hybrid state while also making the next migration steps explicit.
 
