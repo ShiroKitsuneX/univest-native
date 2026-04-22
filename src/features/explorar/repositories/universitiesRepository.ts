@@ -8,6 +8,14 @@ export type UniversityUpdate = {
   inscricao?: string
   prova?: string
   site?: string
+  address?: string
+  city?: string
+  state?: string
+  country?: string
+  logoUrl?: string
+  email?: string
+  phone?: string
+  color?: string
   courses?: string[]
   books?: string[]
   exams?: unknown[]

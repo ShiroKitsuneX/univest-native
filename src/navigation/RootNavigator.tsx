@@ -19,11 +19,14 @@ export function RootNavigator({ Main }: Props) {
   const bootstrapped = useAuthStore(s => s.bootstrapped)
   const authLoading = useAuthStore(s => s.authLoading)
   const currentUser = useAuthStore(s => s.currentUser)
+  const userData = useAuthStore(s => s.userData)
   const done = useOnboardingStore(s => s.done)
 
   if (!bootstrapped || authLoading) {
     return <SplashScreen />
   }
+
+  const isInstitution = userData?.tipo === 'instituicao'
 
   return (
     <Stack.Navigator
@@ -32,7 +35,7 @@ export function RootNavigator({ Main }: Props) {
     >
       {!currentUser ? (
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      ) : !done ? (
+      ) : !done && !isInstitution ? (
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       ) : (
         <Stack.Screen name="Main" component={Main} />
