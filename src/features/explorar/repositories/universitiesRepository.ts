@@ -1,4 +1,10 @@
-import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import {
+  doc,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+  increment,
+} from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 
@@ -59,4 +65,19 @@ export async function updateUniversityField<T>(
   })
 
   return value
+}
+
+export async function updateFollowerCount(
+  universityId: string,
+  delta: number
+): Promise<void> {
+  const universityRef = doc(
+    db,
+    getPath(...firestorePaths.university(universityId))
+  )
+  await setDoc(
+    universityRef,
+    { followersCount: increment(delta) },
+    { merge: true }
+  ).catch(() => {})
 }

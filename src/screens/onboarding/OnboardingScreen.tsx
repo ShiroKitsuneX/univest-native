@@ -8,8 +8,7 @@ import {
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { setDoc, doc } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { completeOnboarding } from '@/features/onboarding/services/onboardingService'
 import { USER_TYPES } from '@/data/userTypes'
 import { ALL_COURSES } from '@/data/areas'
 import { SBox } from '@/components/SBox'
@@ -73,17 +72,14 @@ export function OnboardingScreen() {
     hDone(true)
     if (!currentUser) return
     try {
-      const dataToSave = {
-        done: true,
-        uTypeId: uType?.id,
+      const followedUniNames = unis.filter(u => u.followed).map(u => u.name)
+      await completeOnboarding(
+        currentUser.uid,
+        uType?.id,
         c1,
         c2,
-        followedUnis: unis.filter(u => u.followed).map(u => u.name),
-        updatedAt: new Date().toISOString(),
-      }
-      await setDoc(doc(db, 'usuarios', currentUser.uid), dataToSave, {
-        merge: true,
-      })
+        followedUniNames
+      )
     } catch (e) {
       logger.warn('Error saving onboarding:', e.message)
     }
