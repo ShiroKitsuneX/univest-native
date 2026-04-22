@@ -85,7 +85,9 @@ export function AddGradeModal({ visible, onClose }) {
             ].map(([v, l]) => (
               <TouchableOpacity
                 key={v}
-                onPress={() => setNg({ ...ng, type: v })}
+                onPress={() =>
+                  setNg({ ...ng, type: v as 'prova' | 'simulado' })
+                }
                 style={{
                   flex: 1,
                   padding: 12,
