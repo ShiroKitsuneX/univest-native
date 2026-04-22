@@ -2,353 +2,357 @@
 
 ## Purpose
 
-This guide defines how to add or extend features without creating structural drift.
+This guide defines how to build or extend Univest Native safely.
 
-The intended audience includes:
+It is optimized for:
 
-- human developers
-- strong AI coding tools
-- weak AI coding tools with low context
+- human contributors
+- high-context AI tools
+- low-context AI tools that need explicit procedural rules
 
-The process must therefore be explicit and repeatable.
+## Mandatory First Step
 
-## Before You Build Anything
+Before changing code, always inspect:
 
-Always inspect these areas first:
+1. `docs/APP_MAP.md`
+2. the relevant feature screen
+3. the relevant store
+4. the relevant service
+5. the relevant repository
+6. any related modal
+7. any related seed or catalog data
 
-1. the feature screen
-2. the related store
-3. the related service
-4. the related repository
-5. shared components that may already solve part of the UI
+If you skip this step, you are likely to break a product invariant or duplicate an existing pattern.
 
-If the needed structure does not exist, create it once in the correct place.
-Do not solve the task by placing logic in the nearest convenient file.
+## Task Classification Template
 
-## Standard Build Flow
+Every task should be classified before implementation.
 
-Use this order for every new Firebase-backed feature:
+Use this template:
 
 ```text
-data contract
--> repository
--> service
--> store or hook
--> UI
--> verification
+Feature or fix:
+Account type affected: common / institution / both
+Primary domain: auth / onboarding / feed / explore / notes / profile / planning / institution / reference
+Behavior change or structural change:
+Remote entities touched:
+Reference data touched:
+Shared state touched:
+Modal or route touched:
+Docs to update:
 ```
 
-## How To Create A New Feature From Scratch
+## Product Invariants You Must Check
 
-### Step 1: Define The Feature Boundary
+These are mandatory checks from `APP_MAP.md`.
 
-Write down:
+1. Is this about followed universities or goal universities?
+2. Is this about notes or planning goals?
+3. Is this for a common user, an institution user, or both?
+4. Is the source of truth remote, local fallback, cached local state, or ephemeral UI state?
+5. Does this affect a modal workflow that is actually a core feature surface?
 
-- feature name
-- user goal
-- screens involved
-- remote data needed
-- shared state needed
-- reusable UI pieces needed
+Do not code until these answers are explicit.
+
+## Standard Implementation Flow
+
+Use this order:
+
+```text
+classify task
+-> inspect existing code
+-> define domain action
+-> implement or reuse repository
+-> implement or reuse service
+-> connect store or hook
+-> connect UI
+-> verify flow
+-> update docs
+```
+
+## Where New Code Should Go
+
+### New Product Logic
+
+Prefer:
+
+- `src/features/*`
+
+### New Infrastructure
+
+Prefer:
+
+- `src/app/*`
+- `src/core/*`
+
+### New Reference Catalog Logic
+
+Prefer:
+
+- `src/reference/*` as the target direction
+- while migrating, use the nearest existing catalog store/service only if the new code clearly belongs there
+
+### What Not To Do
+
+- do not create new domain-heavy helpers in a generic `src/services/` file if a feature module already exists
+- do not add new Firebase logic inside screens or modals
+- do not create another root-level “misc” folder
+
+## How To Create A New Feature
+
+### Step 1: Define The User Problem
 
 Example:
 
 ```text
-Feature: Exam reminders
-User goal: Save reminder preferences for upcoming exams
-Screens: UniversityDetailScreen, Profile reminders area
-Remote data: user reminder settings
-Shared state: reminders map keyed by exam id
+Feature: institution can publish stories
+Account type: institution
+Primary domain: institution + feed
+Remote entities: universidades/{uniId}/stories
+Shared state: story list refresh
 ```
 
-### Step 2: Choose The Correct Place
+### Step 2: Find The Domain Owner
 
-Use these rules:
+Ask:
 
-- one screen only and local behavior only -> keep local
-- shared inside one feature -> feature store
-- reused across multiple features -> shared component or shared utility
-- any Firebase access -> repository
+- which screen owns the UI?
+- which feature owns the business rules?
+- which repository should own the backend access?
+- which store or selector should expose the state?
 
-### Step 3: Create The Files
-
-Example structure:
-
-```text
-src/features/explorar/
-  screens/
-    UniversityDetailScreen.js
-  services/
-    examReminderService.js
-  repositories/
-    remindersRepository.js
-  store/
-    useExploreStore.js
-```
-
-### Step 4: Implement The Repository First
+### Step 3: Create The Backend Contract First
 
 Example:
 
-```js
-// remindersRepository.js
-export async function updateExamReminder(userId, examId, enabled) {
-  const fieldPath = `examReminders.${examId}`;
-
-  await setDoc(
-    doc(db, "usuarios", userId),
-    {
-      examReminders: {
-        [examId]: enabled,
-      },
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  );
-
-  return { examId, enabled };
+```ts
+export async function createUniversityStory(input: {
+  universityId: string
+  imageUrl: string
+  createdBy: string
+  expiresAt: string
+}): Promise<void> {
+  // repository implementation
 }
 ```
 
-### Step 5: Add Service Logic
+### Step 4: Add Service Orchestration
 
-Example:
+Use a service when you need:
 
-```js
-// examReminderService.js
-export async function toggleExamReminder({ userId, examId, enabled }) {
-  if (!userId) {
-    throw new Error("User must be authenticated");
-  }
+- validation
+- optimistic updates
+- rollback
+- multi-step writes
+- domain-specific rules
 
-  return updateExamReminder(userId, examId, enabled);
-}
-```
+### Step 5: Connect State
 
-### Step 6: Connect The Store
+Use:
 
-Example:
+- a feature store if the state is reused across screens
+- local component state if the state is only view-local
 
-```js
-// useExploreStore.js
-toggleReminder: async ({ examId, enabled, userId }) => {
-  set((state) => ({
-    examReminders: { ...state.examReminders, [examId]: enabled },
-  }));
+### Step 6: Connect The UI
 
-  try {
-    await toggleExamReminder({ userId, examId, enabled });
-  } catch (error) {
-    set((state) => ({
-      examReminders: { ...state.examReminders, [examId]: !enabled },
-    }));
-    throw error;
-  }
-},
-```
+The UI should:
 
-### Step 7: Connect The UI
+- read store data
+- call named actions
+- render success/error/loading states
 
-Example:
+The UI should not:
 
-```js
-// UniversityDetailScreen.js
-const toggleReminder = useExploreStore((state) => state.toggleReminder);
-const reminderEnabled = useExploreStore((state) => !!state.examReminders[exam.id]);
-
-<TouchableOpacity
-  onPress={() =>
-    toggleReminder({
-      examId: exam.id,
-      enabled: !reminderEnabled,
-      userId: currentUser?.uid,
-    })
-  }
->
-  <Text>{reminderEnabled ? "Reminder enabled" : "Enable reminder"}</Text>
-</TouchableOpacity>
-```
-
-The UI does not import Firebase.
+- assemble Firebase paths
+- call raw Firebase methods
+- decide cross-domain persistence rules
 
 ## How To Extend An Existing Feature Safely
 
-### Safe Extension Checklist
+Before creating anything new, check in this order:
 
-1. Reuse the existing feature folder if the behavior belongs there.
-2. Reuse the existing store if the state belongs to the same domain.
-3. Reuse an existing repository function if the query/write is the same.
-4. Create a new repository function only when the backend operation is genuinely different.
-5. Update selectors or derived helpers instead of duplicating filtered lists in several screens.
+1. existing screen
+2. existing modal
+3. existing store action
+4. existing repository method
+5. existing selector or helper
+6. existing seed/reference data
 
-### Example: Extending Feed Likes
+Use this reuse order:
 
-Wrong approach:
+1. reuse as-is
+2. extend the current module
+3. extract a shared helper
+4. create a new module only when the existing one is the wrong owner
 
-- add a new Firestore write directly in `FeedScreen`
-- update local storage manually
-- patch counts inline again in another file
+## How To Handle Hybrid Architecture During Migration
 
-Right approach:
+The current repo has both:
 
-- add `postsRepository.setPostLike`
-- call it from `feedService.toggleLike`
-- update `useFeedStore.toggleLike`
-- let `FeedScreen` only trigger the action
+- root-level services and stores
+- feature repositories and services
 
-## How To Connect UI -> Logic -> Firebase
+Use these rules:
 
-Always use this chain:
+### Rule 1
 
-```text
-UI event
-  -> hook/store action
-  -> service
-  -> repository
-  -> Firebase
-  -> state update
-  -> rerender
-```
+If a feature already has `features/<domain>/repositories`, add new backend logic there.
 
-### Practical Mapping For This Project
+### Rule 2
 
-- Button press in `FeedScreen`
-  -> `useFeedStore.toggleLike`
-  -> `feedService.toggleLike`
-  -> `postsRepository.setPostLike`
-  -> Firestore
+If the behavior still lives in a legacy root module, you may touch that file, but do not let it grow into a permanent dumping ground.
 
-- Submit in `OnboardingScreen`
-  -> `useOnboardingStore.completeOnboarding`
-  -> `onboardingService.completeOnboarding`
-  -> `userRepository.saveOnboarding`
-  -> Firestore
+### Rule 3
 
-- Mark book as read in profile or explore
-  -> `useProgressStore.updateBookStatus`
-  -> `profileService.updateReadingProgress`
-  -> `profileRepository.updateReadBooks`
-  -> Firestore
-
-## How To Reuse Existing Code Properly
-
-Before creating anything new, search for:
-
-- existing UI component
-- existing store action
-- existing repository method
-- existing static data file
-- existing selector or helper
-
-Use this decision order:
-
-1. Reuse as-is.
-2. Extend the existing module.
-3. Extract a shared helper.
-4. Create a new module only if none of the above is clean.
-
-## How To Avoid Breaking Existing Functionality
-
-### Rule 1: Preserve Existing Data Shapes
-
-If the app already stores:
-
-- `followedUnis`
-- `readBooks`
-- `completedTodos`
-
-do not silently rename fields during a small feature change.
-If renaming is necessary, do it as an explicit migration task.
-
-### Rule 2: Keep One Write Path
-
-If a field is persisted by store middleware, do not also write it directly from the screen.
-
-### Rule 3: Change One Responsibility At A Time
+When moving logic from legacy to feature modules, migrate one behavior at a time.
 
 Good:
 
-- extract repository first
-- then move service logic
-- then simplify the screen
+- move onboarding completion write
+- keep UI unchanged
+- verify
 
 Bad:
 
-- change naming
-- rewrite navigation
-- alter persistence
-- change UI behavior
+- rewrite onboarding UI
+- rename fields
+- change routing
+- change persistence
 
-all in one step
+all at once
 
-### Rule 4: Verify By Flow, Not Just By File
+## How To Connect UI -> Logic -> Firebase
 
-For any change, manually test:
-
-1. first load
-2. logged out state if relevant
-3. logged in state if relevant
-4. save action
-5. app reload after save
-6. another screen that consumes the same data
-
-## Feature Template
-
-Use this template for new feature work:
+Approved chain:
 
 ```text
-Feature:
-User problem:
-Existing files reviewed:
-Shared state needed:
-Firebase collections involved:
-Repository functions:
-Service actions:
-UI files affected:
-Manual verification:
+UI event
+  -> store action or feature hook
+  -> service
+  -> repository
+  -> Firebase
+  -> store reconciliation
+  -> rerender
 ```
 
-## Rules For Simple Features
-
-A simple feature is allowed to remain compact if:
-
-- it touches one screen
-- it has one repository action
-- it has no cross-feature behavior
-- the file remains easy to scan
-
-Do not split a tiny feature into many files just to follow a pattern mechanically.
-
-## Rules For Complex Features
-
-A complex feature must be organized before it is expanded further.
-
-Use explicit subfolders when the feature has:
-
-- more than one screen
-- more than one backend entity
-- optimistic updates
-- several derived views
-- reusable internal components
-
-Complex feature minimum structure:
+### Example: Student Follows A University
 
 ```text
-feature/
-  screens/
-  components/
-  services/
-  repositories/
-  store/
+UniversityDetailScreen
+  -> useExploreStore.followUniversity
+  -> universityService.followUniversity
+  -> universitiesRepository.followUniversity
+  -> update user follow list + university follower count
 ```
 
-## Minimum Done Definition
+### Example: Institution Updates University Description
 
-A feature is not complete until:
+```text
+InstitutionAdminScreen
+  -> institution store or handler
+  -> universityService.updateUniversityInfo
+  -> universitiesRepository.updateUniversityField
+  -> update store selection/cache
+```
 
-1. Firebase access is centralized.
-2. State ownership is clear.
-3. UI code does not contain backend details.
-4. Existing code reuse was checked.
-5. Manual verification was performed.
-6. File placement matches the architecture.
+## How To Work With Seed Data And Remote Data
+
+This app intentionally uses fallback local data for resilience.
+
+Use these rules:
+
+1. decide the authoritative source first
+2. document fallback behavior explicitly
+3. keep fallback merging below the UI layer
+4. never silently replace authoritative remote data with seed data in a screen
+
+Examples:
+
+- feed may fall back to local seeded posts
+- universities may merge remote records with local books/exams metadata
+- notes cut-off data may remain local until remote data exists
+
+## Special Rules For Institution Mode
+
+When touching institution flows, always verify:
+
+1. the feature is really institution-only, student-only, or shared
+2. the permission model is clear
+3. student flows are not accidentally affected
+4. the feature does not reuse student persistence paths by accident
+
+Do not hide institution behavior inside generic profile logic if it deserves a dedicated owner.
+
+## Safe Refactor Checklist
+
+Before merging a structural change:
+
+1. confirm the domain owner is clearer than before
+2. confirm there is not a second source of truth
+3. confirm product invariants from `APP_MAP.md` still hold
+4. confirm account mode branching still works
+5. confirm loading and fallback behavior still works
+6. confirm document paths are still centralized
+
+## Verification Checklist
+
+Every meaningful change should verify the relevant flows.
+
+### Global
+
+- bootstrap
+- splash/loading path
+- logged-out experience
+
+### Common User
+
+- login/signup/reset if touched
+- onboarding if touched
+- feed
+- explore
+- notes
+- profile/planning
+
+### Institution User
+
+- profile tab switches to institution admin
+- linked university loads correctly
+- allowed edits persist correctly
+
+### Persistence
+
+- remote save succeeds
+- local cache survives reload if expected
+- no duplicate write path was introduced
+
+## When To Update Documentation
+
+Update `APP_MAP.md` when:
+
+- feature behavior changes
+- route structure changes
+- account mode changes
+- store ownership changes
+- a new major modal or screen is added
+
+Update architecture docs when:
+
+- a new structural pattern is introduced
+- a legacy pattern is removed
+- domain ownership changes
+
+## Done Definition
+
+A task is complete only when:
+
+1. product invariants were checked
+2. code was placed in the correct owner
+3. Firebase access is organized correctly
+4. duplicated logic was avoided
+5. verification was performed
+6. docs were updated if the behavior or structure changed
+
+## Final Rule
+
+Do not optimize for “fastest patch”.
+Optimize for “next contributor can extend this without guessing”.

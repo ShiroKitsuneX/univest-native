@@ -1,421 +1,616 @@
-# Architecture Guide
+# Architecture Standard
 
 ## Purpose
 
-This document defines the target architecture for Univest Native.
+This document defines the architecture standard for Univest Native.
 
-The goal is not to make the codebase artificially small.
-The goal is to make growth predictable, easy to inspect, and safe for multiple AI tools working with limited context.
+It must be readable by:
 
-## Current Project Analysis
+- human developers
+- strong AI coding tools
+- low-context AI tools
+- non-programmer maintainers reviewing generated code
 
-The project already has good foundations:
+The architecture must therefore optimize for:
 
-- `src/screens`, `src/components`, `src/services`, `src/stores`, `src/utils`, and `src/firebase` exist.
-- Zustand is already being used for shared state.
-- Firebase is already initialized centrally in `src/firebase/config.js`.
-- Some logic has already moved out of `App.js`.
+- explicit ownership
+- deterministic file placement
+- controlled complexity
+- low ambiguity
+- progressive migration instead of large rewrites
 
-The current structural risks are:
+## Source Of Truth Hierarchy
 
-- `App.js` still acts as a root coordinator for auth, onboarding, tab switching, modal orchestration, hydration, and some Firebase writes.
-- React Navigation exists, but `src/navigation/RootNavigator.js` is still only a single-screen wrapper.
-- Firebase writes are scattered across `App.js`, screens, modals, services, and middleware.
-- Persistence is split between local storage, store middleware, and direct Firestore writes.
-- Empty duplicate folders exist under `src/screens/ExplorarScreen`, `FeedScreen`, `NotasScreen`, and `PerfilScreen`.
-- Naming is inconsistent in some places and often abbreviated (`c1`, `c2`, `gs`, `av`, `selUni`), which is easy for weaker AI tools to misuse.
-- `README.md` is still a Create React App template and does not describe the actual Expo/React Native project.
+For architecture decisions, use this order:
 
-## Architectural Principles
+1. `docs/APP_MAP.md`
+   - product behavior, feature scope, account modes, domain invariants
+2. `docs/ARCHITECTURE.md`
+   - code organization, ownership, layering
+3. `docs/FIREBASE_GUIDE.md`
+   - backend access rules
+4. `docs/DEVELOPMENT_GUIDE.md`
+   - implementation workflow
+5. `docs/ANTI_PATTERNS.md`
+   - what must not be introduced
 
-1. UI renders data and triggers actions.
-2. Business logic decides what should happen.
-3. Firebase code performs remote reads and writes.
-4. Shared state stores app state, not raw Firebase logic.
-5. Static data and remote data must have explicit ownership.
-6. Simple features may stay compact, but the boundaries must stay the same.
-7. Complex features may have large files, but only when the responsibility is clear.
+If product behavior and folder organization seem to conflict, `APP_MAP.md` decides the product truth and this document decides how that truth must be implemented.
+
+## Current Codebase Assessment
+
+The codebase is already in a meaningful transition toward a better structure.
+
+### What Is Already Good
+
+- real navigation now exists in `src/navigation/RootNavigator.tsx`, `MainTabs.tsx`, and `ExplorarStack.tsx`
+- bootstrap logic has been extracted into `src/app/useBootstrap.ts`
+- the app already uses Zustand with domain stores
+- some Firebase access is already centralized through:
+  - `src/core/firebase/firestorePaths.ts`
+  - `src/features/feed/repositories/*`
+  - `src/features/explorar/repositories/*`
+- institution mode is already real and not just planned
+- an `ErrorBoundary` exists
+- path aliases with `@/` are already in use
+- most app UI code is already in TypeScript/TSX
+
+### Current Structural Debts
+
+- architecture is hybrid: root-level `services/` and `stores/` still coexist with feature repositories and services
+- `OnboardingScreen.tsx` still writes directly to Firestore
+- `persistToUser` still performs remote writes from store infrastructure
+- generic `src/services/firestore.ts` still owns several cross-domain queries
+- feature-owned modals still live in a global `src/modals/` folder
+- empty duplicate folders still exist under `src/screens/ExplorarScreen`, `FeedScreen`, `NotasScreen`, and `PerfilScreen`
+- the repo still mixes `.js`, `.ts`, and `.tsx`
+- some naming remains highly abbreviated and easy for AI tools to misread
+
+This document must support the current hybrid state while also making the next migration steps explicit.
+
+## Architecture Style
+
+Use a **hybrid feature-first layered architecture**.
+
+That means:
+
+- the codebase is organized primarily by product domain
+- each domain still respects clear layers
+- shared infrastructure stays out of product feature folders
+- temporary legacy modules are tolerated during migration, but new code should not expand them
+
+The layers are:
+
+1. `app`
+   - bootstrapping, providers, navigation shell, top-level composition
+2. `core`
+   - infrastructure that is not product-specific
+3. `features`
+   - product domains and workflows
+4. `reference`
+   - shared catalogs, lookups, fallback seed datasets, and reference data loading
+5. `shared`
+   - pure UI primitives, theme, hooks, and stateless utilities
 
 ## Recommended Target Structure
 
 ```text
 src/
   app/
-    AppBootstrap.js
-    AppProviders.js
+    bootstrap/
+      useBootstrap.ts
     navigation/
-      RootNavigator.js
-      AuthStack.js
-      OnboardingStack.js
-      MainTabs.js
+      RootNavigator.tsx
+      MainTabs.tsx
+      ExplorarStack.tsx
+      mainContext.ts
+    providers/
+    composition/
 
   core/
-    config/
-      env.js
-      constants.js
     firebase/
-      client.js
-      authClient.js
-      firestorePaths.js
-      mappers/
+      firestorePaths.ts
+      client.ts
+      authClient.ts
+      storageClient.ts
     storage/
-      localUserStorage.js
+      localUserStorage.ts
+    logging/
+      logger.ts
     errors/
-      appError.js
+      ErrorBoundary.tsx
 
   features/
     auth/
       screens/
-        WelcomeScreen.js
-      components/
-      hooks/
-        useAuthActions.js
       services/
-        authService.js
       repositories/
-        authRepository.js
-        userRepository.js
-      store/
-        useSessionStore.js
+      hooks/
+      types/
 
     onboarding/
       screens/
-        OnboardingScreen.js
-      components/
-      hooks/
       services/
-        onboardingService.js
+      repositories/
       store/
-        useOnboardingStore.js
 
     feed/
       screens/
-        FeedScreen.js
       components/
-        StoriesStrip.js
-        StoryViewer.js
-      hooks/
-        useFeedScreenData.js
       services/
-        feedService.js
       repositories/
-        postsRepository.js
-        reportsRepository.js
+      selectors/
       store/
-        useFeedStore.js
 
-    explorar/
+    explore/
       screens/
-        ExplorarScreen.js
-        FollowingScreen.js
-        BooksListScreen.js
-        ExamsListScreen.js
-        UniversityDetailScreen.js
       components/
-      hooks/
       services/
-        universityService.js
       repositories/
-        universitiesRepository.js
+      selectors/
       store/
-        useExploreStore.js
 
-    notas/
+    notes/
       screens/
-        NotasScreen.js
-      components/
-      hooks/
       services/
-        gradesService.js
+      selectors/
       store/
-        useGradesStore.js
 
     profile/
       screens/
-        PerfilScreen.js
+      components/
+      services/
+      repositories/
+      store/
+
+    planning/
       components/
       modals/
-      hooks/
       services/
-        profileService.js
       repositories/
-        profileRepository.js
+      selectors/
       store/
-        useProfileStore.js
+
+    institution/
+      screens/
+      components/
+      services/
+      repositories/
+      store/
+
+  reference/
+    catalogs/
+      repositories/
+      stores/
+    seed/
+      areas.ts
+      events.ts
+      feed.ts
+      geo.ts
+      notasCorte.ts
+      stories.ts
+      subjects.ts
+      universities.ts
+      userTypes.ts
 
   shared/
     components/
-      Chip.js
-      EmptyState.js
-      SBox.js
-      BottomSheet.js
-    theme/
-      palette.js
-      avatar.js
-    data/
-      areas.js
-      constants.js
-      events.js
-      feed.js
-      geo.js
-      notasCorte.js
-      stories.js
-      subjects.js
-      universities.js
-      userTypes.js
     hooks/
+    theme/
     utils/
-      dates.js
-      filter.js
-      format.js
-      goals.js
-      string.js
-      validation.js
 ```
 
-## Layer Responsibilities
+## Current Repo Mapping
+
+The repo does not fully match the target yet.
+Use this mapping while migrating:
+
+- `src/app/*` is already valid and should grow
+- `src/core/firebase/*` is already valid and should grow
+- `src/features/feed/*` and `src/features/explorar/*` are already valid and should grow
+- `src/services/*` is legacy-compatible, but new domain logic should prefer feature services/repositories
+- `src/stores/*` is currently the shared state home; new stores may remain here during migration, but ownership must still follow domains
+- `src/modals/*` is temporary; feature-owned modals should gradually move into feature folders when touched
+- `src/data/*` currently acts as reference seed data; over time this should be treated as `reference/seed`
+
+## Bounded Contexts
+
+The app has these primary product domains.
+Each one should have a clear owner.
+
+### 1. Auth And Session
+
+Owns:
+
+- login
+- signup
+- password reset
+- auth listener
+- common user vs institution user branching
+
+Files should live under:
+
+- `features/auth/*`
+- `app/bootstrap/*`
+- `app/navigation/*`
+
+### 2. Onboarding And Identity Setup
+
+Owns:
+
+- academic profile type
+- primary and secondary course
+- initial followed universities
+- completion state
+
+Files should live under:
+
+- `features/onboarding/*`
+
+### 3. Feed And Stories
+
+Owns:
+
+- feed posts
+- likes
+- saves
+- shares
+- reports
+- stories loading and viewer
+
+Files should live under:
+
+- `features/feed/*`
+
+### 4. Explore And Universities
+
+Owns:
+
+- university discovery
+- following list
+- books list
+- exams list
+- university detail
+- sort and preference rules for discovery
+
+Files should live under:
+
+- `features/explore/*`
+
+### 5. Notes And Performance
+
+Owns:
+
+- grade history
+- cut-off comparisons
+- filters, charts, comparisons
+- future admission calculators and simulators
+
+Files should live under:
+
+- `features/notes/*`
+
+### 6. Profile And Planning
+
+Owns:
+
+- user profile identity
+- avatar and theme
+- read books
+- completed tasks
+- goals and planning views
+- settings and edit flows
+
+Current code still mixes profile and planning.
+That is acceptable for now, but new planning-heavy logic should not keep inflating a generic profile layer forever.
+
+### 7. Institution Mode
+
+Owns:
+
+- institution-specific profile/admin view
+- university self-edit actions
+- future institution posts, stories, analytics, and admin settings
+
+Institution mode must be treated as its own domain, not a special case hidden inside student profile code.
+
+### 8. Reference Catalogs
+
+Owns:
+
+- geo data
+- courses
+- icons
+- static fallback universities
+- seed feed/events/cut-off data
+- user types and subject definitions
+
+Reference data is not “misc data”.
+It is a real system with its own ownership rules.
+
+## Non-Negotiable Product Invariants
+
+These come directly from `APP_MAP.md` and must be preserved in code organization.
+
+### Followed Universities Are Not Goal Universities
+
+- `followedUnis` drives feed, stories, and following lists
+- `goalsUnis` drives planning, countdowns, and tasks
+
+Never combine them into a single concept.
+
+### Notes Are Not Goals
+
+- notes represent historical performance
+- goals represent future direction and planning
+
+These domains may interact, but they are not the same state.
+
+### Common User And Institution User Are Different Modes
+
+- a common user receives student features
+- an institution user receives administrative capabilities
+
+Do not assume profile behavior is the same for both.
+
+### Seed Data Is Not Automatically Authoritative
+
+- local data is used for fallback, scaffolding, or catalog support
+- Firebase data is the remote source of truth when available
+
+The ownership and merge policy must be explicit.
+
+### Modals Are First-Class Feature UI
+
+In this app, many important workflows live in modals.
+They are not secondary UI and should not be treated as generic leftovers.
+
+## Layer Rules
 
 ### UI Layer
 
-Files:
+Includes:
 
-- `screens/`
-- `components/`
-- `modals/`
-
-Rules:
-
-- May read from stores and call hooks/actions.
-- May own ephemeral state like search text, picker state, open/closed UI state, focused tab section, local form input, and animation flags.
-- Must not import Firebase SDK directly.
-- Must not assemble Firestore document paths.
-- Must not contain cross-collection write logic.
-
-### Business Logic Layer
-
-Files:
-
-- `services/`
-- `hooks/`
-- store actions when the logic is truly state-specific
+- screens
+- components
+- modals
 
 Rules:
 
-- Converts UI intent into application behavior.
-- Coordinates optimistic updates, rollback, validation, and multi-step flows.
-- Calls repositories, not Firebase SDK directly.
-- Can be simple for small features and more structured for complex ones.
+- renders data
+- triggers named actions
+- owns ephemeral UI state
+- may format data for presentation
+- must not import Firebase SDK directly
+- must not build remote document paths
+- must not own multi-step business transactions
 
-### Firebase Integration Layer
+### Service Layer
 
-Files:
+Includes:
 
-- `core/firebase/*`
-- `features/*/repositories/*`
+- feature services
+- feature hooks that coordinate behavior
 
 Rules:
 
-- Owns document paths, queries, reads, writes, batching, transactions, and mapping.
-- Returns clean app-shaped data.
-- No React state inside repositories.
-- No Alert, modal, navigation, or UI formatting inside repositories.
+- converts UI intent into domain actions
+- coordinates optimistic updates and rollback
+- validates invariants
+- composes repository calls
+- never owns final rendering
 
-## State Management Standard
+### Repository Layer
 
-Use Zustand, but split state by responsibility.
+Includes:
 
-### App-Level Stores
+- Firebase reads
+- Firebase writes
+- mapping to app shapes
+- query ownership
 
-Use app-level stores only for truly cross-app state:
+Rules:
 
-- session/auth
-- onboarding status
-- theme if it is global
-- cached remote collections shared by multiple screens
+- one repository function per backend action or query shape
+- no UI code
+- no navigation code
+- no React state
 
-### Feature Stores
+### Store Layer
 
-Use feature stores for state shared inside one feature:
+Stores are allowed, but must be disciplined.
 
-- feed liked/saved state
-- profile progress data
-- explore filters if reused across explore screens
+Rules:
 
-### Local Component State
+- app-wide stores only for genuinely shared state
+- feature stores for shared state inside one domain
+- local screen state for temporary view-only behavior
+- derived state belongs in selectors or memoized helpers, not duplicated in many screens
 
-Keep local state in the component when it is temporary and screen-specific:
+## State Taxonomy
 
-- search input
-- accordion expansion
-- selected local picker option
-- modal visibility owned by one screen
-- transient edit drafts
+Every piece of state must fit exactly one bucket.
 
-### State Management Rules
-
-1. A store may call a service action.
-2. A store should not import raw Firebase SDK.
-3. A store should expose clear actions with full names.
-4. Derived state should be computed via selectors or helper functions, not duplicated in multiple screens.
-5. Remote loading state must be explicit: `idle`, `loading`, `success`, `error`.
-
-## Firebase Call Structure
-
-Use this chain:
-
-```text
-Screen/Modal
-  -> feature hook or store action
-  -> feature service
-  -> repository
-  -> Firebase SDK
-```
-
-Example:
-
-```text
-FeedScreen
-  -> useFeedActions().toggleLike(postId)
-  -> feedService.toggleLike(postId, userId)
-  -> postsRepository.setPostLike(postId, userId, liked)
-  -> Firestore write
-```
-
-## Authentication Structure
-
-Authentication must be split into three parts:
-
-1. `authRepository`
-   - Wraps Firebase Auth methods.
-2. `authService`
-   - Handles sign in, sign up, logout, password reset, session bootstrap, and user document initialization.
-3. `useSessionStore`
-   - Stores `currentUser`, `sessionStatus`, `profile`, `onboardingStatus`, and exposes bootstrap actions.
-
-The root navigator must branch based on store state:
-
-```text
-loading -> Splash
-signed out -> AuthStack
-signed in but onboarding incomplete -> OnboardingStack
-signed in and ready -> MainTabs
-```
-
-Do not keep this routing logic inside `App.js` conditionals long term.
-
-## Naming Conventions
-
-### Files
-
-- Components: `PascalCase.js`
-- Screens: `PascalCaseScreen.js`
-- Hooks: `useSomething.js`
-- Stores: `useSomethingStore.js`
-- Services: `somethingService.js`
-- Repositories: `somethingRepository.js`
-- Firebase-only helpers: `somethingClient.js` or `firestorePaths.js`
-- Static data: `somethingData.js` only when the file is clearly static
-
-### Variables
-
-Prefer full names over abbreviations:
-
-- `primaryCourse` instead of `c1`
-- `secondaryCourse` instead of `c2`
-- `selectedUniversity` instead of `selUni`
-- `grades` instead of `gs`
-- `avatar` instead of `av`
-
-Short names are acceptable only inside tiny local scopes.
-
-### Exports
-
-- Prefer named exports for shared modules.
-- Use one main exported screen/component per file.
-
-## File Organization Standards
-
-### Keep Code Together When
-
-- The feature is small.
-- The file has one obvious responsibility.
-- Splitting would create artificial indirection.
-- The logic is only used by one screen.
+### 1. Remote Authoritative State
 
 Examples:
 
-- A 250-line screen with local form state and display logic.
-- A modal with local picker state and one submit action.
-- A small repository with 3-5 related Firestore functions.
+- user document
+- universities
+- posts
+- stories
+- geo catalog
+- icons and courses
 
-### Split Code When
+Owner:
 
-- A file mixes rendering, domain rules, and Firebase calls.
-- The same query or write logic is repeated in multiple files.
-- A screen owns more than one independent workflow.
-- The same mapping/transformation appears in multiple places.
-- Navigation state and feature state become intertwined.
+- repositories + stores
 
-Split by responsibility, not by line count alone.
+### 2. Persisted Client State
 
-## Simple Feature Standard
+Examples:
 
-A simple feature may use:
+- theme
+- avatar choices
+- saved posts
+- planning selections cached locally
 
-- one screen
-- one local hook or a few inline helpers
-- one store if shared state is needed
-- one repository file if Firebase is involved
+Owner:
 
-Target flow:
+- store persistence infrastructure
+
+### 3. Ephemeral UI State
+
+Examples:
+
+- search strings
+- viewer index
+- local edit text
+- modal open/close state
+- temporary selected chip
+
+Owner:
+
+- component or screen
+
+### 4. Derived View State
+
+Examples:
+
+- filtered universities
+- grouped stories
+- upcoming exams from goals
+- grade averages and chart series
+
+Owner:
+
+- selectors, helpers, or `useMemo`
+
+## Navigation Standard
+
+The navigation tree should reflect product structure, not internal convenience.
+
+Current intended shape:
 
 ```text
-screen -> service/repository -> store update -> render
+Root
+  -> Splash
+  -> Welcome
+  -> Onboarding
+  -> Main
+
+Main
+  -> FeedTab
+  -> ExplorarTab
+    -> UniversityList
+    -> UniversityDetail
+    -> ExamsList
+    -> BooksList
+    -> Following
+  -> NotasTab
+  -> PerfilTab
+    -> student profile view
+    -> institution admin view
 ```
 
-## Complex Feature Standard
+Rules:
 
-A complex feature may include:
+- screen navigation uses React Navigation, not boolean state
+- screen ownership follows the route tree
+- modals may still be controlled by a shell, but their business logic must belong to the owning feature
 
-- multiple screens
-- reusable feature components
-- a store
-- selectors
-- a service layer
-- one or more repositories
-- mappers between Firestore and app models
+## Modal Standard
 
-Target flow:
+Use three classes of modals:
 
-```text
-screens
-  -> feature hooks/actions
-  -> services
-  -> repositories
-  -> store state
-  -> selectors
-  -> UI
-```
+1. feature modals
+   - owned by one domain
+2. app-shell modals
+   - global wrappers launched from top-level navigation
+3. shared primitives
+   - reusable shell like `BottomSheet`
 
-Complexity is acceptable when the feature is difficult.
-Disorder is not acceptable.
+The current `src/modals/` folder is transitional.
+When touching a modal that clearly belongs to one domain, prefer moving it under that feature instead of expanding the global bucket.
 
-## Recommended Migration Direction
+## Naming And File Standards
 
-Do not perform a massive rewrite.
-Move progressively in this order:
+### Language
 
-1. Stop adding new direct Firebase calls in screens and modals.
-2. Move repeated Firestore writes into repositories and services.
-3. Move root app routing into real navigators.
-4. Clean duplicated empty screen folders.
-5. Standardize naming in new code first, then rename old abbreviations when touching related files.
-6. Replace inaccurate project docs starting with `README.md`.
+- technical code and documentation in English
+- user-facing UI text may be Portuguese
 
-## Non-Negotiable Rules
+### File Extensions
 
-1. No Firebase SDK imports in screens, components, or modals.
-2. No duplicated query definitions across features.
-3. No new global store without clear cross-screen need.
-4. No route state implemented as a growing set of booleans.
-5. No feature may write user data to Firestore in more than one architectural path.
+- new app code should be `.ts` or `.tsx`
+- do not create new `.js` files in actively evolving app layers unless the file is purely static seed data or build configuration
+
+### Imports
+
+- use `@/` alias imports for internal modules
+- avoid deep relative import chains when aliases are available
+
+### Naming
+
+Prefer explicit names:
+
+- `primaryCourse`
+- `secondaryCourse`
+- `selectedUniversity`
+- `readBooks`
+- `completedTodos`
+
+Avoid introducing new ambiguous abbreviations.
+
+## When To Keep Code Together
+
+Keep code together when:
+
+- the file has one responsibility
+- the workflow is contained to one screen or modal
+- splitting would only create indirection
+
+Large files are acceptable when the responsibility is still singular and obvious.
+
+## When To Split Code
+
+Split when:
+
+- UI and remote writes live together
+- more than one workflow grows in the same file
+- multiple screens need the same transformation or selector
+- product concepts with different invariants are mixed together
+- a student flow and an institution flow begin to share a file awkwardly
+
+## Testing And Observability Standard
+
+Minimum expectations:
+
+- utility logic should have tests
+- selectors and mappers should be testable without UI
+- infrastructure and repository failures should log through the shared logger
+- app shell should remain wrapped in an error boundary
+- manual regression checks must cover:
+  - bootstrap
+  - common user auth
+  - institution auth
+  - onboarding
+  - feed
+  - explore detail flows
+  - notes
+  - profile/planning
+
+## Migration Priorities
+
+The next architectural improvements should happen in this order:
+
+1. remove remaining direct Firebase writes from UI, starting with `OnboardingScreen.tsx`
+2. continue moving generic remote access from `src/services/firestore.ts` into feature or reference repositories
+3. define the long-term rule for `persistToUser` so remote writes are no longer a hidden infrastructure side effect for complex domains
+4. move feature-owned modals out of the global `src/modals/` bucket as they are touched
+5. delete empty duplicate screen directories
+6. continue standardizing active app layers on TypeScript
+
+## Final Rule
+
+The best organization for this app is not the most abstract one.
+It is the one where every product behavior has one obvious home, one obvious owner, and one obvious way to extend it.

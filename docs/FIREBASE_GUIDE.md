@@ -2,355 +2,421 @@
 
 ## Purpose
 
-Firebase must be centralized.
+Firebase is a core platform dependency for Univest Native.
 
-This project already uses Firebase for authentication, Firestore, and potentially storage.
-The main structural risk is not Firebase itself.
-The risk is letting Firebase access spread into screens, modals, and ad hoc helpers until no one knows which file is the real source of truth.
+This guide defines:
 
-## Current Project Analysis
+- where Firebase code may live
+- which modules own which collections
+- how reads, writes, fallbacks, and caches must be organized
+- how to avoid cost, duplication, and permission drift
 
-Firebase access is currently distributed across multiple layers:
+## Current Repo Assessment
 
-- `src/firebase/config.js`
-- `src/services/auth.js`
-- `src/services/firestore.js`
-- `src/services/geo.js`
-- `src/stores/middleware/persistToUser.js`
-- `App.js`
-- `src/screens/onboarding/OnboardingScreen.js`
-- `src/screens/feed/FeedScreen.js`
-- `src/screens/perfil/PerfilScreen.js`
-- `src/screens/explorar/BooksListScreen.js`
-- `src/screens/explorar/UniversityDetailScreen.js`
-- `src/modals/GoalsModal.js`
+The codebase is in a hybrid state.
 
-This is the primary Firebase risk in the codebase.
+### Already Good
 
-## Centralization Rule
+- `src/core/firebase/firestorePaths.ts` exists
+- feature repositories already exist for:
+  - feed
+  - explore
+- story loading is already moving through feature services
+- institution updates already use an explore repository and service
 
-Firebase SDK usage is allowed only in these places:
+### Remaining Debts
 
-```text
-src/core/firebase/*
-src/features/*/repositories/*
-src/services/* only if the service file is acting as a repository wrapper during migration
-```
+- `src/screens/onboarding/OnboardingScreen.tsx` still writes directly to Firestore
+- `src/services/firestore.ts` still centralizes several unrelated query families
+- `src/stores/middleware/persistToUser.ts` still performs remote writes from infrastructure middleware
+- root-level services still mix temporary legacy responsibilities with domain logic
 
-Firebase SDK usage is not allowed in:
+This guide must support the current code while forcing all new work toward a cleaner end state.
+
+## Firebase Ownership Rule
+
+Firebase SDK imports are allowed only in:
+
+- `src/core/firebase/*`
+- `src/features/*/repositories/*`
+- `src/reference/*/repositories/*`
+- temporary migration files already doing this work today
+
+Firebase SDK imports are not allowed in:
 
 - screens
 - components
 - modals
 - navigation files
-- generic utilities
-- Zustand stores
+- generic utils
+- new store files
 
-Stores may call services.
-Services may call repositories.
-Repositories may call Firebase.
+### Exception
 
-## Standard Firebase Folder Design
+`persistToUser` is an existing infrastructure exception.
+It is tolerated for now because it centralizes repeated persistence.
+It must not become the default place for new domain-specific remote behavior.
 
-```text
-src/
-  core/
-    firebase/
-      client.js
-      authClient.js
-      firestorePaths.js
-      storageClient.js
-      converters/
-        userConverter.js
-        postConverter.js
+New multi-step or domain-sensitive writes must go through repositories and services.
 
-  features/
-    auth/
-      repositories/
-        authRepository.js
-        userRepository.js
-    feed/
-      repositories/
-        postsRepository.js
-        reportsRepository.js
-    explorar/
-      repositories/
-        universitiesRepository.js
-    profile/
-      repositories/
-        profileRepository.js
-```
+## Approved Request Flow
 
-## Firestore Path Standard
-
-All collection and document path knowledge must be centralized.
-
-Example:
-
-```js
-// src/core/firebase/firestorePaths.js
-export const firestorePaths = {
-  user: (userId) => ["usuarios", userId],
-  universities: () => ["universidades"],
-  university: (universityId) => ["universidades", String(universityId)],
-  posts: () => ["posts"],
-  post: (postId) => ["posts", String(postId)],
-  postLike: (postId, userId) => ["posts", String(postId), "likes", userId],
-  reports: () => ["reports"],
-};
-```
-
-Never rebuild these path strings in screens.
-
-## Authentication Pattern
-
-### Required Structure
+For reads:
 
 ```text
 UI
-  -> authService
-  -> authRepository
-  -> Firebase Auth
-  -> userRepository
-  -> Firestore user document
+  -> store or feature hook
+  -> service if orchestration is needed
+  -> repository
+  -> Firebase
 ```
 
-### Rules
+For writes:
 
-1. Sign in and sign out live in `authService`.
-2. Creating the initial user profile document lives in `authService` or `userRepository`, not in the screen.
-3. Auth state subscription lives in one bootstrap flow only.
-4. The session store receives app-shaped data, not raw Firebase snapshot objects.
-
-### Example
-
-```js
-// features/auth/services/authService.js
-export async function registerUser(input) {
-  const credential = await authRepository.signUp(input.email, input.password);
-
-  await userRepository.createUserProfile(credential.user.uid, {
-    email: credential.user.email,
-    firstName: input.firstName,
-    lastName: input.lastName,
-    onboardingCompleted: false,
-    followedUniversityIds: [],
-  });
-
-  await authRepository.sendEmailVerification(credential.user);
-
-  return credential.user;
-}
+```text
+UI intent
+  -> store action or feature hook
+  -> service
+  -> repository
+  -> Firebase
+  -> state reconciliation
 ```
 
-## Database Read Pattern
+## Collection Ownership Map
 
-Every read function must answer one clear domain question.
+Every collection must have a clear owner.
 
-Good examples:
+### `usuarios`
 
-- `getUserProfile(userId)`
+Purpose:
+
+- auth-linked user profile
+- onboarding completion
+- followed universities
+- planning state
+- profile preferences
+- institution account metadata
+
+Primary domains:
+
+- auth
+- onboarding
+- profile
+- planning
+
+Rules:
+
+- do not let every feature write arbitrary partials to `usuarios`
+- group writes by domain intent
+- fields like `tipo` and `linkedUniId` are identity/session fields, not generic profile preferences
+
+### `universidades`
+
+Purpose:
+
+- university catalog
+- institution-editable profile data
+- follower counts
+- books and exams metadata
+
+Primary domains:
+
+- explore
+- institution
+
+Rules:
+
+- student-facing reads belong to explore repositories
+- institution-admin writes belong to institution/explore repositories
+- follower counter logic must stay centralized
+
+### `universidades/{uniId}/stories`
+
+Purpose:
+
+- institution stories
+- feed story strip
+
+Primary domains:
+
+- feed
+- institution
+
+Rules:
+
+- loading belongs to feed repositories
+- creation and moderation should belong to institution repositories/services when added
+
+### `posts`
+
+Purpose:
+
+- feed content
+- share count
+- like count
+
+Primary domain:
+
+- feed
+
+### `posts/{postId}/likes`
+
+Purpose:
+
+- per-user like state
+
+Primary domain:
+
+- feed
+
+### `reports`
+
+Purpose:
+
+- moderation/report pipeline
+
+Primary domain:
+
+- feed
+
+### `cursos` and `icones`
+
+Purpose:
+
+- reference catalogs
+
+Primary owner:
+
+- reference catalog repositories
+
+### `countries`, `states`, `cities`
+
+Purpose:
+
+- geo reference catalogs
+
+Primary owner:
+
+- reference geo repositories
+
+## Firestore Path Rule
+
+All document and collection path construction must go through centralized helpers.
+
+Current approved helper:
+
+- `src/core/firebase/firestorePaths.ts`
+
+Rules:
+
+1. never hardcode repeated collection names in UI code
+2. never rebuild nested paths ad hoc in screens
+3. add new path helpers before adding new repositories
+
+## Domain Field Ownership Inside `usuarios`
+
+The user document is currently multi-purpose.
+That is acceptable for now, but ownership must stay explicit.
+
+### Session/Auth Fields
+
+Examples:
+
+- `tipo`
+- `linkedUniId`
+- `email`
+
+Owner:
+
+- auth domain
+
+### Onboarding Fields
+
+Examples:
+
+- `done`
+- `uTypeId`
+- `c1`
+- `c2`
+- `followedUnis`
+
+Owner:
+
+- onboarding domain
+
+### Profile Preference Fields
+
+Examples:
+
+- `theme`
+- `av`
+- `avBgIdx`
+- `nome`
+- `sobrenome`
+- location fields
+
+Owner:
+
+- profile domain
+
+### Planning Fields
+
+Examples:
+
+- `goalsUnis`
+- `readBooks`
+- `completedTodos`
+
+Owner:
+
+- planning domain
+
+The existence of one shared document does not remove domain ownership.
+
+## Read Strategy
+
+### Rule 1: One Query Shape, One Repository Function
+
+Examples:
+
+- `listFeedPosts()`
 - `listUniversities()`
-- `listPostsForFeed()`
-- `getPostLikesForUser(postIds, userId)`
-- `getGeoCatalog()`
+- `getUserProfile()`
+- `listStoriesForFollowedUniversities()`
 
-Bad examples:
+Do not redefine the same query in several files.
 
-- `fetchEverything()`
-- `loadData()`
-- `queryStuff()`
+### Rule 2: Repositories Return App Shapes
 
-### Read Function Template
+Repositories must:
 
-```js
-export async function listUniversities() {
-  const snapshot = await getDocs(collection(db, "universidades"));
+- map document snapshots
+- normalize ids
+- sort where appropriate
+- hide Firestore-specific quirks
 
-  return snapshot.docs.map((docItem) => mapUniversityDoc(docItem));
-}
-```
+Screens and stores should not need to understand `DocumentSnapshot`, `toMillis`, or nested Firestore path details.
 
-### Read Rules
+### Rule 3: Fallbacks Belong Below The UI
 
-1. Map Firebase data once in the repository.
-2. Return consistent shapes.
-3. Never make screens understand Firestore quirks.
-4. Keep fallback static data outside the repository, unless the repository is explicitly responsible for fallback behavior.
+When the app needs fallback local data:
 
-## Database Write Pattern
+- repositories or store loaders decide how fallback is applied
+- screens consume the final prepared dataset
+
+Do not let screens decide whether data is “remote” or “seed”.
+
+## Write Strategy
 
 Every write must be represented by a named domain action.
 
 Good examples:
 
-- `followUniversity(userId, universityId)`
-- `unfollowUniversity(userId, universityId)`
-- `togglePostLike(postId, userId, liked)`
-- `saveOnboardingAnswers(userId, payload)`
-- `updateReadBooks(userId, readBooks)`
+- `completeOnboarding`
+- `togglePostLike`
+- `reportPost`
+- `followUniversity`
+- `updateUniversityInfo`
+- `updateReadBooks`
 
 Bad examples:
 
-- writing a raw partial document from each screen
-- calling `setDoc` directly from UI code
-- updating counters in one file and arrays in another without a shared action
+- `setDoc` called directly from a screen
+- raw partial writes assembled ad hoc in multiple files
+- counter updates in one file while array updates live elsewhere
 
-### Write Function Template
+## Transaction And Batch Rule
 
-```js
-export async function followUniversity({ userId, universityId, universityName }) {
-  const batch = writeBatch(db);
-
-  batch.set(
-    doc(db, "usuarios", userId),
-    {
-      followedUniversityIds: arrayUnion(universityId),
-      followedUniversityNames: arrayUnion(universityName),
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  );
-
-  batch.set(
-    doc(db, "universidades", String(universityId)),
-    {
-      followersCount: increment(1),
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  );
-
-  await batch.commit();
-}
-```
-
-Multi-document writes must live in one place only.
-
-## How To Avoid Duplicated Queries
-
-### Rule 1: One Query, One Owner
-
-If the app needs the same dataset in multiple places, create one repository function and reuse it.
+Use a transaction or batch when a write must keep multiple documents logically aligned.
 
 Examples:
 
-- `listUniversities()` should not exist in multiple files.
-- `getUserProfile()` should not be rebuilt in auth, profile, onboarding, and App bootstrap separately.
+- following/unfollowing a university
+  - user document state
+  - university follower count
+- future institution publishing flows
+  - publish record
+  - moderation state
+  - analytics counters
 
-### Rule 2: Cache at the Store Boundary
+If consistency matters across documents, do not rely on unrelated separate writes from UI code.
 
-If multiple screens consume the same remote collection:
+## `persistToUser` Policy
 
-- load it once
-- store it once
-- derive filtered/sorted views locally
+`persistToUser` currently exists and is useful, but it is also a hidden remote side-effect layer.
 
-This is especially important for:
+### Allowed Use During Migration
 
-- universities
-- feed posts
-- geo data
-- user profile
+- low-risk user preference slices
+- clearly scoped cache synchronization
+- fields already standardized in existing stores
 
-### Rule 3: Track Fetch State
+### Not Appropriate For
 
-Each shared remote store should track:
+- sensitive identity logic
+- multi-document transactions
+- permission-sensitive institution writes
+- counters and moderation actions
+- flows that require validation beyond “save this slice”
 
-- `status`
-- `lastFetchedAt`
-- `error`
-- `loadedOnce`
+### Long-Term Direction
 
-This avoids repeated queries caused by weaker AI tools adding `useEffect(() => load(), [])` in multiple screens.
+Move high-importance user document writes toward explicit domain repositories and services.
+Keep middleware persistence for simple, well-bounded slices only if it remains predictable.
 
-### Rule 4: Reuse Selectors Before Requerying
+## Authentication Rules
 
-If a screen needs:
+1. auth listener logic lives in one bootstrap/session flow
+2. user document initialization belongs to auth repositories/services, not UI
+3. account mode checks (`usuario` vs `instituicao`) are part of session state
+4. institution permissions must never be inferred only from UI state
 
-- only followed universities
-- only saved posts
-- only upcoming exams
+## Institution Mode Rules
 
-derive from existing store state first.
-Do not fetch a second copy unless the backend query is materially different and cheaper.
+Institution mode changes Firebase requirements.
 
-## Reusable Firebase Function Standards
+### Required Rules
 
-Each repository function must:
+1. institution users may only edit their linked university
+2. `linkedUniId` ownership must be enforced by backend rules, not only by client code
+3. student-facing and institution-facing write paths must stay separate
+4. future post/story creation should use institution-owned repositories, not reuse student profile persistence paths
 
-1. have a domain name
-2. accept explicit arguments
-3. return a stable shape
-4. hide Firebase internals
-5. own error translation when appropriate
+## Cost And Performance Rules
 
-Example:
+The app currently loads several full collections.
+This is acceptable at the current scale, but the architecture must anticipate growth.
 
-```js
-export async function updateUserReadingProgress(userId, readBooks) {
-  await setDoc(
-    doc(db, "usuarios", userId),
-    {
-      readBooks,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  );
+### Required Practices
 
-  return { readBooks };
-}
-```
+1. load shared reference catalogs once and cache them
+2. add pagination for growing feed collections
+3. avoid duplicate loads from multiple screens
+4. track loading/error state explicitly
+5. use `serverTimestamp()` for remote timestamps where ordering matters
+6. avoid downloading wide datasets only to filter almost everything locally when a targeted query is possible
+7. keep counters centralized
+8. plan indexes intentionally as query patterns stabilize
 
-## Performance And Cost Control
+## Security And Rules Guidance
 
-The current project reads full collections for:
+For long-term robustness, backend rules must match architectural ownership.
 
-- universities
-- courses
-- icons
-- posts
-- geo data
+Priority areas:
 
-This is acceptable while the dataset is small.
-It will become expensive and slow as the app grows.
+- institution users can only update allowed fields for their `linkedUniId`
+- users can only write their own likes, saved state, and planning state
+- sensitive counters should not be freely mutable by unrelated clients
+- moderation/report collections should be append-only for standard users
 
-### Required Best Practices
+## Current Highest-Priority Cleanup
 
-1. Prefer one-time bootstrap loads for small reference datasets.
-2. Add pagination for growing feed-style collections.
-3. Use batch writes or transactions for multi-document consistency.
-4. Use `serverTimestamp()` for remote write timestamps.
-5. Keep counters denormalized only when they are updated in one centralized action.
-6. Avoid duplicate listeners or duplicate one-time loads in multiple screens.
-7. Avoid downloading documents only to filter most of them on device when a targeted query is possible.
-8. Add indexes intentionally when query patterns stabilize.
-9. Cache static or low-change reference data in local storage when reasonable.
-10. Keep user document writes coarse enough to avoid noise, but not so coarse that unrelated fields overwrite each other.
+1. move onboarding completion write out of `OnboardingScreen.tsx`
+2. stop expanding `src/services/firestore.ts` as a generic backend bucket
+3. decide which `usuarios` fields remain middleware-persisted and which must move to explicit domain repositories
+4. keep all new collection access behind path helpers and repositories
 
-## Current High-Risk Patterns To Remove
+## Final Rule
 
-These should be refactored before adding many new Firebase-backed features:
-
-1. Direct Firestore writes in screens and modals.
-2. Firestore writes from `App.js`.
-3. Mixed persistence paths:
-   - `persistToUser`
-   - `saveLocalUserData`
-   - direct `setDoc`
-4. UI-triggered optimistic updates with rollback logic embedded in screen files.
-5. Repeated `"usuarios"` and `"posts"` document paths across the app.
-
-## Approved Firebase Flow
-
-Use this exact mental model:
-
-```text
-UI asks for an action
-  -> service validates and coordinates
-  -> repository talks to Firebase
-  -> store updates state
-  -> UI rerenders
-```
-
-If a new feature breaks this flow, stop and reorganize it before merging.
+The best Firebase architecture for this app is not “all Firebase in one file”.
+It is “one explicit backend owner per domain action, with zero ambiguity about where a read or write belongs”.
