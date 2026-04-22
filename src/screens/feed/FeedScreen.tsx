@@ -75,15 +75,20 @@ export function FeedScreen({
     ...extra,
   })
 
+  const getMonthNum = (s: string | undefined) =>
+    getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || 'DEZ')
+
   const fol = useMemo(
     () =>
       unis
         .filter(u => u.followed)
         .sort((a, b) => {
-          if (uniSort === 'pref')
-            return (uniPrefs[b.id] || 5) - (uniPrefs[a.id] || 5)
-          const gm = s => getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || 'DEZ')
-          return gm(a.prova) - gm(b.prova)
+          if (uniSort === 'pref') {
+            const aPref = Number(uniPrefs[String(a.id)]) || 5
+            const bPref = Number(uniPrefs[String(b.id)]) || 5
+            return bPref - aPref
+          }
+          return getMonthNum(a.prova) - getMonthNum(b.prova)
         }),
     [unis, uniSort, uniPrefs]
   )
@@ -97,10 +102,14 @@ export function FeedScreen({
             .filter(e => e.status === 'upcoming')
             .map(e => ({ ...e, uni: g }))
         )
-        .map(e => ({
-          ...e,
-          daysUntil: Math.ceil((new Date(e.date) - new Date()) / 86400000),
-        }))
+        .map(e => {
+          const dateNum = e.date ? new Date(e.date).getTime() : 0
+          const nowNum = new Date().getTime()
+          return {
+            ...e,
+            daysUntil: Math.ceil((dateNum - nowNum) / 86400000),
+          }
+        })
         .filter(e => e.daysUntil >= 0 && e.daysUntil <= 180)
         .sort((a, b) => a.daysUntil - b.daysUntil)
         .slice(0, 5),

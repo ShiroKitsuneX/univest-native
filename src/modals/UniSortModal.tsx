@@ -13,13 +13,18 @@ export function UniSortModal({ visible, onClose }) {
   const uniPrefs = useUniversitiesStore(s => s.uniPrefs)
   const setUniPrefs = useUniversitiesStore(s => s.setUniPrefs)
 
+  const getMonthNum = (s: string | undefined) =>
+    getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || 'DEZ')
+
   const fol = unis
     .filter(u => u.followed)
     .sort((a, b) => {
-      if (uniSort === 'pref')
-        return (uniPrefs[b.id] || 5) - (uniPrefs[a.id] || 5)
-      const gm = s => getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || 'DEZ')
-      return gm(a.prova) - gm(b.prova)
+      if (uniSort === 'pref') {
+        const aPref = Number(uniPrefs[String(a.id)]) || 5
+        const bPref = Number(uniPrefs[String(b.id)]) || 5
+        return bPref - aPref
+      }
+      return getMonthNum(a.prova) - getMonthNum(b.prova)
     })
 
   return (

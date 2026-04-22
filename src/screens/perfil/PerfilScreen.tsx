@@ -549,10 +549,13 @@ export function PerfilScreen({
                 const upcomingExams =
                   g.exams?.filter(e => e.status === 'upcoming') || []
                 return upcomingExams.map((exam, idx) => {
+                  const daysUntilVal = exam.date
+                    ? new Date(exam.date).getTime()
+                    : 0
                   const daysUntil = Math.max(
                     0,
                     Math.ceil(
-                      (new Date(exam.date) - new Date()) / (1000 * 60 * 60 * 24)
+                      (daysUntilVal - Date.now()) / (1000 * 60 * 60 * 24)
                     )
                   )
                   return (
@@ -731,11 +734,12 @@ function GoalsList({
     <View>
       {goalsUnis.map(goal => {
         const nextExam = goal.exams?.find(e => e.status === 'upcoming')
-        const daysUntil = nextExam
+        const daysUntil = nextExam?.date
           ? Math.max(
               0,
               Math.ceil(
-                (new Date(nextExam.date) - new Date()) / (1000 * 60 * 60 * 24)
+                (new Date(nextExam.date).getTime() - Date.now()) /
+                  (1000 * 60 * 60 * 24)
               )
             )
           : null

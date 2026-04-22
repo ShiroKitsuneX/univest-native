@@ -26,12 +26,14 @@ export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
   }
 
   const { upcoming, filteredYears } = useMemo(() => {
-    const allExams = selUni?.exams || []
+    const allExams: import('@/stores/universitiesStore').Exam[] =
+      selUni?.exams || []
     const up = allExams.filter(e => e.status === 'upcoming')
     const past = allExams.filter(e => e.status === 'past')
-    const years = [...new Set(past.map(e => e.year))].sort((a, b) =>
-      examSort === 'newest' ? b - a : a - b
-    )
+    const years = [
+      ...new Set(past.map(e => e.year).filter(Boolean)),
+    ] as number[]
+    years.sort((a, b) => (examSort === 'newest' ? b - a : a - b))
     const fy = years
       .map(year => ({
         year,
@@ -40,8 +42,10 @@ export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
           .filter(
             e =>
               !examSearch ||
-              e.subject.toLowerCase().includes(examSearch.toLowerCase()) ||
-              e.phase.toLowerCase().includes(examSearch.toLowerCase())
+              (e.subject || '')
+                .toLowerCase()
+                .includes(examSearch.toLowerCase()) ||
+              (e.phase || '').toLowerCase().includes(examSearch.toLowerCase())
           ),
       }))
       .filter(g => !examSearch || g.exams.length > 0)
