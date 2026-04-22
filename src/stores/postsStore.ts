@@ -5,16 +5,20 @@ import { persistToUser } from '@/stores/middleware/persistToUser'
 
 export type Post = {
   id: string | number
+  uni?: string
+  uniId?: string
+  type?: string
+  icon?: string
+  tag?: string
   title?: string
   body?: string
-  uni?: string
-  tags?: string[]
+  time?: string
+  likes?: number
   imageUrl?: string
   createdAt?: string
   authorId?: string
   authorName?: string
   likesCount?: number
-  likes?: number
   sharesCount?: number
   saved?: boolean
 }

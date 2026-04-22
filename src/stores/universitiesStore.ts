@@ -24,7 +24,7 @@ export type University = {
   type?: string
 }
 
-type Exam = {
+export type Exam = {
   id?: string
   year?: number
   phase?: string
