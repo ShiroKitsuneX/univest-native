@@ -6,11 +6,35 @@ import { persistToUser } from '@/stores/middleware/persistToUser'
 export type University = {
   id?: string | number
   name: string
+  fullName?: string
+  city?: string
+  state?: string
+  color?: string
+  description?: string
+  courses?: string[]
+  books?: string[]
+  exams?: Exam[]
   followed?: boolean
-  followersCount?: number
-  books?: unknown[]
-  exams?: unknown[]
-  [key: string]: unknown
+  followersCount?: number | string
+  vestibular?: string
+  inscricao?: string
+  prova?: string
+  site?: string
+  type?: string
+}
+
+type Exam = {
+  id?: string
+  year?: number
+  phase?: string
+  subject?: string
+  date?: string
+  status?: string
+  pdfUrl?: string
+  sourceUrl?: string
+  description?: string
+  duration?: string
+  questions?: number
 }
 
 type UniversitiesState = {

@@ -5,10 +5,18 @@ import { persistToUser } from '@/stores/middleware/persistToUser'
 
 export type Post = {
   id: string | number
+  title?: string
+  body?: string
+  uni?: string
+  tags?: string[]
+  imageUrl?: string
+  createdAt?: string
+  authorId?: string
+  authorName?: string
   likesCount?: number
   likes?: number
   sharesCount?: number
-  [key: string]: unknown
+  saved?: boolean
 }
 
 type PostsState = {
@@ -31,7 +39,10 @@ type PostsState = {
   ) => void
   setLikeDelta: (id: Post['id'], delta: number) => void
   setShareDelta: (id: Post['id'], delta: number) => void
-  hydrate: (d: { saved?: Record<string, boolean>; liked?: Record<string, boolean> }) => void
+  hydrate: (d: {
+    saved?: Record<string, boolean>
+    liked?: Record<string, boolean>
+  }) => void
 }
 
 export const usePostsStore = create<PostsState>(
