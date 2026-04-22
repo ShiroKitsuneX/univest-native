@@ -8,17 +8,6 @@ import {
   RefreshControl,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
-import {
-  doc,
-  setDoc,
-  deleteDoc,
-  updateDoc,
-  increment,
-  addDoc,
-  collection,
-  serverTimestamp,
-} from 'firebase/firestore'
-import { db } from '@/firebase/config'
 import { TAG_D, TAG_L } from '@/theme/palette'
 import { FEED } from '@/data/feed'
 import { timeAgo, fmtCount } from '@/utils/format'
@@ -29,7 +18,9 @@ import { useAuthStore } from '@/stores/authStore'
 import { useStoriesStore } from '@/stores/storiesStore'
 import { StoriesStrip } from '@/components/StoriesStrip'
 import { StoryViewer } from '@/components/StoryViewer'
-import { logger } from '@/services/logger'
+import { togglePostLike } from '@/features/feed/services/feedService'
+import { reportPost } from '@/features/feed/services/feedService'
+import { incrementShareCount } from '@/features/feed/services/feedService'
 
 export function FeedScreen({
   refreshing,
@@ -126,27 +117,15 @@ export function FeedScreen({
     usePostsStore.getState().setLikeDelta(item.id, newLiked ? 1 : -1)
     ;(async () => {
       try {
-        const postRef = doc(db, 'posts', item.id)
-        const lkRef = doc(db, 'posts', item.id, 'likes', currentUser.uid)
-        if (newLiked) {
-          await setDoc(lkRef, { timestamp: serverTimestamp() })
-          await updateDoc(postRef, { likesCount: increment(1) })
-        } else {
-          await deleteDoc(lkRef)
-          await updateDoc(postRef, { likesCount: increment(-1) })
-        }
-      } catch (e) {
-        logger.warn('toggleLike:', e?.message)
-      }
+        await togglePostLike(item.id, currentUser.uid, newLiked)
+      } catch {}
     })()
   }
 
   const shareItem = item => {
     onShare(item)
     usePostsStore.getState().setShareDelta(item.id, 1)
-    updateDoc(doc(db, 'posts', item.id), { sharesCount: increment(1) }).catch(
-      () => {}
-    )
+    incrementShareCount(item.id).catch(() => {})
   }
 
   const reportItem = item => {
@@ -160,16 +139,13 @@ export function FeedScreen({
           style: 'destructive',
           onPress: async () => {
             try {
-              await addDoc(collection(db, 'reports'), {
+              await reportPost({
                 postId: item.id,
                 postTitle: item.title,
                 reportedBy: currentUser?.uid || 'anon',
                 reason: 'user_report',
-                createdAt: serverTimestamp(),
               })
-            } catch (e) {
-              logger.warn('reportItem:', e?.message)
-            }
+            } catch {}
             Alert.alert('Obrigado!', 'Report enviado para análise.')
           },
         },

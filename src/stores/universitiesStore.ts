@@ -21,17 +21,10 @@ type UniversitiesState = {
   uniPrefs: Record<string, unknown>
   uniSort: string
 
-  setUnis: (
-    unis: University[] | ((prev: University[]) => University[])
-  ) => void
-  setFbUnis: (
-    v: University[] | ((prev: University[]) => University[])
-  ) => void
+  setUnis: (unis: University[] | ((prev: University[]) => University[])) => void
+  setFbUnis: (v: University[] | ((prev: University[]) => University[])) => void
   setSelUni: (
-    selUni:
-      | University
-      | null
-      | ((prev: University | null) => University | null)
+    selUni: University | null | ((prev: University | null) => University | null)
   ) => void
   setGoalsUnis: (
     v: University[] | ((prev: University[]) => University[])
@@ -44,6 +37,7 @@ type UniversitiesState = {
   setUniSort: (uniSort: string) => void
   load: () => Promise<University[]>
   applyFollowedUnis: (followedUnis?: string[]) => void
+  getFollowedUnis: () => University[]
   hydrate: (d: { goalsUnis?: University[] }) => void
 }
 
@@ -117,6 +111,11 @@ export const useUniversitiesStore = create<UniversitiesState>(
             followed: followedUnis.includes(u.name) || false,
           })),
         })
+      },
+
+      getFollowedUnis: () => {
+        const { unis } = get()
+        return unis.filter(u => u.followed)
       },
 
       hydrate: d => {

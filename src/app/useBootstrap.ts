@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { loadLocalUserData, saveLocalUserData } from '@/services/storage'
 import { onAuthChange } from '@/services/auth'
 import { fetchUserDoc } from '@/services/firestore'
@@ -13,7 +13,12 @@ import { useGeoStore } from '@/stores/geoStore'
 import { logger } from '@/services/logger'
 
 export function useBootstrap() {
+  const initialized = useRef(false)
+
   useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+
     loadLocalUserData().then(localData => {
       if (localData) {
         useOnboardingStore.getState().hydrateFromLocal(localData)
@@ -28,7 +33,7 @@ export function useBootstrap() {
   useEffect(() => {
     const { setCurrentUser, setUserData, setAuthLoading } =
       useAuthStore.getState()
-    const { setStep, setDone } = useOnboardingStore.getState()
+    const { setStep, setDone, setUType } = useOnboardingStore.getState()
     const unsub = onAuthChange(async user => {
       if (user) {
         setCurrentUser(user)
@@ -37,7 +42,17 @@ export function useBootstrap() {
           if (fbData) {
             await saveLocalUserData(fbData)
             setUserData(fbData)
-            useOnboardingStore.getState().hydrateFromFb(fbData)
+            const isInstitution = fbData.tipo === 'instituicao'
+            if (isInstitution) {
+              setDone(true)
+              setStep(3)
+              setUType(null)
+            } else if (fbData.done === true) {
+              useOnboardingStore.getState().hydrateFromFb(fbData)
+            } else {
+              setStep(1)
+              setDone(false)
+            }
             useProfileStore.getState().hydrate(fbData)
             useProgressStore.getState().hydrate(fbData)
             usePostsStore.getState().hydrate(fbData)
@@ -65,18 +80,17 @@ export function useBootstrap() {
     useUniversitiesStore.getState().load()
   }, [])
 
-  const fbUnis = useUniversitiesStore(s => s.fbUnis)
-  const userData = useAuthStore(s => s.userData)
   useEffect(() => {
+    const userData = useAuthStore.getState().userData
     useUniversitiesStore.getState().applyFollowedUnis(userData?.followedUnis)
-  }, [fbUnis, userData])
+  }, [])
 
-  const currentUser = useAuthStore(s => s.currentUser)
   useEffect(() => {
+    const currentUser = useAuthStore.getState().currentUser
+    if (!currentUser) return
     ;(async () => {
       await usePostsStore.getState().load()
-      if (currentUser)
-        await usePostsStore.getState().loadLikesFor(currentUser.uid)
+      await usePostsStore.getState().loadLikesFor(currentUser.uid)
     })()
-  }, [currentUser])
+  }, [])
 }

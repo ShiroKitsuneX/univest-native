@@ -7,6 +7,8 @@ import { logger } from '@/services/logger'
 
 export type UserData = {
   followedUnis?: string[]
+  tipo?: 'usuario' | 'instituicao'
+  linkedUniId?: string
   [key: string]: unknown
 }
 
@@ -22,13 +24,15 @@ type AuthState = {
   ) => void
   setAuthLoading: (authLoading: boolean) => void
   setBootstrapped: (bootstrapped: boolean) => void
+  isInstitution: () => boolean
+  getLinkedUniId: () => string | undefined
 
   subscribe: (
     onUserDoc?: (data: UserData | null, existed: boolean) => void
   ) => () => void
 }
 
-export const useAuthStore = create<AuthState>(set => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   currentUser: null,
   userData: null,
   authLoading: true,
@@ -43,6 +47,16 @@ export const useAuthStore = create<AuthState>(set => ({
     ),
   setAuthLoading: authLoading => set({ authLoading }),
   setBootstrapped: bootstrapped => set({ bootstrapped }),
+
+  isInstitution: () => {
+    const { userData } = get()
+    return userData?.tipo === 'instituicao'
+  },
+
+  getLinkedUniId: () => {
+    const { userData } = get()
+    return userData?.linkedUniId
+  },
 
   subscribe: onUserDoc =>
     onAuthChange(async (user: User | null) => {

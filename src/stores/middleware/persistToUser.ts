@@ -39,12 +39,15 @@ export const persistToUser =
     }
 
     const flush = async (): Promise<void> => {
-      const slice = serialize ? serialize(get()) : pick(get())
+      const raw = serialize ? serialize(get()) : pick(get())
+      const slice = Object.fromEntries(
+        Object.entries(raw).filter(([, v]) => v !== undefined && v !== null)
+      )
       try {
         const existing = (await loadLocalUserData()) || {}
         await saveLocalUserData({ ...existing, ...slice })
         const user = useAuthStore.getState().currentUser
-        if (user) {
+        if (user && Object.keys(slice).length > 0) {
           await setDoc(
             doc(db, 'usuarios', user.uid),
             { ...slice, updatedAt: new Date().toISOString() },

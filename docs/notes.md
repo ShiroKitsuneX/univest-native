@@ -502,3 +502,8 @@ Separate experience for universities to manage their data.
 - [ ] Quiz mode
 - [ ] Flashcard mode
 - [ ] FIES info
+
+
+
+Avaliar quais informações precisam estar em database:
+- Cidade, Pais, Estado, Universidades... Pra não ficar hardcodado

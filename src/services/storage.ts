@@ -25,3 +25,11 @@ export const saveLocalUserData = async (
     logger.warn('saveLocalUserData:', (e as Error)?.message)
   }
 }
+
+export const clearLocalUserData = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY)
+  } catch (e: unknown) {
+    logger.warn('clearLocalUserData:', (e as Error)?.message)
+  }
+}

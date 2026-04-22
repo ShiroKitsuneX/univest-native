@@ -1,5 +1,10 @@
 import { create } from 'zustand'
-import { logger } from '@/services/logger'
+import { useUniversitiesStore } from './universitiesStore'
+import {
+  loadStoriesForUser,
+  trackStoryView,
+  type StoryDoc,
+} from '@/features/feed/services/storiesService'
 
 export type Story = {
   id: string
@@ -51,6 +56,11 @@ export const useStoriesStore = create<StoriesState>((set, get) => ({
   },
 
   markViewed: storyId => {
+    const { stories } = get()
+    const story = stories.find(s => s.id === storyId)
+    if (story) {
+      trackStoryView(story.uniId, storyId).catch(() => {})
+    }
     set(state => ({
       viewedIds: { ...state.viewedIds, [storyId]: Date.now() },
     }))
@@ -68,14 +78,13 @@ export const useStoriesStore = create<StoriesState>((set, get) => ({
   load: async () => {
     set({ loading: true })
     try {
-      const { STORIES } = await import('@/data/stories')
-      const now = new Date()
-      const activeStories = (STORIES as Story[]).filter(
-        s => new Date(s.expiresAt) > now
-      )
-      set({ stories: activeStories })
-    } catch (e: unknown) {
-      logger.warn('Error loading stories:', e)
+      const getFollowedUnis = useUniversitiesStore.getState().getFollowedUnis
+      const followedUnis = getFollowedUnis()
+      const followedUniIds = followedUnis.map(u => String(u.id))
+      const fbStories = await loadStoriesForUser(followedUniIds)
+      set({ stories: fbStories })
+    } catch {
+      set({ stories: [] })
     } finally {
       set({ loading: false })
     }

@@ -22,9 +22,8 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
 
   const stories = useStoriesStore(s => s.stories)
   const viewedIds = useStoriesStore(s => s.viewedIds)
-  const fol = useUniversitiesStore(s =>
-    s.unis.filter((u: { followed?: boolean }) => u.followed)
-  )
+  const getFollowedUnis = useUniversitiesStore(s => s.getFollowedUnis)
+  const fol = getFollowedUnis()
 
   const groupedStories = stories.reduce<Group[]>((acc, story) => {
     const existing = acc.find(g => g.uniId === story.uniId)

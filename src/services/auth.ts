@@ -10,6 +10,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '@/firebase/config'
+import { clearLocalUserData } from './storage'
 
 export const onAuthChange = (cb: (user: User | null) => void): (() => void) =>
   onAuthStateChanged(auth, cb)
@@ -17,8 +18,7 @@ export const onAuthChange = (cb: (user: User | null) => void): (() => void) =>
 export const signIn = (
   email: string,
   password: string
-): Promise<UserCredential> =>
-  signInWithEmailAndPassword(auth, email, password)
+): Promise<UserCredential> => signInWithEmailAndPassword(auth, email, password)
 
 type SignUpInput = {
   email: string
@@ -53,7 +53,10 @@ export const signUp = async ({
 export const resetPassword = (email: string): Promise<void> =>
   sendPasswordResetEmail(auth, email)
 
-export const logout = (): Promise<void> => signOut(auth)
+export const logout = async (): Promise<void> => {
+  await signOut(auth)
+  await clearLocalUserData()
+}
 
 export const getAuthErrorMessage = (
   err: { code?: string } | Error,

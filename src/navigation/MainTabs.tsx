@@ -14,9 +14,11 @@ import { AVATAR_COLORS } from '@/theme/avatar'
 import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useCoursesStore } from '@/stores/coursesStore'
+import { useAuthStore } from '@/stores/authStore'
 import { FeedScreen } from '@/screens/feed/FeedScreen'
 import { NotasScreen } from '@/screens/notas/NotasScreen'
 import { PerfilScreen } from '@/screens/perfil/PerfilScreen'
+import { InstitutionAdminScreen } from '@/screens/perfil/InstitutionAdminScreen'
 import { MainCtx, useMain, type MainHandlers } from '@/navigation/mainContext'
 import { ExplorarStack } from '@/navigation/ExplorarStack'
 
@@ -213,6 +215,18 @@ function NotasTab() {
 function PerfilTab() {
   const navigation = useNavigation<Nav>()
   const h = useMain()
+  const isInstitution = useAuthStore(s => s.isInstitution)
+  const linkedUniId = useAuthStore(s => s.getLinkedUniId)
+
+  if (isInstitution() && linkedUniId()) {
+    return (
+      <InstitutionAdminScreen
+        universityId={linkedUniId()!}
+        onOpenSettings={h.onOpenSettings}
+      />
+    )
+  }
+
   return (
     <PerfilScreen
       onChangePhoto={h.onChangePhoto}
