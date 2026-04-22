@@ -75,11 +75,17 @@ export function PerfilScreen({
     borderColor: T.border,
     ...extra,
   })
-  const lbl = {
+  const lbl: {
+    color: string
+    fontSize: number
+    fontWeight: '700'
+    textTransform: 'uppercase'
+    letterSpacing: number
+  } = {
     color: T.muted,
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: '700' as const,
+    textTransform: 'uppercase' as const,
     letterSpacing: 0.8,
   }
 
@@ -145,8 +151,10 @@ export function PerfilScreen({
               marginBottom: 12,
             }}
           >
-            <Text>{uType?.emoji}</Text>
-            <Text style={{ color: T.sub, fontSize: 12 }}>{uType?.label}</Text>
+            <Text>{uType?.emoji || ''}</Text>
+            <Text style={{ color: T.sub, fontSize: 12 }}>
+              {uType?.label || ''}
+            </Text>
           </View>
           <View
             style={{
@@ -333,7 +341,7 @@ export function PerfilScreen({
               <View
                 style={{
                   width:
-                    Math.min(100, Math.round((avg(last) / tgt) * 100)) + '%',
+                    `${Math.min(100, Math.round((avg(last) / tgt) * 100))}%` as const,
                   height: '100%',
                   backgroundColor: T.accent,
                   borderRadius: 6,

@@ -265,6 +265,7 @@ export function WelcomeScreen() {
         visible={showLogin}
         transparent
         animationType="slide"
+        // @ts-ignore - animationDuration is valid but missing from types
         animationDuration={200}
         onRequestClose={() => setShowLogin(false)}
       >

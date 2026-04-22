@@ -22,11 +22,17 @@ export function SettingsModal({
   const sobrenome = useProfileStore(s => s.sobrenome)
   const currentUser = useAuthStore(s => s.currentUser)
 
-  const lbl = {
+  const lbl: {
+    color: string
+    fontSize: number
+    fontWeight: '700'
+    textTransform: 'uppercase'
+    letterSpacing: number
+  } = {
     color: T.muted,
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: '700' as const,
+    textTransform: 'uppercase' as const,
     letterSpacing: 0.8,
   }
 

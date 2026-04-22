@@ -2,7 +2,12 @@ import { create } from 'zustand'
 import { USER_TYPES } from '@/data/userTypes'
 import { persistToUser } from '@/stores/middleware/persistToUser'
 
-type UserType = { id: string; [key: string]: unknown }
+type UserType = {
+  id: string
+  emoji?: string
+  label?: string
+  [key: string]: unknown
+}
 
 type OnboardingState = {
   step: number

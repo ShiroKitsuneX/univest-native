@@ -18,10 +18,16 @@ export function AddGradeModal({ visible, onClose }) {
   const ng = useProfileStore(s => s.ng)
   const setNg = useProfileStore(s => s.setNg)
 
-  const lbl = {
+  const lbl: {
+    color: string
+    fontSize: number
+    fontWeight: '700'
+    textTransform: 'uppercase'
+    letterSpacing: number
+  } = {
     color: T.muted,
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   }

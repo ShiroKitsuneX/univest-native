@@ -93,11 +93,17 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
     borderColor: T.border,
     ...extra,
   })
-  const lbl = {
+  const lbl: {
+    color: string
+    fontSize: number
+    fontWeight: '700'
+    textTransform: 'uppercase'
+    letterSpacing: number
+  } = {
     color: T.muted,
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: '700' as const,
+    textTransform: 'uppercase' as const,
     letterSpacing: 0.8,
   }
 
@@ -329,7 +335,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                 >
                   <View
                     style={{
-                      width: pct + '%',
+                      width: `${pct}%` as const,
                       height: '100%',
                       backgroundColor: n.cor,
                       borderRadius: 6,
@@ -535,6 +541,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                 height={148}
                 chartConfig={{
                   ...chartConfig,
+                  // @ts-ignore - barColors is a valid property but missing from types
                   barColors: ['#60a5fa', '#f87171', '#4ade80', '#fbbf24'],
                 }}
                 verticalLabelRotation={0}
@@ -621,7 +628,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                         >
                           <View
                             style={{
-                              width: tgt + '%',
+                              width: `${tgt}%` as const,
                               height: '100%',
                               backgroundColor: '#22c55e40',
                               position: 'absolute',
@@ -630,7 +637,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                           />
                           <View
                             style={{
-                              width: Math.min(100, v) + '%',
+                              width: `${Math.min(100, v)}%` as const,
                               height: '100%',
                               backgroundColor: sub.color,
                               borderRadius: 4,

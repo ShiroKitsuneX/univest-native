@@ -460,7 +460,7 @@ export function OnboardingScreen() {
         >
           <View
             style={{
-              width: (step / 3) * 100 + '%',
+              width: `${(step / 3) * 100}%` as const,
               height: '100%',
               backgroundColor: T.accent,
               borderRadius: 2,
