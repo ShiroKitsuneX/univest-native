@@ -39,7 +39,7 @@ export async function fetchActiveStories(
   if (!followedUniIds.length) return []
 
   const allStories: StoryDoc[] = []
-  const now = new Date()
+  const now = new Date().toISOString()
 
   await Promise.all(
     followedUniIds.map(async uniId => {
@@ -47,30 +47,29 @@ export async function fetchActiveStories(
         db,
         getPath(...firestorePaths.universityStories(uniId))
       )
-      const q = query(
-        storiesRef,
-        where('expiresAt', '>', now.toISOString()),
-        orderBy('expiresAt', 'desc')
-      )
+      const q = query(storiesRef, where('expiresAt', '>', now))
 
       const snapshot = await getDocs(q)
       snapshot.docs.forEach(d => {
         const data = d.data()
-        allStories.push({
-          id: d.id,
-          uniId: data.uniId,
-          uniName: data.uniName,
-          uniColor: data.uniColor,
-          imageUrl: data.imageUrl,
-          videoUrl: data.videoUrl,
-          createdAt:
-            data.createdAt?.toDate?.()?.toISOString?.() ??
-            new Date().toISOString(),
-          expiresAt:
-            data.expiresAt?.toDate?.()?.toISOString?.() ??
-            new Date().toISOString(),
-          viewsCount: data.viewsCount ?? 0,
-        })
+        const expiresAt =
+          data.expiresAt?.toDate?.()?.toISOString?.() ??
+          new Date().toISOString()
+        if (expiresAt > now) {
+          allStories.push({
+            id: d.id,
+            uniId: data.uniId,
+            uniName: data.uniName,
+            uniColor: data.uniColor,
+            imageUrl: data.imageUrl,
+            videoUrl: data.videoUrl,
+            createdAt:
+              data.createdAt?.toDate?.()?.toISOString?.() ??
+              new Date().toISOString(),
+            expiresAt,
+            viewsCount: data.viewsCount ?? 0,
+          })
+        }
       })
     })
   )

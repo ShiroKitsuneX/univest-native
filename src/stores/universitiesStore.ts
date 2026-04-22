@@ -15,6 +15,7 @@ export type University = {
   books?: string[]
   exams?: Exam[]
   followed?: boolean
+  followers?: string
   followersCount?: number | string
   vestibular?: string
   inscricao?: string
