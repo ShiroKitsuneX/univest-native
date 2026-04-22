@@ -132,31 +132,38 @@ export function SettingsModal({
               onOpenGoals()
             },
           ],
-          ['E-mail', currentUser?.email || '—', () => {}],
-        ].map(([ti, su, fn]) => (
-          <TouchableOpacity
-            key={ti}
-            onPress={fn}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: T.card2,
-              borderRadius: 14,
-              padding: 15,
-              marginBottom: 10,
-              borderWidth: 1,
-              borderColor: T.border,
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: T.text, fontSize: 14, fontWeight: '700' }}>
-                {ti}
-              </Text>
-              <Text style={{ color: T.sub, fontSize: 12 }}>{su}</Text>
-            </View>
-            <Text style={{ color: T.muted, fontSize: 18 }}>›</Text>
-          </TouchableOpacity>
-        ))}
+          ['E-mail', currentUser?.email || '—', () => {}] as const,
+        ].map(item => {
+          const ti = String(item[0])
+          const su = String(item[1])
+          const fn = item[2] as () => void
+          return (
+            <TouchableOpacity
+              key={ti}
+              onPress={fn}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: T.card2,
+                borderRadius: 14,
+                padding: 15,
+                marginBottom: 10,
+                borderWidth: 1,
+                borderColor: T.border,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{ color: T.text, fontSize: 14, fontWeight: '700' }}
+                >
+                  {ti}
+                </Text>
+                <Text style={{ color: T.sub, fontSize: 12 }}>{su}</Text>
+              </View>
+              <Text style={{ color: T.muted, fontSize: 18 }}>›</Text>
+            </TouchableOpacity>
+          )
+        })}
         <View
           style={{ height: 1, backgroundColor: T.border, marginVertical: 16 }}
         />
