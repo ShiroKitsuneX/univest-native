@@ -202,6 +202,17 @@ export const logout = async (): Promise<void> => {
 - Moved store imports out of auth.ts (was causing: persistToUser → authStore → auth → onboardingStore → persistToUser)
 - App.tsx handles state reset after logout separately
 
+**Fix 2c: Filter undefined values in persistToUser**
+
+- persistToUser was writing undefined values to Firestore causing warnings
+- Added filter to remove undefined/null before writing
+
+```typescript
+const slice = Object.fromEntries(
+  Object.entries(raw).filter(([, v]) => v !== undefined && v !== null)
+)
+```
+
 ---
 
 ## Part 4: Previous Session Fixes (from earlier)
@@ -286,11 +297,15 @@ src/
 
 ## What Claude Should Continue
 
-1. **TypeScript migration** - The pre-existing type errors in modals/screens
-2. **Security rules** - Add Firestore security rules to ensure only institution can edit their uni
-3. **Stories loading** - Verify followedUnis filtering works correctly
-4. **More institution fields** - Add exams, books, courses editing to InstitutionAdminScreen
-5. **Testing** - Test institution login flow end-to-end
+### See INSTITUTION_IMPROVEMENTS.md for detailed plan
+
+**Quick Summary:**
+
+1. Fix institution account UI issues (remove user-specific features, add institution-specific features)
+2. Add service/repository layer for institution profile updates
+3. Fix duplicate settings icon bug
+4. Add logo editing, followers count, contact info editing
+5. Move from hardcoded data to Firebase for editable institution fields
 
 ---
 
