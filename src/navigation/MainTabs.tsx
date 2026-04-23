@@ -222,7 +222,6 @@ function PerfilTab() {
     return (
       <InstitutionAdminScreen
         universityId={linkedUniId()!}
-        onOpenSettings={h.onOpenSettings}
         onChangePhoto={h.onChangePhoto}
       />
     )

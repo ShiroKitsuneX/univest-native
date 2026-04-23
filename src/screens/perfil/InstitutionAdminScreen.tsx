@@ -18,7 +18,6 @@ import { logger } from '@/services/logger'
 
 type Props = {
   universityId: string
-  onOpenSettings: () => void
   onChangePhoto: () => void
 }
 
@@ -35,11 +34,7 @@ type EditMode =
   | 'phone'
   | 'color'
 
-export function InstitutionAdminScreen({
-  universityId,
-  onOpenSettings,
-  onChangePhoto,
-}: Props) {
+export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
   const { T, isDark, AT } = useTheme()
 
   const unis = useUniversitiesStore(s => s.unis)
