@@ -29,15 +29,19 @@ export async function fetchPostLikes(
   posts: { id: string | number }[],
   uid: string
 ): Promise<Record<string, boolean>> {
-  if (!posts?.length || !uid) return {}
+  if (!posts?.length || !uid) {
+    return {}
+  }
   const checks = await Promise.all(
     posts.map(p => getDoc(doc(db, getPath(...firestorePaths.postLike(String(p.id), uid))))
   )
-  const lk = {} as Record<string, boolean>
-  checks.forEach((snap, i) => {
-    if (snap.exists()) lk[String(posts[i].id)] = true
-  })
-  return lk
+  const result: Record<string, boolean> = {}
+  for (let i = 0; i < checks.length; i++) {
+    if (checks[i].exists()) {
+      result[String(posts[i].id)] = true
+    }
+  }
+  return result
 }
 
 export async function setPostLike(
