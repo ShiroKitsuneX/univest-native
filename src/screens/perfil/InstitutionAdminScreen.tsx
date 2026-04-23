@@ -367,26 +367,6 @@ export function InstitutionAdminScreen({
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={{ flex: 1 }}>
-        <TouchableOpacity
-          onPress={onOpenSettings}
-          style={{
-            position: 'absolute',
-            top: 50,
-            right: 16,
-            zIndex: 10,
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: T.card,
-            borderWidth: 1,
-            borderColor: T.border,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Text style={{ fontSize: 16 }}>⚙️</Text>
-        </TouchableOpacity>
-
         <View
           style={{
             borderRadius: 22,
