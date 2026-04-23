@@ -63,12 +63,16 @@ A generic store middleware writes to Firestore automatically when local state ch
 
 ### Current Evidence
 
-- `src/stores/middleware/persistToUser.ts`
+- `src/stores/middleware/persistToUser.ts` - actively used for user preferences
 
 ### Correct Direction
 
 Keep middleware persistence limited and explicit.
-Move sensitive, multi-step, or domain-heavy writes to repositories/services.
+This is currently ACCEPTABLE per FIREBASE_GUIDE.md - stores using it only persist:
+
+- user preference slices (theme, avatar)
+- followed preferences
+- planning state (goalsUnis, readBooks)
 
 ## 4. Treating Student And Institution Accounts As The Same Domain
 
@@ -194,9 +198,20 @@ Navigation files or root app shell accumulate:
 - remote writes
 - feature-specific workflow logic
 
+### Current Evidence
+
+- App.tsx has modal visibility states (acceptable composition)
+- toggleFollow moved to universityService
+
 ### Why It Is Dangerous
 
 Every feature becomes coupled to the app shell.
+
+### Correct Direction
+
+Keep `app/` and navigation focused on composition, branching, and screen wiring.
+Push domain behavior down into features.
+Note: UI state like modal visibility is navigation composition - acceptable.
 
 ### Correct Direction
 
