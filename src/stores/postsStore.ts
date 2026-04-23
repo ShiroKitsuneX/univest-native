@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { FEED } from '@/data/feed'
-import { fetchPosts, fetchPostLikes } from '@/services/firestore'
+import {
+  fetchPosts,
+  fetchPostLikes,
+} from '@/features/feed/repositories/postsRepository'
 import { persistToUser } from '@/stores/middleware/persistToUser'
 
 export type Post = {

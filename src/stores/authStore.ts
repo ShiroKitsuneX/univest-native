@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { User } from 'firebase/auth'
 import { onAuthChange } from '@/services/auth'
-import { fetchUserDoc } from '@/services/firestore'
+import { fetchUserProfile } from '@/features/auth/repositories/authRepository'
 import { saveLocalUserData } from '@/services/storage'
 import { logger } from '@/services/logger'
 
@@ -66,7 +66,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       set({ currentUser: user })
       try {
-        const fbData = (await fetchUserDoc(user.uid)) as UserData | null
+        const fbData = (await fetchUserProfile(user.uid)) as UserData | null
         if (fbData) {
           await saveLocalUserData(fbData)
           set({ userData: fbData })

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { loadLocalUserData, saveLocalUserData } from '@/services/storage'
 import { onAuthChange } from '@/services/auth'
-import { fetchUserDoc } from '@/services/firestore'
+import { fetchUserProfile } from '@/features/auth/repositories/authRepository'
 import { useAuthStore } from '@/stores/authStore'
 import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
@@ -38,7 +38,7 @@ export function useBootstrap() {
       if (user) {
         setCurrentUser(user)
         try {
-          const fbData = await fetchUserDoc(user.uid)
+          const fbData = await fetchUserProfile(user.uid)
           if (fbData) {
             await saveLocalUserData(fbData)
             setUserData(fbData)

@@ -1,9 +1,13 @@
 import {
   doc,
+  getDoc,
+  getDocs,
+  collection,
   setDoc,
   updateDoc,
   serverTimestamp,
   increment,
+  type DocumentData,
 } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
@@ -26,6 +30,16 @@ export type UniversityUpdate = {
   books?: string[]
   exams?: unknown[]
   [key: string]: unknown
+}
+
+type NamedDoc = { id: string; name?: string } & DocumentData
+
+export async function fetchUniversitiesList(): Promise<NamedDoc[]> {
+  const universitiesPath = getPath(...firestorePaths.universities())
+  const snap = await getDocs(collection(db, universitiesPath))
+  if (snap.empty) return []
+  const f: NamedDoc[] = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return [...new Map(f.map(u => [u.name, u])).values()]
 }
 
 export async function updateUniversity(

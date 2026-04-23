@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { UNIVERSITIES } from '@/data/universities'
-import { fetchUniversities } from '@/services/firestore'
+import { fetchUniversitiesList } from '@/features/explorar/repositories/universitiesRepository'
 import { persistToUser } from '@/stores/middleware/persistToUser'
 
 export type University = {
@@ -105,7 +105,7 @@ export const useUniversitiesStore = create<UniversitiesState>(
 
       load: async () => {
         try {
-          const unisList = (await fetchUniversities()) as University[]
+          const unisList = (await fetchUniversitiesList()) as University[]
           if (unisList.length) {
             const merged = unisList.map(fbU => {
               const localU = (UNIVERSITIES as University[]).find(

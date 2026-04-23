@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { ALL_COURSES } from '@/data/areas'
-import { fetchCourses, fetchIcons } from '@/services/firestore'
+import {
+  fetchCoursesList,
+  fetchIconsMap,
+} from '@/features/reference/repositories/referenceRepository'
 
 type CoursesState = {
   fbCourses: string[]
@@ -20,7 +23,10 @@ export const useCoursesStore = create<CoursesState>((set, get) => ({
   load: async () => {
     if (get().loaded) return
     try {
-      const [courses, icons] = await Promise.all([fetchCourses(), fetchIcons()])
+      const [courses, icons] = await Promise.all([
+        fetchCoursesList(),
+        fetchIconsMap(),
+      ])
       set({
         fbCourses: courses,
         fbIcons: icons,

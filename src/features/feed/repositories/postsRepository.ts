@@ -1,15 +1,44 @@
 import {
   doc,
+  getDoc,
+  getDocs,
+  collection,
   setDoc,
   deleteDoc,
   updateDoc,
   addDoc,
-  collection,
   increment,
   serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
+
+export async function fetchPosts(): Promise<unknown[]> {
+  const postsPath = getPath(...firestorePaths.posts())
+  const snap = await getDocs(collection(db, postsPath))
+  if (snap.empty) return []
+  const f = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  f.sort(
+    (a: any, b: any) =>
+      (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)
+  )
+  return f
+}
+
+export async function fetchPostLikes(
+  posts: { id: string | number }[],
+  uid: string
+): Promise<Record<string, boolean>> {
+  if (!posts?.length || !uid) return {}
+  const checks = await Promise.all(
+    posts.map(p => getDoc(doc(db, getPath(...firestorePaths.postLike(String(p.id), uid))))
+  )
+  const lk: Record<string, boolean> = {}
+  checks.forEach((snap, i) => {
+    if (snap.exists()) lk[String(posts[i].id)] = true
+  })
+  return lk
+}
 
 export async function setPostLike(
   postId: string,
