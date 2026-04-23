@@ -33,7 +33,7 @@ export async function fetchPostLikes(
   const checks = await Promise.all(
     posts.map(p => getDoc(doc(db, getPath(...firestorePaths.postLike(String(p.id), uid))))
   )
-  const lk: Record<string, boolean> = {}
+  const lk = {} as Record<string, boolean>
   checks.forEach((snap, i) => {
     if (snap.exists()) lk[String(posts[i].id)] = true
   })
