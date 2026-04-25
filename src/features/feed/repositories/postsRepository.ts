@@ -13,7 +13,7 @@ import {
 import { db } from '@/firebase/config'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 
-export async function fetchPosts(): Promise<unknown[]> {
+export async function fetchPosts() {
   const postsPath = getPath(...firestorePaths.posts())
   const snap = await getDocs(collection(db, postsPath))
   if (snap.empty) return []
@@ -28,16 +28,19 @@ export async function fetchPosts(): Promise<unknown[]> {
 export async function fetchPostLikes(
   posts: { id: string | number }[],
   uid: string
-): Promise<Record<string, boolean>> {
-  if (!posts?.length || !uid) {
-    return {}
-  }
-  const checks = await Promise.all(
-    posts.map(p => getDoc(doc(db, getPath(...firestorePaths.postLike(String(p.id), uid))))
+) {
+  if (!posts?.length || !uid) return {}
+
+  const likeChecks = await Promise.all(
+    posts.map(p => {
+      const path = firestorePaths.postLike(String(p.id), uid)
+      return getDoc(doc(db, getPath(...path)))
+    })
   )
+
   const result: Record<string, boolean> = {}
-  for (let i = 0; i < checks.length; i++) {
-    if (checks[i].exists()) {
+  for (let i = 0; i < likeChecks.length; i += 1) {
+    if (likeChecks[i].exists()) {
       result[String(posts[i].id)] = true
     }
   }
@@ -48,16 +51,20 @@ export async function setPostLike(
   postId: string,
   userId: string,
   liked: boolean
-): Promise<void> {
-  const likeRef = doc(db, getPath(...firestorePaths.postLike(postId, userId)))
-  const postRef = doc(db, getPath(...firestorePaths.post(postId)))
+) {
+  const likePath = firestorePaths.postLike(postId, userId)
+  const postPath = firestorePaths.post(postId)
 
   if (liked) {
-    await setDoc(likeRef, { timestamp: serverTimestamp() })
-    await updateDoc(postRef, { likesCount: increment(1) })
+    await setDoc(doc(db, getPath(...likePath)), {
+      timestamp: serverTimestamp(),
+    })
+    await updateDoc(doc(db, getPath(...postPath)), { likesCount: increment(1) })
   } else {
-    await deleteDoc(likeRef)
-    await updateDoc(postRef, { likesCount: increment(-1) })
+    await deleteDoc(doc(db, getPath(...likePath)))
+    await updateDoc(doc(db, getPath(...postPath)), {
+      likesCount: increment(-1),
+    })
   }
 }
 
@@ -66,7 +73,7 @@ export async function addReport(input: {
   postTitle: string
   reportedBy: string
   reason: string
-}): Promise<void> {
+}) {
   await addDoc(collection(db, getPath(...firestorePaths.reports())), {
     postId: input.postId,
     postTitle: input.postTitle,
@@ -76,7 +83,7 @@ export async function addReport(input: {
   })
 }
 
-export async function incrementPostShares(postId: string): Promise<void> {
-  const postRef = doc(db, getPath(...firestorePaths.post(postId)))
-  await updateDoc(postRef, { sharesCount: increment(1) })
+export async function incrementPostShares(postId: string) {
+  const postPath = firestorePaths.post(postId)
+  await updateDoc(doc(db, getPath(...postPath)), { sharesCount: increment(1) })
 }
