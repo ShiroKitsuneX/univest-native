@@ -978,6 +978,7 @@ export function WelcomeScreen() {
 
       <Modal
         visible={showTerms}
+        transparent
         animationType="slide"
         onRequestClose={() => setShowTerms(false)}
       >
