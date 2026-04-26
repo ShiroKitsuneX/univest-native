@@ -41,7 +41,7 @@ const INITIAL_TOUCHED = {
   nascimento: false,
 }
 
-export function WelcomeScreen() {
+export function WelcomeScreen({ navigation }: { navigation?: any }) {
   const insets = useSafeAreaInsets()
   const { T, isDark, AT } = useTheme()
   const getIcon = useIcons()
@@ -738,9 +738,7 @@ export function WelcomeScreen() {
                             Li e aceito os{' '}
                           </Text>
                           <TouchableOpacity
-                            onPress={() => {
-                              setShowTerms(true)
-                            }}
+                            onPress={() => navigation?.navigate('Terms')}
                             activeOpacity={0.7}
                           >
                             <Text
