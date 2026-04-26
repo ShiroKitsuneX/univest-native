@@ -516,9 +516,11 @@ export function WelcomeScreen() {
                     {loginMode === 'signup' && (
                       <View
                         style={{
-                          backgroundColor: T.card2,
-                          borderRadius: 8,
-                          padding: 10,
+                          backgroundColor: T.inp,
+                          borderWidth: 1,
+                          borderColor: T.border,
+                          borderRadius: 12,
+                          padding: 12,
                           marginBottom: 12,
                         }}
                       >
@@ -534,9 +536,9 @@ export function WelcomeScreen() {
                         </Text>
                         {[
                           ['8+ caracteres', /.{8,}/] as [string, RegExp],
-                          ['Uma letra maiúscula', /[A-Z]/] as [string, RegExp],
-                          ['Uma letra minúscula', /[a-z]/] as [string, RegExp],
-                          ['Um número', /\d/] as [string, RegExp],
+                          ['Maiúscula', /[A-Z]/] as [string, RegExp],
+                          ['Minúscula', /[a-z]/] as [string, RegExp],
+                          ['Número', /\d/] as [string, RegExp],
                         ].map(([req, regex]) => {
                           const met = regex.test(authPassword)
                           return (
@@ -545,15 +547,15 @@ export function WelcomeScreen() {
                               style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
-                                marginBottom: 2,
+                                marginBottom: 4,
                               }}
                             >
                               <Text style={{ fontSize: 10, marginRight: 6 }}>
-                                {met ? '✅' : '⚪'}
+                                {met ? '✓' : '○'}
                               </Text>
                               <Text
                                 style={{
-                                  color: met ? '#4ade80' : T.muted,
+                                  color: met ? T.accent : T.muted,
                                   fontSize: 11,
                                 }}
                               >
