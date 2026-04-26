@@ -14,7 +14,11 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/theme/useTheme'
-import { validatePassword } from '@/utils/validation'
+import {
+  validatePassword,
+  validateBirthdate,
+  validateEmail,
+} from '@/utils/validation'
 import {
   signIn,
   signUp,
@@ -97,15 +101,23 @@ export function WelcomeScreen() {
       confirmarSenha: true,
       nascimento: true,
     })
+    const emailErr = validateEmail(authEmail)
     const pwdErr = validatePassword(authPassword)
+    const dobErr = validateBirthdate(authBirthdate)
+    if (emailErr) {
+      setAuthError(emailErr)
+      return
+    }
+    if (dobErr) {
+      setAuthError(dobErr)
+      return
+    }
     if (
-      !authEmail ||
       !authPassword ||
       !authName.trim() ||
       !authSobrenome.trim() ||
       pwdErr ||
       authPassword !== authConfirmPassword ||
-      !authBirthdate.trim() ||
       !authAcceptTerms
     )
       return
