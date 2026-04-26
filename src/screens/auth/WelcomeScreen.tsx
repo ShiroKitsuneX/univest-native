@@ -739,8 +739,7 @@ export function WelcomeScreen() {
                           </Text>
                           <TouchableOpacity
                             onPress={() => {
-                              setShowLogin(false)
-                              setTimeout(() => setShowTerms(true), 300)
+                              setShowTerms(true)
                             }}
                             activeOpacity={0.7}
                           >
@@ -978,7 +977,6 @@ export function WelcomeScreen() {
 
       <Modal
         visible={showTerms}
-        transparent
         animationType="slide"
         onRequestClose={() => setShowTerms(false)}
       >
