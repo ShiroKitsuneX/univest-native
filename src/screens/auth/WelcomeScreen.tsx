@@ -514,22 +514,13 @@ export function WelcomeScreen() {
                       </TouchableOpacity>
                     </View>
                     {loginMode === 'signup' && (
-                      <View
-                        style={{
-                          backgroundColor: T.inp,
-                          borderWidth: 1,
-                          borderColor: T.border,
-                          borderRadius: 12,
-                          padding: 12,
-                          marginBottom: 12,
-                        }}
-                      >
+                      <View style={{ marginTop: -4, marginBottom: 12 }}>
                         <Text
                           style={{
                             color: T.sub,
                             fontSize: 11,
                             fontWeight: '600',
-                            marginBottom: 6,
+                            marginBottom: 8,
                           }}
                         >
                           Sua senha precisa ter:
