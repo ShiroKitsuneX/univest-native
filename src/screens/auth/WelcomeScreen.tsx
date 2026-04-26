@@ -739,7 +739,8 @@ export function WelcomeScreen() {
                           </Text>
                           <TouchableOpacity
                             onPress={() => {
-                              setShowTerms(true)
+                              setShowLogin(false)
+                              setTimeout(() => setShowTerms(true), 300)
                             }}
                             activeOpacity={0.7}
                           >
