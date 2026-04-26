@@ -5,6 +5,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useBootstrap } from '@/app/useBootstrap'
 import { SplashScreen } from '@/screens/SplashScreen'
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen'
+import { LoginScreen } from '@/screens/auth/LoginScreen'
 import { TermsScreen } from '@/screens/auth/TermsScreen'
 import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen'
 import { TermsReacceptModal } from '@/modals/TermsReacceptModal'
@@ -49,6 +50,7 @@ export function RootNavigator({ Main }: Props) {
         {!currentUser ? (
           <>
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Terms" component={TermsScreen} />
           </>
         ) : !done && !isInstitution ? (

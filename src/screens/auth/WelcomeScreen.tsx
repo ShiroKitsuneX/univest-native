@@ -260,7 +260,7 @@ export function WelcomeScreen({ navigation }: { navigation?: any }) {
                 useNativeDriver: true,
               }).start()
               setLoginMode('login')
-              setShowLogin(true)
+              navigation?.navigate('Login')
               setAuthTouched(INITIAL_TOUCHED)
             }, 100)
           }}
@@ -1002,7 +1002,7 @@ export function WelcomeScreen({ navigation }: { navigation?: any }) {
               <TouchableOpacity
                 onPress={() => {
                   setShowTerms(false)
-                  setShowLogin(true)
+                  navigation?.navigate('Login')
                 }}
                 style={{ padding: 8 }}
               >
@@ -1040,7 +1040,7 @@ export function WelcomeScreen({ navigation }: { navigation?: any }) {
                 onPress={() => {
                   setShowTerms(false)
                   setAuthAcceptTerms(true)
-                  setShowLogin(true)
+                  navigation?.navigate('Login')
                 }}
                 style={{
                   padding: 16,
@@ -1056,7 +1056,7 @@ export function WelcomeScreen({ navigation }: { navigation?: any }) {
               <TouchableOpacity
                 onPress={() => {
                   setShowTerms(false)
-                  setShowLogin(true)
+                  navigation?.navigate('Login')
                 }}
                 style={{ padding: 14, alignItems: 'center' }}
               >
