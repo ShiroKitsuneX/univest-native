@@ -1,8 +1,10 @@
 import type { ComponentType } from 'react'
+import { View } from 'react-native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useAuthStore } from '@/stores/authStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useBootstrap } from '@/app/useBootstrap'
+import { useTheme } from '@/theme/useTheme'
 import { SplashScreen } from '@/screens/SplashScreen'
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen'
 import { LoginScreen } from '@/screens/auth/LoginScreen'
@@ -18,6 +20,7 @@ type Props = {
 
 export function RootNavigator({ Main }: Props) {
   useBootstrap()
+  const { T } = useTheme()
 
   const bootstrapped = useAuthStore(s => s.bootstrapped)
   const authLoading = useAuthStore(s => s.authLoading)
@@ -42,10 +45,13 @@ export function RootNavigator({ Main }: Props) {
   const isInstitution = userData?.tipo === 'instituicao'
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
       <Stack.Navigator
         id="Root"
-        screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
       >
         {!currentUser ? (
           <>
@@ -64,6 +70,6 @@ export function RootNavigator({ Main }: Props) {
         onAccepted={handleTermsAccepted}
         onDeclined={handleTermsDeclined}
       />
-    </>
+    </View>
   )
 }

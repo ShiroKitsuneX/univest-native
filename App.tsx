@@ -220,7 +220,7 @@ function ThemedNavigation() {
         },
       }
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} style={{ backgroundColor: T.bg }}>
       <RootNavigator Main={MainApp} />
     </NavigationContainer>
   )
