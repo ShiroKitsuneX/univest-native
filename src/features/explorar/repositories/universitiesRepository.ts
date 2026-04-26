@@ -9,7 +9,7 @@ import {
   increment,
   type DocumentData,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/core/firebase/client'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 
 export type UniversityUpdate = {

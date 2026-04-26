@@ -11,9 +11,7 @@ type ProgressState = {
   setReadBooks: (
     v:
       | Record<string, BookStatus>
-      | ((
-          prev: Record<string, BookStatus>
-        ) => Record<string, BookStatus>)
+      | ((prev: Record<string, BookStatus>) => Record<string, BookStatus>)
   ) => void
   setReadingBooks: (v: string[] | ((prev: string[]) => string[])) => void
   setCompletedTodos: (

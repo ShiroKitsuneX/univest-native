@@ -1,5 +1,5 @@
 import { collection, getDocs } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/core/firebase/client'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 
 export async function fetchCoursesList(): Promise<string[]> {

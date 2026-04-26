@@ -7,13 +7,13 @@ import {
   RefreshControl,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
-import { GEO_DATA } from '@/data/geo'
+import { useCardStyle } from '@/theme/styles'
 import { SBox } from '@/components/SBox'
 import { fmtCount } from '@/utils/format'
 import { removeAccents } from '@/utils/string'
 import { useProfileStore } from '@/stores/profileStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
-import { useGeoStore } from '@/stores/geoStore'
+import { useGeo } from '@/stores/hooks/useGeo'
 import { logger } from '@/services/logger'
 
 export function ExplorarScreen({
@@ -27,14 +27,11 @@ export function ExplorarScreen({
 
   const studyStateId = useProfileStore(s => s.studyStateId)
   const unis = useUniversitiesStore(s => s.unis)
-  const states = useGeoStore(s => s.states)
+  const { getStateName: getStateDisplayName } = useGeo()
 
   const [query, setQuery] = useState('')
   const [fSt, setFSt] = useState('Todos')
 
-  const getState = id =>
-    states.find(s => s.id === id) || GEO_DATA.states.find(s => s.id === id)
-  const getStateDisplayName = id => getState(id)?.name || ''
   const userStudyState = studyStateId ? getStateDisplayName(studyStateId) : null
 
   const filtU = useMemo(() => {
@@ -58,7 +55,7 @@ export function ExplorarScreen({
       logger.warn('Filter error:', e.message)
       return []
     }
-  }, [unis, query, fSt, states])
+  }, [unis, query, fSt, getStateDisplayName])
 
   const filterChips = useMemo(() => {
     const allStates = [...new Set(unis.map(u => u.state))].filter(Boolean)
@@ -73,13 +70,7 @@ export function ExplorarScreen({
 
   const hasSearch = query.length > 0
 
-  const cd = (extra = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...extra,
-  })
+  const cd = useCardStyle()
 
   return (
     <ScrollView

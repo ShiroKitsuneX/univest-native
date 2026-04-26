@@ -2,19 +2,16 @@ import { useMemo } from 'react'
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { getMonthFromKey } from '@/utils/dates'
+import { getMonthFromExamLabel } from '@/utils/dates'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 
-export function FollowingScreen({ onBack, onExplore, onSelectUni }) {
+export function FollowingScreen({ onBack, onExplore, onSelectUni, onOpenSort }) {
   const insets = useSafeAreaInsets()
   const { T, isDark, AT } = useTheme()
 
   const unis = useUniversitiesStore(s => s.unis)
   const uniSort = useUniversitiesStore(s => s.uniSort)
   const uniPrefs = useUniversitiesStore(s => s.uniPrefs)
-
-  const getMonthNum = (s: string | undefined) =>
-    getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || 'DEZ')
 
   const fol = useMemo(
     () =>
@@ -26,7 +23,7 @@ export function FollowingScreen({ onBack, onExplore, onSelectUni }) {
             const bPref = Number(uniPrefs[String(b.id)]) || 5
             return bPref - aPref
           }
-          return getMonthNum(a.prova) - getMonthNum(b.prova)
+          return getMonthFromExamLabel(a.prova) - getMonthFromExamLabel(b.prova)
         }),
     [unis, uniSort, uniPrefs]
   )
@@ -52,6 +49,23 @@ export function FollowingScreen({ onBack, onExplore, onSelectUni }) {
         >
           🏛️ Seguindo
         </Text>
+        {fol.length > 1 && onOpenSort && (
+          <TouchableOpacity
+            onPress={onOpenSort}
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 12,
+              backgroundColor: T.card2,
+              borderWidth: 1,
+              borderColor: T.border,
+            }}
+          >
+            <Text style={{ color: T.sub, fontSize: 12, fontWeight: '700' }}>
+              ↕ Ordenar
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16 }}>

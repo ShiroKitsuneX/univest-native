@@ -19,6 +19,13 @@ export const firestorePaths = {
   reports: () => ['reports'] as const,
   courses: () => ['cursos'] as const,
   icons: () => ['icones'] as const,
+
+  countries: () => ['countries'] as const,
+  country: (id: string) => ['countries', id] as const,
+  states: () => ['states'] as const,
+  state: (id: string) => ['states', id] as const,
+  cities: () => ['cities'] as const,
+  city: (id: string) => ['cities', id] as const,
 }
 
 export const getPath = (...segments: (string | number)[]): string => {

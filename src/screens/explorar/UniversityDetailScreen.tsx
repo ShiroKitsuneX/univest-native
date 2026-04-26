@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, Linking } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
+import { useCardStyle, useLabelStyle } from '@/theme/styles'
 import { fmtCount } from '@/utils/format'
 import { useProgressStore } from '@/stores/progressStore'
 
@@ -18,26 +19,8 @@ export function UniversityDetailScreen({
   const [selectedBookYear, setSelectedBookYear] = useState(null)
   const [bookMenu, setBookMenu] = useState(null)
 
-  const lbl: {
-    color: string
-    fontSize: number
-    fontWeight: '700'
-    textTransform: 'uppercase'
-    letterSpacing: number
-  } = {
-    color: T.muted,
-    fontSize: 10,
-    fontWeight: '700' as const,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.8,
-  }
-  const cd = (st = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...st,
-  })
+  const lbl = useLabelStyle()
+  const cd = useCardStyle(14)
 
   const persistReadBooks = newRead => setReadBooks(newRead)
 

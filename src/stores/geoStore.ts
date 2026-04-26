@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { GEO_DATA } from '@/data/geo'
-import { seedGeoData, fetchGeoCollections } from '@/services/geo'
+import {
+  seedGeoData,
+  fetchGeoCollections,
+} from '@/features/reference/repositories/geoRepository'
 import { logger } from '@/services/logger'
 
 export type Country = { id: string; name: string }

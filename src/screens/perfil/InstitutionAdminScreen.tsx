@@ -9,6 +9,7 @@ import {
   Linking,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
+import { useCardStyle, useLabelStyle } from '@/theme/styles'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import {
   saveUniversityUpdates,
@@ -165,20 +166,8 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
       .finally(() => setLoading(false))
   }
 
-  const lbl = {
-    color: T.muted,
-    fontSize: 10,
-    fontWeight: '700' as const,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.8,
-  }
-  const cd = (st = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...st,
-  })
+  const lbl = useLabelStyle()
+  const cd = useCardStyle(14)
 
   const EditableField = ({
     label,

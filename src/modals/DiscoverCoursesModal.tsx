@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
+import { useCardStyle } from '@/theme/styles'
 import { BottomSheet } from '@/components/BottomSheet'
 import { AREAS } from '@/data/areas'
 import { NOTAS_CORTE } from '@/data/notasCorte'
@@ -14,13 +15,7 @@ export function DiscoverCoursesModal({ visible, onClose, onPickCourse }) {
     if (!visible) setDarea(null)
   }, [visible])
 
-  const cd = (extra = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...extra,
-  })
+  const cd = useCardStyle()
 
   return (
     <BottomSheet visible={visible} onClose={onClose} T={T}>

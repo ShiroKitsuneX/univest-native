@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
+import { useCardStyle, useLabelStyle } from '@/theme/styles'
 import { BarChart } from 'react-native-chart-kit'
 import { NOTAS_CORTE } from '@/data/notasCorte'
 import { ENEM_SUBJECTS, subjectScore } from '@/data/subjects'
@@ -86,26 +87,8 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
     [gs, gradeFilter]
   )
 
-  const cd = (extra = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...extra,
-  })
-  const lbl: {
-    color: string
-    fontSize: number
-    fontWeight: '700'
-    textTransform: 'uppercase'
-    letterSpacing: number
-  } = {
-    color: T.muted,
-    fontSize: 10,
-    fontWeight: '700' as const,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.8,
-  }
+  const cd = useCardStyle()
+  const lbl = useLabelStyle()
 
   return (
     <ScrollView

@@ -17,23 +17,27 @@ The codebase is in a hybrid state.
 
 ### Already Good
 
-- `src/core/firebase/firestorePaths.ts` exists
-- feature repositories already exist for:
-  - feed
-  - explore
-- story loading is already moving through feature services
-- institution updates already use an explore repository and service
+- `src/core/firebase/firestorePaths.ts` exists and is used by every repository (now also covers `countries/states/cities`)
+- `src/core/firebase/client.ts` owns Firebase initialisation and reads `EXPO_PUBLIC_*` env vars
+- feature repositories exist for: auth (`fetchUserProfile`, `createInitialUserProfile`), feed (posts + stories), explorar (universities), onboarding, reference (courses, icons, geo)
+- story loading goes through `features/feed/services/storiesService` → `storiesRepository`
+- institution updates use `explorarService.saveUniversityUpdates` → `universitiesRepository`
+- `src/services/firestore.ts` and `src/services/geo.ts` were deleted; no more generic backend buckets
+- `src/services/auth.ts` retains only Firebase Auth wrappers (no Firestore writes)
 
 ### Remaining Debts
 
-- `src/services/firestore.ts` still centralizes several unrelated query families
-- `src/stores/middleware/persistToUser.ts` still performs remote writes from infrastructure middleware
-- root-level services still mix temporary legacy responsibilities with domain logic
+- `src/stores/middleware/persistToUser.ts` still performs remote writes from infrastructure middleware (kept by policy, see policy section below)
 
 ### Recently Fixed
 
 - OnboardingScreen now uses onboardingService/repository
-- App.tsx toggleFollow now uses universityService
+- App.tsx `toggleFollow` now uses `toggleUniversityFollow` from `universityService`
+- `src/services/firestore.ts` removed; queries migrated to feature/reference repositories
+- signUp profile write moved from `src/services/auth.ts` into `authRepository.createInitialUserProfile`
+- geo seed + fetch moved from `src/services/geo.ts` into `features/reference/repositories/geoRepository.ts`
+- Firebase init moved from `src/firebase/config.js` (JS, hardcoded) to `src/core/firebase/client.ts` (TS, env-driven)
+- `storiesRepository.createStory` now writes a real 24-hour `expiresAt` Date so `fetchActiveStories`'s `where('expiresAt', '>', now)` query expires stories on schedule
 
 This guide must support the current code while forcing all new work toward a cleaner end state.
 
@@ -415,10 +419,9 @@ Priority areas:
 
 ## Current Highest-Priority Cleanup
 
-1. move onboarding completion write out of `OnboardingScreen.tsx`
-2. stop expanding `src/services/firestore.ts` as a generic backend bucket
-3. decide which `usuarios` fields remain middleware-persisted and which must move to explicit domain repositories
-4. keep all new collection access behind path helpers and repositories
+1. write down the explicit allow-list of `usuarios` fields handled by `persistToUser` per store, and reject any new field on a write-path that needs validation
+2. consider whether the institution sign-up flow (when added) needs a separate `createInitialInstitutionProfile` so `tipo: 'instituicao'` is set at creation rather than retrofitted later
+3. keep all new collection access behind path helpers and repositories
 
 ## Final Rule
 

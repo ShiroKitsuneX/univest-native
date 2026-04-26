@@ -32,6 +32,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
+# Local design references (not part of the app)
+inspiration/
+
 # local env files
 .env*.local
 .env

@@ -13,7 +13,7 @@ import { useTheme } from '@/theme/useTheme'
 import { AVATAR_COLORS } from '@/theme/avatar'
 import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
-import { useCoursesStore } from '@/stores/coursesStore'
+import { useIcons } from '@/stores/hooks/useIcons'
 import { useAuthStore } from '@/stores/authStore'
 import { FeedScreen } from '@/screens/feed/FeedScreen'
 import { NotasScreen } from '@/screens/notas/NotasScreen'
@@ -125,10 +125,7 @@ function TabHeader({
 function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets()
   const { T } = useTheme()
-  const fbIcons = useCoursesStore(s => s.fbIcons)
-  const getIcon = (id: string, fallback: string): string =>
-    fbIcons[id] || fallback
-  const { onTabPress } = useMain()
+  const getIcon = useIcons()
 
   return (
     <View
@@ -150,7 +147,6 @@ function TabBar({ state, navigation }: BottomTabBarProps) {
           <TouchableOpacity
             key={route.name}
             onPress={() => {
-              onTabPress?.()
               if (!active) navigation.navigate(route.name)
             }}
             style={{ flex: 1, alignItems: 'center', paddingVertical: 6 }}

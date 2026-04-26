@@ -7,6 +7,7 @@ import {
   StatusBar,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
+import { useCardStyle } from '@/theme/styles'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { completeOnboarding } from '@/features/onboarding/services/onboardingService'
 import { USER_TYPES } from '@/data/userTypes'
@@ -15,6 +16,7 @@ import { SBox } from '@/components/SBox'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useCoursesStore } from '@/stores/coursesStore'
+import { useIcons } from '@/stores/hooks/useIcons'
 import { useAuthStore } from '@/stores/authStore'
 import { logger } from '@/services/logger'
 
@@ -36,8 +38,7 @@ export function OnboardingScreen() {
   const setUnis = useUniversitiesStore(s => s.setUnis)
 
   const fbCourses = useCoursesStore(s => s.fbCourses)
-  const getIcon = (id, fallback) =>
-    useCoursesStore.getState().getIcon(id, fallback)
+  const getIcon = useIcons()
 
   const currentUser = useAuthStore(s => s.currentUser)
 
@@ -46,13 +47,7 @@ export function OnboardingScreen() {
   const [picking, setPick] = useState(1)
 
   const coursesToUse = fbCourses.length ? fbCourses : ALL_COURSES
-  const cd = (extra = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...extra,
-  })
+  const cd = useCardStyle()
 
   const fC = coursesToUse
     .filter(c => c.toLowerCase().includes(cSrch.toLowerCase()))

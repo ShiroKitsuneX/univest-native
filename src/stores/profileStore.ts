@@ -44,9 +44,7 @@ type ProfileState = {
   setAv: (av: string) => void
   setAvBgIdx: (avBgIdx: number) => void
   setGs: (gs: Grade[] | ((prev: Grade[]) => Grade[])) => void
-  setNg: (
-    ng: NewGradeDraft | ((prev: NewGradeDraft) => NewGradeDraft)
-  ) => void
+  setNg: (ng: NewGradeDraft | ((prev: NewGradeDraft) => NewGradeDraft)) => void
   setCountryId: (countryId: string) => void
   setStateId: (stateId: string) => void
   setCityId: (cityId: string) => void

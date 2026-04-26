@@ -21,7 +21,7 @@ import {
   resetPassword,
   getAuthErrorMessage,
 } from '@/services/auth'
-import { useCoursesStore } from '@/stores/coursesStore'
+import { useIcons } from '@/stores/hooks/useIcons'
 
 const INITIAL_TOUCHED = {
   email: false,
@@ -35,8 +35,7 @@ const INITIAL_TOUCHED = {
 export function WelcomeScreen() {
   const insets = useSafeAreaInsets()
   const { T, isDark, AT } = useTheme()
-  const getIcon = (id, fallback) =>
-    useCoursesStore.getState().getIcon(id, fallback)
+  const getIcon = useIcons()
 
   const [showLogin, setShowLogin] = useState(false)
   const [loginMode, setLoginMode] = useState('login')

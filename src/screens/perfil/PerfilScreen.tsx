@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react'
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
+import { useCardStyle, useLabelStyle } from '@/theme/styles'
 import { AVATAR_COLORS } from '@/theme/avatar'
 import { EVENTS } from '@/data/events'
-import { GEO_DATA } from '@/data/geo'
 import { NOTAS_CORTE } from '@/data/notasCorte'
 import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useProgressStore } from '@/stores/progressStore'
 import { usePostsStore } from '@/stores/postsStore'
-import { useGeoStore } from '@/stores/geoStore'
+import { useGeo } from '@/stores/hooks/useGeo'
 
 export function PerfilScreen({
   onChangePhoto,
@@ -47,11 +47,7 @@ export function PerfilScreen({
   const setReadBooks = useProgressStore(s => s.setReadBooks)
   const completedTodos = useProgressStore(s => s.completedTodos)
   const setCompletedTodos = useProgressStore(s => s.setCompletedTodos)
-  const cities = useGeoStore(s => s.cities)
-
-  const getCity = id =>
-    cities.find(c => c.id === id) || GEO_DATA.cities.find(c => c.id === id)
-  const getCityDisplayName = id => getCity(id)?.name || ''
+  const { getCityName: getCityDisplayName } = useGeo()
 
   const last = gs[gs.length - 1]
   const avg = g => Math.round((g.s.l + g.s.h + g.s.n + g.s.m) / 4)
@@ -68,26 +64,8 @@ export function PerfilScreen({
     [unis]
   )
 
-  const cd = (extra = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...extra,
-  })
-  const lbl: {
-    color: string
-    fontSize: number
-    fontWeight: '700'
-    textTransform: 'uppercase'
-    letterSpacing: number
-  } = {
-    color: T.muted,
-    fontSize: 10,
-    fontWeight: '700' as const,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.8,
-  }
+  const cd = useCardStyle()
+  const lbl = useLabelStyle()
 
   return (
     <ScrollView

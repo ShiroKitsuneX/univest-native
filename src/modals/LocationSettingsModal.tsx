@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { BottomSheet } from '@/components/BottomSheet'
-import { GEO_DATA } from '@/data/geo'
 import { useProfileStore } from '@/stores/profileStore'
-import { useGeoStore } from '@/stores/geoStore'
+import { useGeo } from '@/stores/hooks/useGeo'
 
 export function LocationSettingsModal({ visible, onClose }) {
   const { T, isDark, AT } = useTheme()
@@ -22,25 +21,12 @@ export function LocationSettingsModal({ visible, onClose }) {
   const studyCityId = useProfileStore(s => s.studyCityId)
   const setStudyCityId = useProfileStore(s => s.setStudyCityId)
 
-  const states = useGeoStore(s => s.states)
-  const cities = useGeoStore(s => s.cities)
-
-  const getState = id =>
-    states.find(s => s.id === id) || GEO_DATA.states.find(s => s.id === id)
-  const getCity = id =>
-    cities.find(c => c.id === id) || GEO_DATA.cities.find(c => c.id === id)
-  const getStatesForCountry = cid => {
-    const fromDb = states.filter(s => s.countryId === cid)
-    if (fromDb.length > 0) return fromDb
-    return GEO_DATA.states.filter(s => s.countryId === cid)
-  }
-  const getCitiesForState = sid => {
-    const fromDb = cities.filter(c => c.stateId === sid)
-    if (fromDb.length > 0) return fromDb
-    return GEO_DATA.cities.filter(c => c.stateId === sid)
-  }
-  const getCityDisplayName = id => getCity(id)?.name || ''
-  const getStateDisplayName = id => getState(id)?.name || ''
+  const {
+    getStatesForCountry,
+    getCitiesForState,
+    getCityName: getCityDisplayName,
+    getStateName: getStateDisplayName,
+  } = useGeo()
 
   const [tmpCountryId, setTmpCountryId] = useState('')
   const [tmpStateId, setTmpStateId] = useState('')

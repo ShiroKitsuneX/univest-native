@@ -1,6 +1,6 @@
 import { doc, setDoc } from 'firebase/firestore'
 import type { StateCreator } from 'zustand'
-import { db } from '@/firebase/config'
+import { db } from '@/core/firebase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { loadLocalUserData, saveLocalUserData } from '@/services/storage'
 import { logger } from '@/services/logger'

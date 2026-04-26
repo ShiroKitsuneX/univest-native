@@ -81,8 +81,8 @@ If your solution blurs any of these concepts, it is wrong.
 - New product code should prefer the owning feature folder
 - New infrastructure code should go to `app/`, `core/`, or shared infrastructure
 - Do NOT create new domain-heavy logic in generic root utility buckets when a feature owner exists
-- Do NOT add new feature logic to `App.js`-style root shells or navigation files
-- Do NOT create new `.js` files in active app layers; prefer `.ts` and `.tsx`
+- Do NOT add new feature logic to `App.tsx`-style root shells or navigation files (the legacy `App.js` no longer exists; the entry is `App.tsx`)
+- Do NOT create new `.js` files in active app layers; prefer `.ts` and `.tsx`. The only remaining `.js` files are `src/data/*` (seed/reference data)
 - Use `@/` alias imports for internal modules
 
 ---

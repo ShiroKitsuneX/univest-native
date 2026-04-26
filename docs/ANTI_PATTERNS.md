@@ -43,11 +43,12 @@ A file such as `src/services/firestore.ts` becomes the default place for every n
 
 ### Current Evidence
 
-- `src/services/firestore.ts` still owns user, universities, posts, courses, icons, and likes reads
+- None — `src/services/firestore.ts` was removed in commit `d2ee07f`; the signUp `usuarios/{uid}` write moved to `features/auth/repositories/authRepository.createInitialUserProfile`; geo seed + fetch moved to `features/reference/repositories/geoRepository`
+- `src/services/auth.ts` retains only the Firebase Auth wrappers (sign in/up/out, password reset, error mapping); all Firestore writes go through repositories
 
 ### Correct Direction
 
-Move each query family to the owning feature or reference repository over time.
+Continue moving any new query family to the owning feature or reference repository.
 
 ## 3. Hidden Remote Writes In Generic Middleware
 

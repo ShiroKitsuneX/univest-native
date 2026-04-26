@@ -10,7 +10,7 @@ import {
   query,
   orderBy,
 } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/core/firebase/client'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 
 export type StoryDoc = {
@@ -39,7 +39,8 @@ export async function fetchActiveStories(
   if (!followedUniIds.length) return []
 
   const allStories: StoryDoc[] = []
-  const now = new Date().toISOString()
+  const nowDate = new Date()
+  const now = nowDate.toISOString()
 
   await Promise.all(
     followedUniIds.map(async uniId => {
@@ -47,7 +48,7 @@ export async function fetchActiveStories(
         db,
         getPath(...firestorePaths.universityStories(uniId))
       )
-      const q = query(storiesRef, where('expiresAt', '>', now))
+      const q = query(storiesRef, where('expiresAt', '>', nowDate))
 
       const snapshot = await getDocs(q)
       snapshot.docs.forEach(d => {
@@ -80,7 +81,8 @@ export async function fetchActiveStories(
 }
 
 export async function createStory(input: CreateStoryInput): Promise<StoryDoc> {
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+  const expiresAtDate = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  const expiresAt = expiresAtDate.toISOString()
 
   const storiesRef = collection(
     db,
@@ -94,7 +96,7 @@ export async function createStory(input: CreateStoryInput): Promise<StoryDoc> {
     imageUrl: input.imageUrl,
     videoUrl: input.videoUrl ?? null,
     createdAt: serverTimestamp(),
-    expiresAt: serverTimestamp(),
+    expiresAt: expiresAtDate,
     viewsCount: 0,
   })
 

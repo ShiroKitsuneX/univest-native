@@ -8,8 +8,8 @@ import {
   type User,
   type UserCredential,
 } from 'firebase/auth'
-import { doc, setDoc } from 'firebase/firestore'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/core/firebase/client'
+import { createInitialUserProfile } from '@/features/auth/repositories/authRepository'
 import { clearLocalUserData } from './storage'
 
 export const onAuthChange = (cb: (user: User | null) => void): (() => void) =>
@@ -36,15 +36,11 @@ export const signUp = async ({
   dataNascimento,
 }: SignUpInput): Promise<UserCredential> => {
   const cred = await createUserWithEmailAndPassword(auth, email, password)
-  await setDoc(doc(db, 'usuarios', cred.user.uid), {
+  await createInitialUserProfile(cred.user.uid, {
     email: cred.user.email,
     nome: nome.trim(),
     sobrenome: sobrenome?.trim() || '',
     dataNascimento: dataNascimento.trim(),
-    tipo: 'usuario',
-    done: false,
-    followedUnis: [],
-    updatedAt: new Date().toISOString(),
   })
   await sendEmailVerification(cred.user)
   return cred

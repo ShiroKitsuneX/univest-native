@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
+import { useCardStyle } from '@/theme/styles'
 import { BottomSheet } from '@/components/BottomSheet'
 import { FEED } from '@/data/feed'
 import { usePostsStore } from '@/stores/postsStore'
@@ -15,13 +16,7 @@ export function SavedPostsModal({ visible, onClose, onSelectPost }) {
   const feedItems = posts.length ? posts : FEED
   const savedItems = feedItems.filter(item => saved[item.id])
 
-  const cd = (extra = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: T.border,
-    ...extra,
-  })
+  const cd = useCardStyle()
 
   return (
     <BottomSheet visible={visible} onClose={onClose} T={T}>

@@ -163,6 +163,7 @@ function MainApp() {
     onShare: item => setMshr(item),
     onOpenLocation: () => setMloc(true),
     onOpenDiscover: () => setMdisc(true),
+    onOpenSort: () => setMUni(true),
     onEditCourses: () => setMedit(true),
     onAddGrade: () => setMgr(true),
     onChangePhoto: () => setMpho(true),

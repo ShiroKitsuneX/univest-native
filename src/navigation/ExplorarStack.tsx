@@ -81,6 +81,7 @@ function FollowingRoute() {
         h.onSelectUni?.(u)
         navigation.navigate('UniversityDetail')
       }}
+      onOpenSort={h.onOpenSort}
     />
   )
 }

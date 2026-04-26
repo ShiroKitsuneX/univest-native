@@ -5,7 +5,7 @@ import {
   type UniversityUpdate,
 } from '../repositories/universitiesRepository'
 import { doc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { db } from '@/core/firebase/client'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 import { logger } from '@/services/logger'
 

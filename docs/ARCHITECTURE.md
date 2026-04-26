@@ -57,10 +57,14 @@ The codebase is already in a meaningful transition toward a better structure.
 ### Current Structural Debts
 
 - architecture is hybrid: root-level `services/` and `stores/` still coexist with feature repositories and services
-- `persistToUser` still performs remote writes from store infrastructure
-- generic `src/services/firestore.ts` still owns several cross-domain queries
+- `persistToUser` still performs remote writes from store infrastructure (kept by policy — see FIREBASE_GUIDE)
+- `src/services/auth.ts` retains only the Firebase Auth wrappers; the signUp profile write now lives in `features/auth/repositories/authRepository.createInitialUserProfile`
 - feature-owned modals still live in a global `src/modals/` folder
-- the repo still mixes `.js`, `.ts`, and `.tsx` (seed data is .js)
+- `ErrorBoundary` is at `src/components/ErrorBoundary.tsx`; long-term home is `src/core/errors/`
+- the repo still mixes `.js`, `.ts`, and `.tsx` — only `src/data/*` remain `.js`
+- folder name drift: `features/explorar` (PT) vs target `features/explore` (EN); `screens/notas` exists with no matching `features/notes`. Pick one convention and migrate the rest at touch time
+- `src/navigation/linking.ts` is a stub (`config: { screens: {} }`); either populate or remove until deep-link work begins
+- ESLint is on v9 but the config is still legacy `.eslintrc.json`; `npm run lint` errors out until the project migrates to `eslint.config.js` flat config and adds `typescript-eslint` for TS support
 - some naming remains highly abbreviated and easy for AI tools to misread
 
 ### Recently Fixed
@@ -607,12 +611,12 @@ Minimum expectations:
 
 The next architectural improvements should happen in this order:
 
-1. remove remaining direct Firebase writes from UI, starting with `OnboardingScreen.tsx`
-2. continue moving generic remote access from `src/services/firestore.ts` into feature or reference repositories
-3. define the long-term rule for `persistToUser` so remote writes are no longer a hidden infrastructure side effect for complex domains
-4. move feature-owned modals out of the global `src/modals/` bucket as they are touched
-5. delete empty duplicate screen directories
-6. continue standardizing active app layers on TypeScript
+1. migrate the ESLint config to flat `eslint.config.js` and add `typescript-eslint` so `npm run lint` works on the TS codebase
+2. move `ErrorBoundary`, `logger`, and `storage` under `src/core/{errors,logging,storage}/` (their long-term home per the target structure)
+3. move feature-owned modals out of the global `src/modals/` bucket as they are touched
+4. decide whether to align `features/explorar` → `features/explore` and add a `features/notes/` owner for the notas screen, or update the target structure to keep the Portuguese names
+5. continue standardising active app layers on TypeScript (only `src/data/*.js` remain JS)
+6. expand `tsconfig` to `strict: true` once the remaining ad-hoc `any` casts in store hydrate functions are typed
 
 ## Final Rule
 
