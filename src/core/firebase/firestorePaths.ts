@@ -1,6 +1,12 @@
 export const firestorePaths = {
   user: (userId: string) => ['usuarios', userId] as const,
   users: () => ['usuarios'] as const,
+  userTermsAcceptance: (userId: string) =>
+    ['usuarios', userId, 'termsAcceptance'] as const,
+
+  terms: () => ['TERMS_AND_CONDITIONS'] as const,
+  termsDocument: (termsId: string) =>
+    ['TERMS_AND_CONDITIONS', String(termsId)] as const,
 
   universities: () => ['universidades'] as const,
   university: (universityId: string) =>

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { User } from 'firebase/auth'
 import { onAuthChange } from '@/services/auth'
 import { fetchUserProfile } from '@/features/auth/repositories/authRepository'
+import { checkTermsStatus } from '@/features/auth/services/termsService'
 import { saveLocalUserData } from '@/services/storage'
 import { logger } from '@/services/logger'
 
@@ -9,6 +10,7 @@ export type UserData = {
   followedUnis?: string[]
   tipo?: 'usuario' | 'instituicao'
   linkedUniId?: string
+  termsAccepted?: boolean
   [key: string]: unknown
 }
 
@@ -17,6 +19,7 @@ type AuthState = {
   userData: UserData | null
   authLoading: boolean
   bootstrapped: boolean
+  needsTermsReaccept: boolean
 
   setCurrentUser: (currentUser: User | null) => void
   setUserData: (
@@ -24,6 +27,7 @@ type AuthState = {
   ) => void
   setAuthLoading: (authLoading: boolean) => void
   setBootstrapped: (bootstrapped: boolean) => void
+  setNeedsTermsReaccept: (needs: boolean) => void
   isInstitution: () => boolean
   getLinkedUniId: () => string | undefined
 
@@ -37,6 +41,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   userData: null,
   authLoading: true,
   bootstrapped: false,
+  needsTermsReaccept: false,
 
   setCurrentUser: currentUser => set({ currentUser }),
   setUserData: userData =>
@@ -47,6 +52,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     ),
   setAuthLoading: authLoading => set({ authLoading }),
   setBootstrapped: bootstrapped => set({ bootstrapped }),
+  setNeedsTermsReaccept: needsTermsReaccept => set({ needsTermsReaccept }),
 
   isInstitution: () => {
     const { userData } = get()
@@ -70,6 +76,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (fbData) {
           await saveLocalUserData(fbData)
           set({ userData: fbData })
+          const termsStatus = await checkTermsStatus(user.uid)
+          if (termsStatus.needsReaccept) {
+            set({ needsTermsReaccept: true })
+          }
           onUserDoc?.(fbData, true)
         } else {
           set({ userData: { followedUnis: [] } })

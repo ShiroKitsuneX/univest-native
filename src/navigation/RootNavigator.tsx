@@ -6,6 +6,7 @@ import { useBootstrap } from '@/app/useBootstrap'
 import { SplashScreen } from '@/screens/SplashScreen'
 import { WelcomeScreen } from '@/screens/auth/WelcomeScreen'
 import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen'
+import { TermsReacceptModal } from '@/modals/TermsReacceptModal'
 
 const Stack = createNativeStackNavigator()
 
@@ -21,6 +22,16 @@ export function RootNavigator({ Main }: Props) {
   const currentUser = useAuthStore(s => s.currentUser)
   const userData = useAuthStore(s => s.userData)
   const done = useOnboardingStore(s => s.done)
+  const needsTermsReaccept = useAuthStore(s => s.needsTermsReaccept)
+  const setNeedsTermsReaccept = useAuthStore(s => s.setNeedsTermsReaccept)
+
+  const handleTermsAccepted = () => {
+    setNeedsTermsReaccept(false)
+  }
+
+  const handleTermsDeclined = async () => {
+    setNeedsTermsReaccept(false)
+  }
 
   if (!bootstrapped || authLoading) {
     return <SplashScreen />
@@ -29,17 +40,24 @@ export function RootNavigator({ Main }: Props) {
   const isInstitution = userData?.tipo === 'instituicao'
 
   return (
-    <Stack.Navigator
-      id="Root"
-      screenOptions={{ headerShown: false, animation: 'none' }}
-    >
-      {!currentUser ? (
-        <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      ) : !done && !isInstitution ? (
-        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-      ) : (
-        <Stack.Screen name="Main" component={Main} />
-      )}
-    </Stack.Navigator>
+    <>
+      <Stack.Navigator
+        id="Root"
+        screenOptions={{ headerShown: false, animation: 'none' }}
+      >
+        {!currentUser ? (
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
+        ) : !done && !isInstitution ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        ) : (
+          <Stack.Screen name="Main" component={Main} />
+        )}
+      </Stack.Navigator>
+      <TermsReacceptModal
+        visible={needsTermsReaccept && !!currentUser}
+        onAccepted={handleTermsAccepted}
+        onDeclined={handleTermsDeclined}
+      />
+    </>
   )
 }

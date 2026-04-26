@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -22,6 +22,11 @@ import {
   getAuthErrorMessage,
 } from '@/services/auth'
 import { useIcons } from '@/stores/hooks/useIcons'
+import {
+  checkTermsStatus,
+  DEFAULT_TERMS_CONTENT,
+  type TermsStatus,
+} from '@/features/auth/services/termsService'
 
 const INITIAL_TOUCHED = {
   email: false,
@@ -53,6 +58,15 @@ export function WelcomeScreen() {
   const [showLoginPwd, setShowLoginPwd] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
   const [authTouched, setAuthTouched] = useState(INITIAL_TOUCHED)
+  const [termsStatus, setTermsStatus] = useState<TermsStatus>({
+    terms: null,
+    userAcceptance: null,
+    needsReaccept: false,
+  })
+
+  useEffect(() => {
+    checkTermsStatus(null).then(setTermsStatus)
+  }, [])
 
   const loginBtnScale = useRef(new Animated.Value(1)).current
 
@@ -447,7 +461,7 @@ export function WelcomeScreen() {
                     >
                       Senha
                     </Text>
-                    <View style={{ marginBottom: 8 }}>
+                    <View style={{ marginBottom: 4 }}>
                       <TextInput
                         value={authPassword}
                         onChangeText={t => {
@@ -487,19 +501,57 @@ export function WelcomeScreen() {
                         </Text>
                       </TouchableOpacity>
                     </View>
-                    {loginMode === 'signup' &&
-                      authTouched.senha &&
-                      validatePassword(authPassword) && (
+                    {loginMode === 'signup' && (
+                      <View
+                        style={{
+                          backgroundColor: T.card2,
+                          borderRadius: 8,
+                          padding: 10,
+                          marginBottom: 12,
+                        }}
+                      >
                         <Text
                           style={{
-                            color: '#f87171',
+                            color: T.sub,
                             fontSize: 11,
-                            marginBottom: 4,
+                            fontWeight: '600',
+                            marginBottom: 6,
                           }}
                         >
-                          {validatePassword(authPassword)}
+                          Sua senha precisa ter:
                         </Text>
-                      )}
+                        {[
+                          ['8+ caracteres', /.{8,}/] as [string, RegExp],
+                          ['Uma letra maiúscula', /[A-Z]/] as [string, RegExp],
+                          ['Uma letra minúscula', /[a-z]/] as [string, RegExp],
+                          ['Um número', /\d/] as [string, RegExp],
+                        ].map(([req, regex]) => {
+                          const met = regex.test(authPassword)
+                          return (
+                            <View
+                              key={req}
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginBottom: 2,
+                              }}
+                            >
+                              <Text style={{ fontSize: 10, marginRight: 6 }}>
+                                {met ? '✅' : '⚪'}
+                              </Text>
+                              <Text
+                                style={{
+                                  color: met ? '#4ade80' : T.muted,
+                                  fontSize: 11,
+                                }}
+                              >
+                                {req}
+                              </Text>
+                            </View>
+                          )
+                        })}
+                      </View>
+                    )}
                     {loginMode === 'signup' && (
                       <>
                         <Text
@@ -620,7 +672,7 @@ export function WelcomeScreen() {
                             backgroundColor: T.inp,
                             color: T.text,
                             fontSize: 14,
-                            marginBottom: 4,
+                            marginBottom: 16,
                           }}
                         />
                         {authTouched.nascimento && (
@@ -628,50 +680,59 @@ export function WelcomeScreen() {
                             style={{
                               color: '#f87171',
                               fontSize: 11,
-                              marginBottom: 12,
+                              marginBottom: 16,
                             }}
                           >
                             Data inválida (DD/MM/AAAA)
                           </Text>
                         )}
-                        <TouchableOpacity
-                          onPress={() => setAuthAcceptTerms(!authAcceptTerms)}
+                        <View
                           style={{
                             flexDirection: 'row',
-                            alignItems: 'center',
-                            marginBottom: 16,
+                            alignItems: 'flex-start',
+                            marginTop: 16,
+                            paddingTop: 16,
+                            borderTopWidth: 1,
+                            borderTopColor: T.border,
                           }}
                         >
-                          <View
+                          <TouchableOpacity
+                            onPress={() => setAuthAcceptTerms(!authAcceptTerms)}
                             style={{
-                              width: 22,
-                              height: 22,
-                              borderRadius: 6,
-                              backgroundColor: authAcceptTerms
-                                ? T.accent
-                                : T.inp,
-                              borderWidth: 1,
-                              borderColor: authAcceptTerms
-                                ? T.accent
-                                : T.border,
-                              alignItems: 'center',
-                              justifyContent: 'center',
                               marginRight: 10,
+                              marginTop: 2,
                             }}
                           >
-                            {authAcceptTerms && (
-                              <Text
-                                style={{
-                                  color: AT,
-                                  fontSize: 14,
-                                  fontWeight: '700',
-                                }}
-                              >
-                                ✓
-                              </Text>
-                            )}
-                          </View>
-                          <Text style={{ color: T.sub, fontSize: 12 }}>
+                            <View
+                              style={{
+                                width: 22,
+                                height: 22,
+                                borderRadius: 6,
+                                backgroundColor: authAcceptTerms
+                                  ? T.accent
+                                  : T.inp,
+                                borderWidth: 1,
+                                borderColor: authAcceptTerms
+                                  ? T.accent
+                                  : T.border,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {authAcceptTerms && (
+                                <Text
+                                  style={{
+                                    color: AT,
+                                    fontSize: 14,
+                                    fontWeight: '700',
+                                  }}
+                                >
+                                  ✓
+                                </Text>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+                          <Text style={{ color: T.sub, fontSize: 12, flex: 1 }}>
                             Li e aceito os{' '}
                           </Text>
                           <TouchableOpacity
@@ -680,7 +741,6 @@ export function WelcomeScreen() {
                               setTimeout(() => setShowTerms(true), 300)
                             }}
                             activeOpacity={0.7}
-                            style={{ paddingHorizontal: 4 }}
                           >
                             <Text
                               style={{
@@ -692,7 +752,7 @@ export function WelcomeScreen() {
                               Termos e Condições
                             </Text>
                           </TouchableOpacity>
-                        </TouchableOpacity>
+                        </View>
                       </>
                     )}
                     {!!authError && (
@@ -923,87 +983,88 @@ export function WelcomeScreen() {
         <View
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            padding: 20,
+            backgroundColor: T.bg,
           }}
         >
           <View
             style={{
-              backgroundColor: T.card,
-              borderRadius: 20,
-              padding: 24,
-              maxHeight: '80%',
+              padding: 20,
+              paddingTop: insets.top + 20,
+              paddingBottom: insets.bottom + 20,
+              flex: 1,
             }}
           >
-            <Text
+            <View
               style={{
-                color: T.text,
-                fontSize: 20,
-                fontWeight: '800',
-                textAlign: 'center',
-                marginBottom: 16,
-              }}
-            >
-              Termos e Condições
-            </Text>
-            <ScrollView style={{ marginBottom: 16 }}>
-              <Text
-                style={{ color: T.sub, fontSize: 13, lineHeight: 22 }}
-              >{`TERMOS E CONDIÇÕES DE USO DO UNIVEST
-
-Bienvenido ao UniVest! Estes Termos e Condições regem o uso do aplicativo UniVest e todos os serviços relacionados.
-
-1. Aceitação dos Termos
-Ao usar o UniVest, você concorda em estar vinculados a estes termos. Se você não concordar com qualquer parte destes termos, não use nosso aplicativo.
-
-2. Uso do Aplicativo
-O UniVest é fornecido para ajudá-lo na preparação para vestibulares, ENEM e outros exames brasileiros. Você concorda em usar o aplicativo de acordo com todas as leis e regulamentos aplicáveis.
-
-3. Privacidade
-Seus dados pessoais, incluindo nome, e-mail, data de nascimento e informações de progresso, serão armazenados de forma segura e usados apenas para melhorar sua experiência no aplicativo.
-
-4. Conteúdo do Usuário
-Você é responsável por qualquer conteúdo que publicar no aplicativo e garante que tem o direito de postar tal conteúdo.
-
-5. Limitação de Responsabilidade
-O UniVest não garante a aprovação em qualquer exame ou vestibular. O conteúdo fornecido é para fins educacionais e informativos.
-
-6. Modificações
-Reservamo-nos o direito de modificar estes termos a qualquer momento. O uso continuado do aplicativo após alterações constitui aceitação dos novos termos.
-
-7. Contato
-Para dúvidas sobre estes termos, entre em contato pelo aplicativo.
-
-Data da última atualização: ${new Date().toLocaleDateString('pt-BR')}`}</Text>
-            </ScrollView>
-            <TouchableOpacity
-              onPress={() => {
-                setShowTerms(false)
-                setAuthAcceptTerms(true)
-                setShowLogin(true)
-              }}
-              style={{
-                padding: 14,
-                borderRadius: 14,
-                backgroundColor: T.accent,
+                flexDirection: 'row',
                 alignItems: 'center',
+                marginBottom: 20,
               }}
             >
-              <Text style={{ color: AT, fontSize: 15, fontWeight: '800' }}>
-                Aceitar
+              <TouchableOpacity
+                onPress={() => {
+                  setShowTerms(false)
+                  setShowLogin(true)
+                }}
+                style={{ padding: 8 }}
+              >
+                <Text style={{ color: T.sub, fontSize: 24 }}>←</Text>
+              </TouchableOpacity>
+              <Text
+                style={{
+                  color: T.text,
+                  fontSize: 20,
+                  fontWeight: '800',
+                  flex: 1,
+                  textAlign: 'center',
+                  marginRight: 40,
+                }}
+              >
+                Termos e Condições
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                setShowTerms(false)
-                setAuthAcceptTerms(false)
-                setShowLogin(true)
-              }}
-              style={{ padding: 14, alignItems: 'center', marginTop: 8 }}
-            >
-              <Text style={{ color: T.sub, fontSize: 13 }}>Recusar</Text>
-            </TouchableOpacity>
+            </View>
+            <ScrollView style={{ flex: 1, marginBottom: 20 }}>
+              <Text style={{ color: T.sub, fontSize: 13, lineHeight: 22 }}>
+                {termsStatus.terms?.content || DEFAULT_TERMS_CONTENT}
+                {'\n\n'}
+                {termsStatus.terms && (
+                  <Text style={{ fontStyle: 'italic', fontSize: 11 }}>
+                    Versão {termsStatus.terms.version} - Atualizado em{' '}
+                    {new Date(termsStatus.terms.createdAt).toLocaleDateString(
+                      'pt-BR'
+                    )}
+                  </Text>
+                )}
+              </Text>
+            </ScrollView>
+            <View style={{ gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowTerms(false)
+                  setAuthAcceptTerms(true)
+                  setShowLogin(true)
+                }}
+                style={{
+                  padding: 16,
+                  borderRadius: 16,
+                  backgroundColor: T.accent,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: AT, fontSize: 16, fontWeight: '800' }}>
+                  Aceitar e continuar
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowTerms(false)
+                  setShowLogin(true)
+                }}
+                style={{ padding: 14, alignItems: 'center' }}
+              >
+                <Text style={{ color: T.sub, fontSize: 14 }}>Voltar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
