@@ -694,18 +694,14 @@ export function WelcomeScreen() {
                         <View
                           style={{
                             flexDirection: 'row',
-                            alignItems: 'flex-start',
-                            marginTop: 16,
-                            paddingTop: 16,
-                            borderTopWidth: 1,
-                            borderTopColor: T.border,
+                            alignItems: 'center',
+                            marginTop: 8,
                           }}
                         >
                           <TouchableOpacity
                             onPress={() => setAuthAcceptTerms(!authAcceptTerms)}
                             style={{
                               marginRight: 10,
-                              marginTop: 2,
                             }}
                           >
                             <View
