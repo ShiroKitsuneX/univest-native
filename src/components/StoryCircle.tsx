@@ -1,5 +1,4 @@
 import { View, Text, TouchableOpacity } from 'react-native'
-import { useTheme } from '@/theme/useTheme'
 
 type Props = {
   uniName: string
@@ -14,17 +13,15 @@ export function StoryCircle({
   uniColor,
   isViewed,
   onPress,
-  size = 64,
+  size = 68,
 }: Props) {
-  const { T } = useTheme()
-
-  const ringColor = isViewed ? T.muted : uniColor
-  const ringWidth = isViewed ? 2 : 2.5
+  const ringColor = isViewed ? 'rgba(139, 92, 246, 0.3)' : '#A855F7'
+  const ringWidth = isViewed ? 2 : 3
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={{ alignItems: 'center', marginRight: 12, width: size + 4 }}
+      style={{ alignItems: 'center', marginRight: 14, width: size + 8 }}
     >
       <View
         style={{
@@ -36,19 +33,23 @@ export function StoryCircle({
           justifyContent: 'center',
           borderWidth: ringWidth,
           borderColor: ringColor,
+          shadowColor: isViewed ? 'transparent' : '#A855F7',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: isViewed ? 0 : 0.4,
+          shadowRadius: isViewed ? 0 : 8,
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800' }}>
           {uniName.slice(0, 2).toUpperCase()}
         </Text>
       </View>
       <Text
         style={{
-          color: isViewed ? T.muted : T.text,
-          fontSize: 10,
+          color: isViewed ? '#6b7280' : '#e6edf3',
+          fontSize: 11,
           fontWeight: '600',
-          marginTop: 4,
-          maxWidth: size + 8,
+          marginTop: 6,
+          maxWidth: size + 12,
         }}
         numberOfLines={1}
       >

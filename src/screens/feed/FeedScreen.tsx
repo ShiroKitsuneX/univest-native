@@ -11,16 +11,23 @@ import { useTheme } from '@/theme/useTheme'
 import { TAG_D, TAG_L } from '@/theme/palette'
 import { FEED } from '@/data/feed'
 import { timeAgo, fmtCount } from '@/utils/format'
-import { getMonthFromKey } from '@/utils/dates'
+import { getMonthFromExamLabel } from '@/utils/dates'
 import { usePostsStore } from '@/stores/postsStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useStoriesStore } from '@/stores/storiesStore'
 import { StoriesStrip } from '@/components/StoriesStrip'
 import { StoryViewer } from '@/components/StoryViewer'
-import { togglePostLike } from '@/features/feed/services/feedService'
-import { reportPost } from '@/features/feed/services/feedService'
-import { incrementShareCount } from '@/features/feed/services/feedService'
+import {
+  togglePostLike,
+  reportPost,
+  incrementShareCount,
+} from '@/features/feed/services/feedService'
+
+const COLORS = {
+  glassBg: 'rgba(255,255,255,0.05)',
+  glassBorder: 'rgba(255,255,255,0.1)',
+}
 
 export function FeedScreen({
   refreshing,
@@ -68,15 +75,12 @@ export function FeedScreen({
   const currentUser = useAuthStore(s => s.currentUser)
 
   const cd = (extra = {}) => ({
-    backgroundColor: T.card,
-    borderRadius: 18,
+    backgroundColor: COLORS.glassBg,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: COLORS.glassBorder,
     ...extra,
   })
-
-  const getMonthNum = (s: string | undefined) =>
-    getMonthFromKey(s?.match(/[A-Z]{3}/)?.[0] || 'DEZ')
 
   const fol = useMemo(
     () =>
@@ -88,7 +92,7 @@ export function FeedScreen({
             const bPref = Number(uniPrefs[String(b.id)]) || 5
             return bPref - aPref
           }
-          return getMonthNum(a.prova) - getMonthNum(b.prova)
+          return getMonthFromExamLabel(a.prova) - getMonthFromExamLabel(b.prova)
         }),
     [unis, uniSort, uniPrefs]
   )
@@ -163,35 +167,39 @@ export function FeedScreen({
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
       <ScrollView
         style={{ flex: 1 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={T.accent}
-            colors={[T.accent]}
+            tintColor="#A855F7"
+            colors={['#A855F7']}
           />
         }
       >
         <StoriesStrip onStoryPress={handleStoryPress} goExplorar={goExplorar} />
         <View
-          style={{ height: 1, backgroundColor: T.border, marginBottom: 8 }}
+          style={{
+            height: 1,
+            backgroundColor: COLORS.glassBorder,
+            marginBottom: 16,
+          }}
         />
         {upcoming.length > 0 && (
-          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+          <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text
               style={{
-                color: T.sub,
-                fontSize: 11,
+                color: '#A855F7',
+                fontSize: 12,
                 fontWeight: '700',
-                marginBottom: 8,
+                marginBottom: 12,
                 textTransform: 'uppercase',
-                letterSpacing: 0.5,
+                letterSpacing: 1,
               }}
             >
-              ⏳ Contagem regressiva
+              ⏳ Próximas provas
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {upcoming.map((e, i) => {
@@ -204,28 +212,32 @@ export function FeedScreen({
                       if (u) onSelectUni(u)
                     }}
                     style={{
-                      minWidth: 130,
-                      marginRight: 10,
-                      padding: 12,
-                      borderRadius: 14,
-                      backgroundColor: urgent ? '#dc262615' : T.card,
+                      minWidth: 120,
+                      marginRight: 12,
+                      padding: 16,
+                      borderRadius: 20,
+                      backgroundColor: urgent
+                        ? 'rgba(239,68,68,0.15)'
+                        : COLORS.glassBg,
                       borderWidth: 1,
-                      borderColor: urgent ? '#dc262660' : T.border,
+                      borderColor: urgent
+                        ? 'rgba(239,68,68,0.3)'
+                        : COLORS.glassBorder,
                     }}
                   >
                     <View
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 6,
-                        marginBottom: 4,
+                        gap: 8,
+                        marginBottom: 8,
                       }}
                     >
                       <View
                         style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: 11,
+                          width: 28,
+                          height: 28,
+                          borderRadius: 14,
                           backgroundColor: e.uni.color,
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -234,7 +246,7 @@ export function FeedScreen({
                         <Text
                           style={{
                             color: '#fff',
-                            fontSize: 8,
+                            fontSize: 9,
                             fontWeight: '800',
                           }}
                         >
@@ -243,9 +255,9 @@ export function FeedScreen({
                       </View>
                       <Text
                         style={{
-                          color: T.sub,
-                          fontSize: 10,
-                          fontWeight: '700',
+                          color: '#8b949e',
+                          fontSize: 11,
+                          fontWeight: '600',
                         }}
                         numberOfLines={1}
                       >
@@ -254,8 +266,8 @@ export function FeedScreen({
                     </View>
                     <Text
                       style={{
-                        color: urgent ? '#dc2626' : T.text,
-                        fontSize: 22,
+                        color: urgent ? '#ef4444' : '#e6edf3',
+                        fontSize: 28,
                         fontWeight: '900',
                       }}
                     >
@@ -263,9 +275,9 @@ export function FeedScreen({
                     </Text>
                     <Text
                       style={{
-                        color: T.muted,
-                        fontSize: 10,
-                        fontWeight: '600',
+                        color: '#6b7280',
+                        fontSize: 11,
+                        fontWeight: '500',
                       }}
                       numberOfLines={1}
                     >
@@ -286,11 +298,11 @@ export function FeedScreen({
               padding: 40,
             }}
           >
-            <Text style={{ fontSize: 48, marginBottom: 16 }}>📰</Text>
+            <Text style={{ fontSize: 56, marginBottom: 16 }}>🎓</Text>
             <Text
               style={{
-                color: T.text,
-                fontSize: 16,
+                color: '#e6edf3',
+                fontSize: 20,
                 fontWeight: '800',
                 marginBottom: 8,
                 textAlign: 'center',
@@ -300,11 +312,11 @@ export function FeedScreen({
             </Text>
             <Text
               style={{
-                color: T.sub,
-                fontSize: 13,
+                color: '#8b949e',
+                fontSize: 14,
                 textAlign: 'center',
-                lineHeight: 20,
-                marginBottom: 20,
+                lineHeight: 22,
+                marginBottom: 24,
               }}
             >
               Siga universidades para ver novidades, datas e notas de corte.
@@ -312,17 +324,19 @@ export function FeedScreen({
             <TouchableOpacity
               onPress={goExplorar}
               style={{
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 20,
-                backgroundColor: T.accent,
+                paddingHorizontal: 28,
+                paddingVertical: 14,
+                borderRadius: 24,
+                backgroundColor: '#8B5CF6',
+                borderWidth: 1,
+                borderColor: '#A855F7',
               }}
             >
               <Text
                 style={{
-                  color: isDark ? '#000' : '#fff',
-                  fontWeight: '800',
-                  fontSize: 14,
+                  color: '#fff',
+                  fontWeight: '700',
+                  fontSize: 15,
                 }}
               >
                 Explorar universidades
@@ -341,75 +355,83 @@ export function FeedScreen({
                 key={item.id}
                 style={{
                   ...cd({ overflow: 'hidden' }),
-                  borderLeftWidth: 3,
-                  borderLeftColor: ui?.color || T.accent,
+                  borderLeftWidth: 4,
+                  borderLeftColor: ui?.color || '#8B5CF6',
                 }}
               >
                 <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: 10,
-                    padding: 14,
-                    paddingBottom: 10,
+                    gap: 12,
+                    padding: 16,
+                    paddingBottom: 12,
                   }}
                 >
                   <View
                     style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      backgroundColor: ui?.color || T.card2,
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: ui?.color || '#1c2333',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      borderWidth: 2,
+                      borderColor: COLORS.glassBorder,
                     }}
                   >
                     <Text
-                      style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}
+                      style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}
                     >
                       {ui?.name?.slice(0, 2) || ''}
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text
-                      style={{ color: T.text, fontSize: 13, fontWeight: '700' }}
+                      style={{
+                        color: '#e6edf3',
+                        fontSize: 14,
+                        fontWeight: '700',
+                      }}
                     >
                       {item.uni}
                     </Text>
-                    <Text style={{ color: T.muted, fontSize: 11 }}>
+                    <Text style={{ color: '#6b7280', fontSize: 12 }}>
                       {item.time || timeAgo(item.createdAt)}
                     </Text>
                   </View>
                   <View
                     style={{
                       backgroundColor: tc.bg,
-                      paddingHorizontal: 9,
-                      paddingVertical: 3,
-                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 16,
                       borderWidth: 1,
                       borderColor: tc.b,
                     }}
                   >
                     <Text
-                      style={{ color: tc.tx, fontSize: 10, fontWeight: '700' }}
+                      style={{ color: tc.tx, fontSize: 11, fontWeight: '700' }}
                     >
                       {item.icon} {item.tag}
                     </Text>
                   </View>
                 </View>
-                <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+                <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
                   <Text
                     style={{
-                      color: T.text,
-                      fontSize: 13,
+                      color: '#e6edf3',
+                      fontSize: 15,
                       fontWeight: '700',
-                      marginBottom: 5,
-                      lineHeight: 18,
+                      marginBottom: 8,
+                      lineHeight: 22,
                     }}
                   >
                     {item.title}
                   </Text>
-                  <Text style={{ color: T.sub, fontSize: 12, lineHeight: 20 }}>
+                  <Text
+                    style={{ color: '#9ca3af', fontSize: 13, lineHeight: 20 }}
+                  >
                     {item.body}
                   </Text>
                 </View>
@@ -418,10 +440,10 @@ export function FeedScreen({
                     flexDirection: 'row',
                     alignItems: 'center',
                     paddingHorizontal: 16,
-                    paddingBottom: 13,
-                    paddingTop: 9,
+                    paddingBottom: 14,
+                    paddingTop: 10,
                     borderTopWidth: 1,
-                    borderColor: T.border,
+                    borderColor: COLORS.glassBorder,
                   }}
                 >
                   <TouchableOpacity
@@ -429,18 +451,18 @@ export function FeedScreen({
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      paddingHorizontal: 7,
-                      paddingVertical: 4,
-                      marginRight: 2,
+                      paddingHorizontal: 8,
+                      paddingVertical: 6,
+                      marginRight: 4,
                     }}
                   >
-                    <Text style={{ fontSize: 14, marginRight: 4 }}>
+                    <Text style={{ fontSize: 16, marginRight: 6 }}>
                       {isL ? '❤️' : '🤍'}
                     </Text>
                     <Text
                       style={{
-                        color: isL ? '#f87171' : T.muted,
-                        fontSize: 11,
+                        color: isL ? '#f87171' : '#6b7280',
+                        fontSize: 12,
                         fontWeight: '600',
                       }}
                     >
@@ -454,16 +476,16 @@ export function FeedScreen({
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      paddingHorizontal: 7,
-                      paddingVertical: 4,
-                      marginRight: 2,
+                      paddingHorizontal: 8,
+                      paddingVertical: 6,
+                      marginRight: 4,
                     }}
                   >
-                    <Text style={{ fontSize: 14, marginRight: 4 }}>📤</Text>
+                    <Text style={{ fontSize: 16, marginRight: 6 }}>📤</Text>
                     <Text
                       style={{
-                        color: T.muted,
-                        fontSize: 11,
+                        color: '#6b7280',
+                        fontSize: 12,
                         fontWeight: '600',
                       }}
                     >
@@ -475,15 +497,15 @@ export function FeedScreen({
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      paddingHorizontal: 7,
-                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      paddingVertical: 6,
                     }}
                   >
-                    <Text style={{ fontSize: 14, marginRight: 4 }}>🚩</Text>
+                    <Text style={{ fontSize: 16, marginRight: 6 }}>🚩</Text>
                     <Text
                       style={{
-                        color: T.muted,
-                        fontSize: 11,
+                        color: '#6b7280',
+                        fontSize: 12,
                         fontWeight: '600',
                       }}
                     >
@@ -497,7 +519,7 @@ export function FeedScreen({
                     }
                     style={{ paddingHorizontal: 4 }}
                   >
-                    <Text style={{ fontSize: 18 }}>{isS ? '🔖' : '🏷️'}</Text>
+                    <Text style={{ fontSize: 20 }}>{isS ? '🔖' : '🏷️'}</Text>
                   </TouchableOpacity>
                 </View>
               </View>

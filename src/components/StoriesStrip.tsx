@@ -1,5 +1,4 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
-import { useTheme } from '@/theme/useTheme'
 import { useStoriesStore, type Story } from '@/stores/storiesStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { StoryCircle } from '@/components/StoryCircle'
@@ -18,8 +17,6 @@ type Props = {
 }
 
 export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
-  const { T } = useTheme()
-
   const stories = useStoriesStore(s => s.stories)
   const viewedIds = useStoriesStore(s => s.viewedIds)
   const getFollowedUnis = useUniversitiesStore(s => s.getFollowedUnis)
@@ -56,7 +53,7 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
   }
 
   return (
-    <View style={{ paddingVertical: 8 }}>
+    <View style={{ paddingVertical: 12 }}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -82,25 +79,29 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
           >
             <View
               style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                backgroundColor: T.card2,
+                width: 68,
+                height: 68,
+                borderRadius: 34,
+                backgroundColor: 'rgba(139, 92, 246, 0.15)',
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderWidth: 2,
-                borderColor: T.border,
+                borderColor: 'rgba(139, 92, 246, 0.4)',
                 borderStyle: 'dashed',
               }}
             >
-              <Text style={{ color: T.sub, fontSize: 24 }}>+</Text>
+              <Text
+                style={{ color: '#A855F7', fontSize: 28, fontWeight: '300' }}
+              >
+                +
+              </Text>
             </View>
             <Text
               style={{
-                color: T.sub,
-                fontSize: 10,
+                color: '#8b949e',
+                fontSize: 11,
                 fontWeight: '600',
-                marginTop: 4,
+                marginTop: 6,
               }}
             >
               Seguir
