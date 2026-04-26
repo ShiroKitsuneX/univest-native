@@ -11,6 +11,7 @@ import {
 } from '@react-navigation/native'
 import { useTheme } from '@/theme/useTheme'
 import { AVATAR_COLORS } from '@/theme/avatar'
+import type { University } from '@/stores/universitiesStore'
 import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useIcons } from '@/stores/hooks/useIcons'
@@ -192,7 +193,7 @@ function FeedTab() {
       refreshing={h.refreshing}
       onRefresh={h.onRefresh}
       goExplorar={() => navigation.navigate('ExplorarTab')}
-      onSelectUni={(u: unknown) => {
+      onSelectUni={(u: University) => {
         h.onSelectUni?.(u)
         goUniDetail(navigation)
       }}
@@ -237,7 +238,7 @@ function PerfilTab() {
       }
       onAddGoal={h.onAddGoal}
       onOpenEvent={h.onOpenEvent}
-      onSelectUni={(u: unknown) => {
+      onSelectUni={(u: University) => {
         h.onSelectUni?.(u)
         goUniDetail(navigation)
       }}

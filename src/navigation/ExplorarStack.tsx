@@ -1,7 +1,10 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '@/theme/useTheme'
-import { useUniversitiesStore } from '@/stores/universitiesStore'
+import {
+  useUniversitiesStore,
+  type University,
+} from '@/stores/universitiesStore'
 import { ExplorarScreen } from '@/screens/explorar/ExplorarScreen'
 import { UniversityDetailScreen } from '@/screens/explorar/UniversityDetailScreen'
 import { ExamsListScreen } from '@/screens/explorar/ExamsListScreen'
@@ -25,7 +28,7 @@ function UniversityListRoute() {
       onRefresh={h.onRefresh}
       onOpenLocation={h.onOpenLocation}
       onOpenDiscover={h.onOpenDiscover}
-      onSelectUni={(u: unknown) => {
+      onSelectUni={(u: University) => {
         h.onSelectUni?.(u)
         navigation.navigate('UniversityDetail')
       }}
@@ -77,7 +80,7 @@ function FollowingRoute() {
     <FollowingScreen
       onBack={() => navigation.goBack()}
       onExplore={() => navigation.navigate('UniversityList')}
-      onSelectUni={(u: unknown) => {
+      onSelectUni={(u: University) => {
         h.onSelectUni?.(u)
         navigation.navigate('UniversityDetail')
       }}

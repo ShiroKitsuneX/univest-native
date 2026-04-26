@@ -59,11 +59,23 @@ export const getAuthErrorMessage = (
   mode: 'login' | 'signup'
 ): string => {
   const code = (err as { code?: string }).code || ''
-  if (code.includes('user-not-found') || code.includes('wrong-password'))
+  // Firebase 12.x consolidated several login failures behind
+  // `auth/invalid-credential` and `auth/invalid-login-credentials` instead of
+  // the granular `user-not-found` / `wrong-password`. Handle both.
+  if (
+    code.includes('user-not-found') ||
+    code.includes('wrong-password') ||
+    code.includes('invalid-credential') ||
+    code.includes('invalid-login-credentials')
+  )
     return 'E-mail ou senha incorretos'
+  if (code.includes('missing-password')) return 'Informe a senha'
+  if (code.includes('missing-email')) return 'Informe o e-mail'
   if (code.includes('email-already-in-use')) return 'E-mail já cadastrado'
   if (code.includes('invalid-email')) return 'E-mail inválido'
   if (code.includes('weak-password')) return 'Senha muito fraca'
+  if (code.includes('user-disabled'))
+    return 'Esta conta foi desativada. Entre em contato com o suporte.'
   if (code.includes('network'))
     return 'Erro de conexão. Verifique sua internet.'
   if (code.includes('too-many-requests'))

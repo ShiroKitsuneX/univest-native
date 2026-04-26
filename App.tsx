@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { View, Alert, StatusBar } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import {
@@ -10,9 +10,15 @@ import {
 import { useTheme } from '@/theme/useTheme'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { logout } from '@/services/auth'
-import { toggleUniversityFollow } from '@/features/explorar/services/universityService'
+import {
+  followUniversity,
+  NotAuthenticatedError,
+} from '@/features/explorar/services/universityService'
 import { usePostsStore } from '@/stores/postsStore'
-import { useUniversitiesStore } from '@/stores/universitiesStore'
+import {
+  useUniversitiesStore,
+  type University,
+} from '@/stores/universitiesStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useAuthStore } from '@/stores/authStore'
 import { RootNavigator } from '@/navigation/RootNavigator'
@@ -36,15 +42,12 @@ function MainApp() {
   const { T, isDark } = useTheme()
 
   const currentUser = useAuthStore(s => s.currentUser)
-  const setUserData = useAuthStore(s => s.setUserData)
 
   const setStep = useOnboardingStore(s => s.setStep)
   const setDone = useOnboardingStore(s => s.setDone)
   const setC1 = useOnboardingStore(s => s.setC1)
   const setC2 = useOnboardingStore(s => s.setC2)
 
-  const setUnis = useUniversitiesStore(s => s.setUnis)
-  const selUni = useUniversitiesStore(s => s.selUni)
   const setSU = useUniversitiesStore(s => s.setSelUni)
   const [goalsModal, setGoalsModal] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -53,10 +56,10 @@ function MainApp() {
   const [mPho, setMpho] = useState(false)
   const [mEdit, setMedit] = useState(false)
   const [mNome, setMnome] = useState(false)
-  const [mEv, setMev] = useState(null)
-  const [mExam, setMexam] = useState(null)
+  const [mEv, setMev] = useState<unknown>(null)
+  const [mExam, setMexam] = useState<unknown>(null)
   const [mGr, setMgr] = useState(false)
-  const [mShr, setMshr] = useState(null)
+  const [mShr, setMshr] = useState<unknown>(null)
   const [mDisc, setMdisc] = useState(false)
   const [mUni, setMUni] = useState(false)
   const [mLoc, setMloc] = useState(false)
@@ -93,91 +96,47 @@ function MainApp() {
     ])
   }
 
-  const toggleFollow = async (uni, isFollowing) => {
-    if (!currentUser) {
-      Alert.alert('Atenção', 'Faça login para seguir universidades')
-      return
-    }
-    setUnis(prev =>
-      prev.map(u =>
-        u.name === uni.name
-          ? {
-              ...u,
-              followed: isFollowing,
-              followersCount: (u.followersCount || 0) + (isFollowing ? 1 : -1),
-            }
-          : u
-      )
-    )
-    if (selUni?.name === uni.name)
-      setSU(p => ({
-        ...p,
-        followed: isFollowing,
-        followersCount: (p.followersCount || 0) + (isFollowing ? 1 : -1),
-      }))
-    setUserData(prev => {
-      const cur = prev?.followedUnis || []
-      const next = isFollowing
-        ? [...new Set([...cur, uni.name])]
-        : cur.filter(n => n !== uni.name)
-      return { ...(prev || {}), followedUnis: next }
-    })
-    try {
-      await toggleUniversityFollow(
-        currentUser.uid,
-        String(uni.id),
-        uni.name,
-        isFollowing
-      )
-    } catch (err) {
-      logger.warn('toggleFollow error:', err?.message)
-      setUnis(prev =>
-        prev.map(u =>
-          u.name === uni.name
-            ? {
-                ...u,
-                followed: !isFollowing,
-                followersCount:
-                  (u.followersCount || 0) + (isFollowing ? -1 : 1),
-              }
-            : u
-        )
-      )
-      if (selUni?.name === uni.name)
-        setSU(p => ({ ...p, followed: !isFollowing }))
-      setUserData(prev => {
-        const cur = prev?.followedUnis || []
-        const next = !isFollowing
-          ? [...new Set([...cur, uni.name])]
-          : cur.filter(n => n !== uni.name)
-        return { ...(prev || {}), followedUnis: next }
-      })
-      Alert.alert('Erro', 'Não foi possível seguir. ' + (err?.message || ''))
-    }
-  }
-
-  const handlers = {
-    refreshing,
-    onRefresh,
-    onOpenSettings: () => setMcfg(true),
-    onShare: item => setMshr(item),
-    onOpenLocation: () => setMloc(true),
-    onOpenDiscover: () => setMdisc(true),
-    onOpenSort: () => setMUni(true),
-    onEditCourses: () => setMedit(true),
-    onAddGrade: () => setMgr(true),
-    onChangePhoto: () => setMpho(true),
-    onChangeName: () => {
-      setMcfg(false)
-      setMnome(true)
+  const onToggleFollow = useCallback(
+    async (uni: University, isFollowing: boolean) => {
+      try {
+        await followUniversity(uni, isFollowing)
+      } catch (err) {
+        if (err instanceof NotAuthenticatedError) {
+          Alert.alert('Atenção', err.message)
+          return
+        }
+        const msg = err instanceof Error ? err.message : ''
+        Alert.alert('Erro', 'Não foi possível seguir. ' + msg)
+      }
     },
-    onShowSaved: () => setMSaved(true),
-    onAddGoal: () => setGoalsModal(true),
-    onOpenEvent: ev => setMev(ev),
-    onOpenExam: exam => setMexam(exam),
-    onSelectUni: u => setSU(u),
-    onToggleFollow: toggleFollow,
-  }
+    []
+  )
+
+  const handlers = useMemo(
+    () => ({
+      refreshing,
+      onRefresh,
+      onOpenSettings: () => setMcfg(true),
+      onShare: (item: unknown) => setMshr(item),
+      onOpenLocation: () => setMloc(true),
+      onOpenDiscover: () => setMdisc(true),
+      onOpenSort: () => setMUni(true),
+      onEditCourses: () => setMedit(true),
+      onAddGrade: () => setMgr(true),
+      onChangePhoto: () => setMpho(true),
+      onChangeName: () => {
+        setMcfg(false)
+        setMnome(true)
+      },
+      onShowSaved: () => setMSaved(true),
+      onAddGoal: () => setGoalsModal(true),
+      onOpenEvent: (ev: unknown) => setMev(ev),
+      onOpenExam: (exam: unknown) => setMexam(exam),
+      onSelectUni: (u: University) => setSU(u),
+      onToggleFollow,
+    }),
+    [refreshing, onRefresh, onToggleFollow, setSU]
+  )
 
   return (
     <View style={{ flex: 1, backgroundColor: T.bg }}>

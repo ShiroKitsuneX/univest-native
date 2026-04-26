@@ -8,6 +8,8 @@ import {
   where,
   orderBy,
   limit,
+  arrayUnion,
+  arrayRemove,
   type DocumentData,
 } from 'firebase/firestore'
 import { db } from '@/core/firebase/client'
@@ -75,6 +77,28 @@ export async function fetchUserProfile(
   const userPath = getPath(...firestorePaths.user(uid))
   const snap = await getDoc(doc(db, userPath))
   return snap.exists() ? snap.data() : null
+}
+
+// Append/remove a name from the user's followedUnis array atomically. The
+// array is stored on the user document; the explorer feature owns the user
+// side of the follow relationship while universitiesRepository owns the
+// per-university follower counter.
+export async function setUserFollowedUni(
+  uid: string,
+  universityName: string,
+  isFollowing: boolean
+): Promise<void> {
+  const userPath = getPath(...firestorePaths.user(uid))
+  await setDoc(
+    doc(db, userPath),
+    {
+      followedUnis: isFollowing
+        ? arrayUnion(universityName)
+        : arrayRemove(universityName),
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  )
 }
 
 export type InitialUserProfile = {

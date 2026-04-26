@@ -32,12 +32,13 @@ The codebase is in a hybrid state.
 ### Recently Fixed
 
 - OnboardingScreen now uses onboardingService/repository
-- App.tsx `toggleFollow` now uses `toggleUniversityFollow` from `universityService`
+- App.tsx `toggleFollow` now uses `followUniversity` from `universityService`, which orchestrates optimistic UI + rollback and writes via `authRepository.setUserFollowedUni` and `universitiesRepository.updateFollowerCount`
 - `src/services/firestore.ts` removed; queries migrated to feature/reference repositories
 - signUp profile write moved from `src/services/auth.ts` into `authRepository.createInitialUserProfile`
 - geo seed + fetch moved from `src/services/geo.ts` into `features/reference/repositories/geoRepository.ts`
 - Firebase init moved from `src/firebase/config.js` (JS, hardcoded) to `src/core/firebase/client.ts` (TS, env-driven)
 - `storiesRepository.createStory` now writes a real 24-hour `expiresAt` Date so `fetchActiveStories`'s `where('expiresAt', '>', now)` query expires stories on schedule
+- `universityService.toggleUniversityFollow` no longer writes to `usuarios/{uid}` directly; the user-doc write is now in `authRepository.setUserFollowedUni`
 
 This guide must support the current code while forcing all new work toward a cleaner end state.
 

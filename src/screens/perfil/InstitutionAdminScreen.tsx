@@ -8,8 +8,10 @@ import {
   Alert,
   Linking,
 } from 'react-native'
+import type { TextStyle } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
-import { useCardStyle, useLabelStyle } from '@/theme/styles'
+import type { ThemeColors } from '@/theme/palette'
+import { useCardStyle, useLabelStyle, type CardStyle } from '@/theme/styles'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import {
   saveUniversityUpdates,
@@ -169,183 +171,13 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
   const lbl = useLabelStyle()
   const cd = useCardStyle(14)
 
-  const EditableField = ({
-    label,
-    field,
-    value,
-    multiline = false,
-    placeholder = '',
-  }: {
-    label: string
-    field: EditMode
-    value: string
-    multiline?: boolean
-    placeholder?: string
-  }) => (
-    <View style={{ marginBottom: 16 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 6,
-        }}
-      >
-        <Text style={lbl}>{label}</Text>
-        <TouchableOpacity
-          onPress={() => {
-            setEditField(field)
-            setEditValue(value)
-          }}
-          style={{ paddingHorizontal: 8, paddingVertical: 4 }}
-        >
-          <Text style={{ color: T.accent, fontSize: 11 }}>✏️ Editar</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={{ color: T.text, lineHeight: 20 }}>
-        {value || placeholder || '-'}
-      </Text>
-    </View>
-  )
-
-  const EditModal = () => {
-    if (!editField) return null
-
-    const fieldLabels: Record<EditMode, string> = {
-      description: 'Descrição',
-      vestibular: 'Vestibular',
-      inscricao: 'Inscrição',
-      prova: 'Data da Prova',
-      site: 'Site',
-      courses: 'Cursos (separar por vírgula)',
-      books: 'Livros (separar por vírgula)',
-      email: 'E-mail',
-      phone: 'Telefone',
-      color: 'Cor do tema',
-    }
-    const isMultiline =
-      editField === 'description' ||
-      editField === 'courses' ||
-      editField === 'books'
-    const isColor = editField === 'color'
-
-    const colorOptions = [
-      '#004d2c',
-      '#1e3a8a',
-      '#7c3aed',
-      '#be185d',
-      '#dc2626',
-      '#ea580c',
-      '#ca8a04',
-      '#16a34a',
-      '#0891b2',
-      '#4f46e5',
-    ]
-
-    return (
-      <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          justifyContent: 'center',
-          padding: 20,
-        }}
-      >
-        <View style={cd({ padding: 20 })}>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '800',
-              color: T.text,
-              marginBottom: 16,
-            }}
-          >
-            Editar {fieldLabels[editField]}
-          </Text>
-
-          {isColor ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {colorOptions.map(c => (
-                <TouchableOpacity
-                  key={c}
-                  onPress={() => setEditValue(c)}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: c,
-                    borderWidth: editValue === c ? 3 : 0,
-                    borderColor: '#fff',
-                  }}
-                />
-              ))}
-            </View>
-          ) : (
-            <TextInput
-              value={editValue}
-              onChangeText={setEditValue}
-              multiline={isMultiline}
-              numberOfLines={isMultiline ? 4 : 1}
-              style={{
-                backgroundColor: T.card2,
-                borderRadius: 12,
-                padding: 12,
-                color: T.text,
-                minHeight: isMultiline ? 100 : 44,
-                textAlignVertical: 'top',
-                marginBottom: 16,
-              }}
-              placeholder={
-                editField === 'courses'
-                  ? 'Medicina, Engenharia, Direito...'
-                  : editField === 'books'
-                    ? 'Livro 1, Livro 2, Livro 3...'
-                    : 'Digite...'
-              }
-            />
-          )}
-
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <TouchableOpacity
-              onPress={() => {
-                setEditField(null)
-                setEditValue('')
-              }}
-              style={{
-                flex: 1,
-                padding: 14,
-                borderRadius: 12,
-                backgroundColor: T.card2,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: T.text, fontWeight: '700' }}>Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleSaveField}
-              disabled={loading}
-              style={{
-                flex: 1,
-                padding: 14,
-                borderRadius: 12,
-                backgroundColor: T.accent,
-                alignItems: 'center',
-              }}
-            >
-              <Text
-                style={{ color: isDark ? '#000' : '#fff', fontWeight: '700' }}
-              >
-                {loading ? 'Salvando...' : 'Salvar'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    )
+  const beginEdit = (field: EditMode, value: string) => {
+    setEditField(field)
+    setEditValue(value)
+  }
+  const cancelEdit = () => {
+    setEditField(null)
+    setEditValue('')
   }
 
   return (
@@ -454,21 +286,27 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
             <Text style={[lbl, { marginBottom: 10 }]}>📅 Vestibular</Text>
             <EditableField
               label="Nome do Vestibular"
-              field="vestibular"
               value={vestibular}
               placeholder="Ex: COMVEST 2026"
+              onEdit={() => beginEdit('vestibular', vestibular)}
+              T={T}
+              lbl={lbl}
             />
             <EditableField
               label="Período de Inscrição"
-              field="inscricao"
               value={inscricao}
               placeholder="Ex: Ago/2025"
+              onEdit={() => beginEdit('inscricao', inscricao)}
+              T={T}
+              lbl={lbl}
             />
             <EditableField
               label="Data da Prova"
-              field="prova"
               value={prova}
               placeholder="Ex: Dez/2025"
+              onEdit={() => beginEdit('prova', prova)}
+              T={T}
+              lbl={lbl}
             />
           </View>
 
@@ -591,7 +429,221 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      <EditModal />
+      <EditModal
+        editField={editField}
+        editValue={editValue}
+        setEditValue={setEditValue}
+        onCancel={cancelEdit}
+        onSave={handleSaveField}
+        loading={loading}
+        T={T}
+        isDark={isDark}
+        cd={cd}
+      />
+    </View>
+  )
+}
+
+// Read-only field row with an "Editar" button. Module-level so its identity is
+// stable across parent re-renders.
+type EditableFieldProps = {
+  label: string
+  value: string
+  placeholder?: string
+  onEdit: () => void
+  T: ThemeColors
+  lbl: TextStyle
+}
+
+function EditableField({
+  label,
+  value,
+  placeholder,
+  onEdit,
+  T,
+  lbl,
+}: EditableFieldProps) {
+  return (
+    <View style={{ marginBottom: 16 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 6,
+        }}
+      >
+        <Text style={lbl}>{label}</Text>
+        <TouchableOpacity
+          onPress={onEdit}
+          style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+        >
+          <Text style={{ color: T.accent, fontSize: 11 }}>✏️ Editar</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={{ color: T.text, lineHeight: 20 }}>
+        {value || placeholder || '-'}
+      </Text>
+    </View>
+  )
+}
+
+// Edit overlay. Module-level so the TextInput keeps its identity (and focus)
+// across re-renders triggered by typing.
+const FIELD_LABELS: Record<Exclude<EditMode, null>, string> = {
+  description: 'Descrição',
+  vestibular: 'Vestibular',
+  inscricao: 'Inscrição',
+  prova: 'Data da Prova',
+  site: 'Site',
+  courses: 'Cursos (separar por vírgula)',
+  books: 'Livros (separar por vírgula)',
+  email: 'E-mail',
+  phone: 'Telefone',
+  color: 'Cor do tema',
+}
+
+const COLOR_OPTIONS = [
+  '#004d2c',
+  '#1e3a8a',
+  '#7c3aed',
+  '#be185d',
+  '#dc2626',
+  '#ea580c',
+  '#ca8a04',
+  '#16a34a',
+  '#0891b2',
+  '#4f46e5',
+]
+
+type EditModalProps = {
+  editField: EditMode
+  editValue: string
+  setEditValue: (v: string) => void
+  onCancel: () => void
+  onSave: () => void
+  loading: boolean
+  T: ThemeColors
+  isDark: boolean
+  cd: CardStyle
+}
+
+function EditModal({
+  editField,
+  editValue,
+  setEditValue,
+  onCancel,
+  onSave,
+  loading,
+  T,
+  isDark,
+  cd,
+}: EditModalProps) {
+  if (!editField) return null
+
+  const isMultiline =
+    editField === 'description' ||
+    editField === 'courses' ||
+    editField === 'books'
+  const isColor = editField === 'color'
+
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        padding: 20,
+      }}
+    >
+      <View style={cd({ padding: 20 })}>
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: '800',
+            color: T.text,
+            marginBottom: 16,
+          }}
+        >
+          Editar {FIELD_LABELS[editField]}
+        </Text>
+
+        {isColor ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            {COLOR_OPTIONS.map(c => (
+              <TouchableOpacity
+                key={c}
+                onPress={() => setEditValue(c)}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: c,
+                  borderWidth: editValue === c ? 3 : 0,
+                  borderColor: '#fff',
+                }}
+              />
+            ))}
+          </View>
+        ) : (
+          <TextInput
+            value={editValue}
+            onChangeText={setEditValue}
+            multiline={isMultiline}
+            numberOfLines={isMultiline ? 4 : 1}
+            style={{
+              backgroundColor: T.card2,
+              borderRadius: 12,
+              padding: 12,
+              color: T.text,
+              minHeight: isMultiline ? 100 : 44,
+              textAlignVertical: 'top',
+              marginBottom: 16,
+            }}
+            placeholder={
+              editField === 'courses'
+                ? 'Medicina, Engenharia, Direito...'
+                : editField === 'books'
+                  ? 'Livro 1, Livro 2, Livro 3...'
+                  : 'Digite...'
+            }
+          />
+        )}
+
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TouchableOpacity
+            onPress={onCancel}
+            style={{
+              flex: 1,
+              padding: 14,
+              borderRadius: 12,
+              backgroundColor: T.card2,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: T.text, fontWeight: '700' }}>Cancelar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onSave}
+            disabled={loading}
+            style={{
+              flex: 1,
+              padding: 14,
+              borderRadius: 12,
+              backgroundColor: T.accent,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: isDark ? '#000' : '#fff', fontWeight: '700' }}>
+              {loading ? 'Salvando...' : 'Salvar'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   )
 }
