@@ -359,7 +359,7 @@ export function WelcomeScreen() {
                               flex: 1,
                               padding: 10,
                               borderRadius: 12,
-                              backgroundColor: isSelected ? T.accent : T.card2,
+                              backgroundColor: T.accent,
                               alignItems: 'center',
                             }}
                           >
