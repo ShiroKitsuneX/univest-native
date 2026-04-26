@@ -94,7 +94,6 @@ export function StoryViewer({
     return () => {
       stopAnimation()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, currentIndex, currentStory])
 
   const handleTap = useCallback(

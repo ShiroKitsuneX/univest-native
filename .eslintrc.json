@@ -1,32 +1,21 @@
 {
   "root": true,
-  "extends": [
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "plugin:react-native",
-    "prettier"
-  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "extends": ["prettier"],
   "parserOptions": {
     "ecmaVersion": 2022,
-    "sourceType": "module",
-    "ecmaFeatures": {
-      "jsx": true
-    }
+    "sourceType": "module"
   },
   "env": {
     "browser": true,
     "es2022": true,
     "node": true,
-    "react-native": true
-  },
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
+    "jest": true
   },
   "rules": {
-    "react/prop-types": "off",
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-    "no-console": ["warn", { "allow": ["warn", "error"] }]
+    "no-unused-vars": "off",
+    "no-console": "off",
+    "no-empty": "off"
   }
 }
