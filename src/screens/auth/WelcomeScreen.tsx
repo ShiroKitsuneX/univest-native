@@ -696,6 +696,7 @@ export function WelcomeScreen() {
                             flexDirection: 'row',
                             alignItems: 'center',
                             marginTop: 8,
+                            marginBottom: 12,
                           }}
                         >
                           <TouchableOpacity
