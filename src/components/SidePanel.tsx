@@ -13,10 +13,9 @@ import {
 } from 'react-native'
 import type { ThemeColors } from '@/theme/palette'
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85
-
-const TAB_BAR_HEIGHT = 50
+const PANEL_HEIGHT = SCREEN_HEIGHT * 0.5
 
 type Props = {
   visible: boolean
@@ -31,7 +30,7 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
   const fadeAnim = useRef(new Animated.Value(0)).current
 
   const panelTop = insets.top
-  const panelBottom = TAB_BAR_HEIGHT + insets.bottom
+  const panelBottom = 0
 
   useEffect(() => {
     Animated.parallel([
@@ -70,7 +69,7 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
               backgroundColor: T.card,
               transform: [{ translateX: slideAnim }],
               top: panelTop,
-              bottom: panelBottom,
+              height: PANEL_HEIGHT,
             },
           ]}
         >
