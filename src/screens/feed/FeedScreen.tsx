@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
   Alert,
   RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { TAG_D, TAG_L } from '@/theme/palette'
@@ -23,12 +24,12 @@ import {
   reportPost,
   incrementShareCount,
 } from '@/features/feed/services/feedService'
-import { SvgIcon } from '@/shared/components/SvgIcon'
-
-const COLORS = {
-  glassBg: 'rgba(255,255,255,0.05)',
-  glassBorder: 'rgba(255,255,255,0.1)',
-}
+import {
+  Button,
+  Card,
+  EmptyState,
+  SvgIcon,
+} from '@/shared/components'
 
 export function FeedScreen({
   refreshing,
@@ -37,8 +38,13 @@ export function FeedScreen({
   onSelectUni,
   onShare,
 }) {
-  const { T, isDark } = useTheme()
+  const { T, isDark, brand, radius, typography } = useTheme()
   const TG = isDark ? TAG_D : TAG_L
+
+  // Urgency tone for the upcoming-exam countdown chip when ≤ 30 days. We use
+  // the alert tag colour (warm amber/orange) so it reads at a glance without
+  // introducing a new red palette that doesn't exist elsewhere.
+  const urgencyTone = TG.alert
 
   const stories = useStoriesStore(s => s.stories)
   const loadStories = useStoriesStore(s => s.load)
@@ -74,14 +80,6 @@ export function FeedScreen({
   const goalsUnis = useUniversitiesStore(s => s.goalsUnis)
 
   const currentUser = useAuthStore(s => s.currentUser)
-
-  const cd = (extra = {}) => ({
-    backgroundColor: COLORS.glassBg,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
-    ...extra,
-  })
 
   const fol = useMemo(
     () =>
@@ -168,37 +166,29 @@ export function FeedScreen({
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0a0a0a' }}>
+    <View style={{ flex: 1, backgroundColor: T.bg }}>
       <ScrollView
         style={{ flex: 1 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#A855F7"
-            colors={['#A855F7']}
+            tintColor={brand.primary}
+            colors={[brand.primary]}
           />
         }
       >
         <StoriesStrip onStoryPress={handleStoryPress} goExplorar={goExplorar} />
         <View
-          style={{
-            height: 1,
-            backgroundColor: COLORS.glassBorder,
-            marginBottom: 16,
-          }}
+          style={{ height: 1, backgroundColor: T.border, marginBottom: 16 }}
         />
         {upcoming.length > 0 && (
           <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text
-              style={{
-                color: '#A855F7',
-                fontSize: 12,
-                fontWeight: '700',
-                marginBottom: 12,
-                textTransform: 'uppercase',
-                letterSpacing: 1,
-              }}
+              style={[
+                typography.eyebrow,
+                { color: brand.primary, marginBottom: 12 },
+              ]}
             >
               ⏳ Próximas provas
             </Text>
@@ -212,78 +202,68 @@ export function FeedScreen({
                       const u = unis.find(x => x.id === e.uni.id)
                       if (u) onSelectUni(u)
                     }}
-                    style={{
-                      minWidth: 120,
-                      marginRight: 12,
-                      padding: 16,
-                      borderRadius: 20,
-                      backgroundColor: urgent
-                        ? 'rgba(239,68,68,0.15)'
-                        : COLORS.glassBg,
-                      borderWidth: 1,
-                      borderColor: urgent
-                        ? 'rgba(239,68,68,0.3)'
-                        : COLORS.glassBorder,
-                    }}
+                    activeOpacity={0.85}
+                    style={{ marginRight: 12 }}
                   >
-                    <View
+                    <Card
+                      tone={urgent ? 'highlight' : 'default'}
+                      padding={14}
                       style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 8,
-                        marginBottom: 8,
+                        minWidth: 132,
+                        backgroundColor: urgent ? urgencyTone.bg : T.card,
+                        borderColor: urgent ? urgencyTone.b : T.border,
                       }}
                     >
-                      <View
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 14,
-                          backgroundColor: e.uni.color,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Text
+                      <View style={styles.upcomingHeader}>
+                        <View
                           style={{
-                            color: '#fff',
-                            fontSize: 9,
-                            fontWeight: '800',
+                            width: 28,
+                            height: 28,
+                            borderRadius: 14,
+                            backgroundColor: e.uni.color,
+                            alignItems: 'center',
+                            justifyContent: 'center',
                           }}
                         >
-                          {e.uni.name.slice(0, 2)}
+                          <Text
+                            style={{
+                              color: '#FFFFFF',
+                              fontSize: 9,
+                              fontWeight: '800',
+                            }}
+                          >
+                            {e.uni.name.slice(0, 2)}
+                          </Text>
+                        </View>
+                        <Text
+                          style={{
+                            color: T.sub,
+                            fontSize: 11,
+                            fontWeight: '600',
+                            flex: 1,
+                          }}
+                          numberOfLines={1}
+                        >
+                          {e.uni.name}
                         </Text>
                       </View>
                       <Text
                         style={{
-                          color: '#8b949e',
-                          fontSize: 11,
-                          fontWeight: '600',
+                          color: urgent ? urgencyTone.tx : T.text,
+                          fontSize: 28,
+                          fontWeight: '900',
+                          letterSpacing: -1,
                         }}
+                      >
+                        {e.daysUntil}d
+                      </Text>
+                      <Text
+                        style={[typography.caption, { color: T.muted }]}
                         numberOfLines={1}
                       >
-                        {e.uni.name}
+                        {e.name || 'Prova'}
                       </Text>
-                    </View>
-                    <Text
-                      style={{
-                        color: urgent ? '#ef4444' : '#e6edf3',
-                        fontSize: 28,
-                        fontWeight: '900',
-                      }}
-                    >
-                      {e.daysUntil}d
-                    </Text>
-                    <Text
-                      style={{
-                        color: '#6b7280',
-                        fontSize: 11,
-                        fontWeight: '500',
-                      }}
-                      numberOfLines={1}
-                    >
-                      {e.name || 'Prova'}
-                    </Text>
+                    </Card>
                   </TouchableOpacity>
                 )
               })}
@@ -291,59 +271,16 @@ export function FeedScreen({
           </View>
         )}
         {feedItems.length === 0 && fol.length === 0 && (
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 40,
-            }}
-          >
-            <Text style={{ fontSize: 56, marginBottom: 16 }}>🎓</Text>
-            <Text
-              style={{
-                color: '#e6edf3',
-                fontSize: 20,
-                fontWeight: '800',
-                marginBottom: 8,
-                textAlign: 'center',
-              }}
-            >
-              Seu feed está vazio
-            </Text>
-            <Text
-              style={{
-                color: '#8b949e',
-                fontSize: 14,
-                textAlign: 'center',
-                lineHeight: 22,
-                marginBottom: 24,
-              }}
-            >
-              Siga universidades para ver novidades, datas e notas de corte.
-            </Text>
-            <TouchableOpacity
-              onPress={goExplorar}
-              style={{
-                paddingHorizontal: 28,
-                paddingVertical: 14,
-                borderRadius: 24,
-                backgroundColor: '#8B5CF6',
-                borderWidth: 1,
-                borderColor: '#A855F7',
-              }}
-            >
-              <Text
-                style={{
-                  color: '#fff',
-                  fontWeight: '700',
-                  fontSize: 15,
-                }}
-              >
+          <EmptyState
+            icon="🎓"
+            title="Seu feed está vazio"
+            description="Siga universidades para ver novidades, datas e notas de corte."
+            action={
+              <Button onPress={goExplorar} variant="primary" size="md">
                 Explorar universidades
-              </Text>
-            </TouchableOpacity>
-          </View>
+              </Button>
+            }
+          />
         )}
         <View style={{ paddingHorizontal: 16, paddingBottom: 16, gap: 12 }}>
           {feedItems.map(item => {
@@ -352,52 +289,42 @@ export function FeedScreen({
             const isS = saved[item.id]
             const ui = unis.find(u => u.id === item.uniId)
             return (
-              <View
+              <Card
                 key={item.id}
+                padding={0}
+                radius={radius.lg}
                 style={{
-                  ...cd({ overflow: 'hidden' }),
+                  overflow: 'hidden',
                   borderLeftWidth: 4,
-                  borderLeftColor: ui?.color || '#8B5CF6',
+                  borderLeftColor: ui?.color || brand.primary,
                 }}
               >
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: 16,
-                    paddingBottom: 12,
-                  }}
-                >
+                <View style={styles.postHeader}>
                   <View
                     style={{
                       width: 44,
                       height: 44,
                       borderRadius: 22,
-                      backgroundColor: ui?.color || '#1c2333',
+                      backgroundColor: ui?.color || T.card2,
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderWidth: 2,
-                      borderColor: COLORS.glassBorder,
+                      borderColor: T.border,
                     }}
                   >
                     <Text
-                      style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}
+                      style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}
                     >
                       {ui?.name?.slice(0, 2) || ''}
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text
-                      style={{
-                        color: '#e6edf3',
-                        fontSize: 14,
-                        fontWeight: '700',
-                      }}
+                      style={{ color: T.text, fontSize: 14, fontWeight: '700' }}
                     >
                       {item.uni}
                     </Text>
-                    <Text style={{ color: '#6b7280', fontSize: 12 }}>
+                    <Text style={[typography.caption, { color: T.muted }]}>
                       {item.time || timeAgo(item.createdAt)}
                     </Text>
                   </View>
@@ -406,7 +333,7 @@ export function FeedScreen({
                       backgroundColor: tc.bg,
                       paddingHorizontal: 12,
                       paddingVertical: 6,
-                      borderRadius: 16,
+                      borderRadius: radius.full,
                       borderWidth: 1,
                       borderColor: tc.b,
                     }}
@@ -420,51 +347,37 @@ export function FeedScreen({
                 </View>
                 <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
                   <Text
-                    style={{
-                      color: '#e6edf3',
-                      fontSize: 15,
-                      fontWeight: '700',
-                      marginBottom: 8,
-                      lineHeight: 22,
-                    }}
+                    style={[
+                      typography.headline,
+                      { color: T.text, marginBottom: 6, lineHeight: 22 },
+                    ]}
                   >
                     {item.title}
                   </Text>
                   <Text
-                    style={{ color: '#9ca3af', fontSize: 13, lineHeight: 20 }}
+                    style={{ color: T.sub, fontSize: 13, lineHeight: 20 }}
                   >
                     {item.body}
                   </Text>
                 </View>
                 <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 16,
-                    paddingBottom: 14,
-                    paddingTop: 10,
-                    borderTopWidth: 1,
-                    borderColor: COLORS.glassBorder,
-                  }}
+                  style={[
+                    styles.postFooter,
+                    { borderTopColor: T.border },
+                  ]}
                 >
                   <TouchableOpacity
                     onPress={() => toggleLike(item)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 8,
-                      paddingVertical: 6,
-                      marginRight: 4,
-                    }}
+                    style={styles.actionBtn}
                   >
                     <SvgIcon
-                      name={isL ? 'heart' : 'heart'}
+                      name="heart"
                       size={18}
-                      color={isL ? '#f87171' : '#6b7280'}
+                      color={isL ? '#F87171' : T.muted}
                     />
                     <Text
                       style={{
-                        color: isL ? '#f87171' : '#6b7280',
+                        color: isL ? '#F87171' : T.muted,
                         fontSize: 12,
                         fontWeight: '600',
                         marginLeft: 6,
@@ -477,18 +390,12 @@ export function FeedScreen({
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => shareItem(item)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 8,
-                      paddingVertical: 6,
-                      marginRight: 4,
-                    }}
+                    style={styles.actionBtn}
                   >
-                    <SvgIcon name="shareSocial" size={18} color="#6b7280" />
+                    <SvgIcon name="shareSocial" size={18} color={T.muted} />
                     <Text
                       style={{
-                        color: '#6b7280',
+                        color: T.muted,
                         fontSize: 12,
                         fontWeight: '600',
                         marginLeft: 6,
@@ -499,17 +406,12 @@ export function FeedScreen({
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => reportItem(item)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 8,
-                      paddingVertical: 6,
-                    }}
+                    style={styles.actionBtn}
                   >
-                    <SvgIcon name="flag" size={18} color="#6b7280" />
+                    <SvgIcon name="flag" size={18} color={T.muted} />
                     <Text
                       style={{
-                        color: '#6b7280',
+                        color: T.muted,
                         fontSize: 12,
                         fontWeight: '600',
                         marginLeft: 6,
@@ -528,11 +430,11 @@ export function FeedScreen({
                     <SvgIcon
                       name="bookmark"
                       size={20}
-                      color={isS ? '#A855F7' : '#6b7280'}
+                      color={isS ? brand.primary : T.muted}
                     />
                   </TouchableOpacity>
                 </View>
-              </View>
+              </Card>
             )
           })}
         </View>
@@ -546,3 +448,34 @@ export function FeedScreen({
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  upcomingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    paddingBottom: 12,
+  },
+  postFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    paddingTop: 10,
+    borderTopWidth: 1,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginRight: 4,
+  },
+})

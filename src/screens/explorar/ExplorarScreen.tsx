@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
-  View,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  ScrollView,
-  RefreshControl,
+  View,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { useCardStyle } from '@/theme/styles'
@@ -15,6 +16,7 @@ import { useProfileStore } from '@/stores/profileStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useGeo } from '@/stores/hooks/useGeo'
 import { logger } from '@/services/logger'
+import { Pill } from '@/shared/components'
 
 export function ExplorarScreen({
   refreshing,
@@ -23,7 +25,7 @@ export function ExplorarScreen({
   onOpenDiscover,
   onSelectUni,
 }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, brand, domain, radius, typography } = useTheme()
 
   const studyStateId = useProfileStore(s => s.studyStateId)
   const unis = useUniversitiesStore(s => s.unis)
@@ -69,8 +71,11 @@ export function ExplorarScreen({
   }, [unis, studyStateId])
 
   const hasSearch = query.length > 0
-
   const cd = useCardStyle()
+
+  // Notas-domain pastel (blue) keys both promos so they read as
+  // "informational / location" without competing with the primary CTA.
+  const notasAccent = domain.notas
 
   return (
     <ScrollView
@@ -81,25 +86,22 @@ export function ExplorarScreen({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={T.accent}
-          colors={[T.accent]}
+          tintColor={brand.primary}
+          colors={[brand.primary]}
         />
       }
     >
       {!studyStateId && (
         <TouchableOpacity
           onPress={onOpenLocation}
-          style={{
-            backgroundColor: isDark ? '#1a2e4a' : '#dbeafe',
-            borderRadius: 14,
-            padding: 12,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
-            marginBottom: 12,
-            borderWidth: 1,
-            borderColor: isDark ? '#3b82f6' : '#93c5fd',
-          }}
+          style={[
+            styles.locationPromo,
+            {
+              backgroundColor: notasAccent.bg,
+              borderColor: notasAccent.fg + '55',
+              borderRadius: radius.md,
+            },
+          ]}
         >
           <Text style={{ fontSize: 20 }}>📍</Text>
           <View style={{ flex: 1 }}>
@@ -110,29 +112,26 @@ export function ExplorarScreen({
               Toque para selecionar onde você pretende estudar
             </Text>
           </View>
-          <Text style={{ color: T.accent, fontSize: 18 }}>›</Text>
+          <Text style={{ color: brand.primary, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
       )}
       <TouchableOpacity
         onPress={onOpenDiscover}
-        style={{
-          backgroundColor: isDark ? '#0c1f3a' : '#dbeafe',
-          borderRadius: 18,
-          padding: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 14,
-          marginBottom: 14,
-          borderWidth: 1,
-          borderColor: isDark ? '#1e40af40' : '#bfdbfe',
-        }}
+        style={[
+          styles.discoverPromo,
+          {
+            backgroundColor: notasAccent.bg,
+            borderColor: notasAccent.fg + '55',
+            borderRadius: radius.lg,
+          },
+        ]}
       >
         <View
           style={{
             width: 52,
             height: 52,
-            borderRadius: 26,
-            backgroundColor: isDark ? '#1e3a6a' : '#bfdbfe',
+            borderRadius: radius.full,
+            backgroundColor: notasAccent.fg + '33',
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -151,28 +150,21 @@ export function ExplorarScreen({
         </View>
         <View
           style={{
-            backgroundColor: T.accent,
-            borderRadius: 12,
+            backgroundColor: brand.primary,
+            borderRadius: radius.sm,
             width: 32,
             height: 32,
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Text style={{ color: AT, fontWeight: '800', fontSize: 16 }}>›</Text>
+          <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 16 }}>›</Text>
         </View>
       </TouchableOpacity>
       <SBox val={query} set={setQuery} ph="Buscar universidade…" T={T} />
       {hasSearch && (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: 8,
-            marginTop: 4,
-          }}
-        >
-          <Text style={{ color: T.accent, fontSize: 12, fontWeight: '600' }}>
+        <View style={styles.searchSummary}>
+          <Text style={{ color: brand.primary, fontSize: 12, fontWeight: '600' }}>
             🔍 {filtU.length} resultado{filtU.length !== 1 ? 's' : ''}
           </Text>
           <Text style={{ color: T.muted, fontSize: 11, marginLeft: 8 }}>
@@ -185,48 +177,35 @@ export function ExplorarScreen({
         horizontal
         showsHorizontalScrollIndicator={false}
         style={{ marginBottom: 10 }}
+        contentContainerStyle={{ gap: 8 }}
       >
         {filterChips.map(s => {
           const chipValue = s.replace('🎯 ', '')
           const isSelected = fSt === chipValue
           return (
-            <TouchableOpacity
+            <Pill
               key={s}
+              active={isSelected}
               onPress={() => setFSt(isSelected ? 'Todos' : chipValue)}
-              style={{
-                paddingHorizontal: 13,
-                paddingVertical: 7,
-                borderRadius: 20,
-                backgroundColor: isSelected ? T.accent : T.card2,
-                marginRight: 7,
-                borderWidth: 1,
-                borderColor: isSelected ? T.accent : T.border,
-              }}
+              size="sm"
             >
-              <Text
-                style={{
-                  color: isSelected ? AT : T.sub,
-                  fontSize: 12,
-                  fontWeight: '700',
-                }}
-              >
-                {s}
-              </Text>
-            </TouchableOpacity>
+              {s}
+            </Pill>
           )
         })}
       </ScrollView>
-      <View style={{ gap: 9 }}>
+      <View style={{ gap: 10 }}>
         {filtU.map(u => (
           <TouchableOpacity
             key={u.id}
             onPress={() => onSelectUni(u)}
+            activeOpacity={0.85}
             style={{
               ...cd(),
               flexDirection: 'row',
               alignItems: 'center',
               gap: 12,
-              padding: 15,
+              padding: 14,
               borderLeftWidth: u.followed ? 3 : 0,
               borderLeftColor: u.color,
             }}
@@ -241,7 +220,7 @@ export function ExplorarScreen({
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
                 {u.name.slice(0, 2)}
               </Text>
             </View>
@@ -250,20 +229,20 @@ export function ExplorarScreen({
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
               >
                 <Text
-                  style={{ color: T.text, fontSize: 15, fontWeight: '800' }}
+                  style={[typography.headline, { color: T.text, fontSize: 15 }]}
                 >
                   {u.name}
                 </Text>
                 {userStudyState && u.state === userStudyState && (
                   <View
                     style={{
-                      backgroundColor: T.accent,
+                      backgroundColor: brand.primary,
                       borderRadius: 8,
                       paddingHorizontal: 6,
                       paddingVertical: 2,
                     }}
                   >
-                    <Text style={{ color: AT, fontSize: 8, fontWeight: '800' }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 8, fontWeight: '800' }}>
                       🎯
                     </Text>
                   </View>
@@ -272,7 +251,7 @@ export function ExplorarScreen({
               <Text style={{ color: T.sub, fontSize: 11 }} numberOfLines={1}>
                 {u.fullName}
               </Text>
-              <View style={{ flexDirection: 'row', gap: 5, marginTop: 5 }}>
+              <View style={{ flexDirection: 'row', gap: 5, marginTop: 5, alignItems: 'center' }}>
                 {[u.state, u.type].map(x => (
                   <View
                     key={x}
@@ -301,3 +280,28 @@ export function ExplorarScreen({
     </ScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  locationPromo: {
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  discoverPromo: {
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+  },
+  searchSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    marginTop: 4,
+  },
+})

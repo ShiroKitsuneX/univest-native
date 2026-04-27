@@ -24,7 +24,9 @@ export function PerfilScreen({
   onSelectUni,
   goNotas,
 }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, isDark, AT, brand, domain } = useTheme()
+  // Reading-progress amber → goal-domain accent (warm pastel).
+  const reading = domain.goal
 
   const av = useProfileStore(s => s.av)
   const avBgIdx = useProfileStore(s => s.avBgIdx)
@@ -269,11 +271,11 @@ export function PerfilScreen({
 
       <View
         style={{
-          backgroundColor: isDark ? '#0a1f0d' : '#f0fdf4',
+          backgroundColor: T.acBg,
           borderRadius: 16,
           padding: 14,
           borderWidth: 1,
-          borderColor: T.accent + '30',
+          borderColor: brand.primary + '40',
           marginBottom: 12,
         }}
       >
@@ -412,16 +414,16 @@ export function PerfilScreen({
                         gap: 4,
                         paddingHorizontal: 10,
                         paddingVertical: 6,
-                        backgroundColor: '#f59e0b20',
+                        backgroundColor: reading.bg,
                         borderRadius: 16,
                         borderWidth: 1,
-                        borderColor: '#f59e0b40',
+                        borderColor: reading.fg + '55',
                       }}
                     >
                       <Text style={{ fontSize: 11 }}>📖</Text>
                       <Text
                         style={{
-                          color: '#f59e0b',
+                          color: reading.fg,
                           fontSize: 11,
                           fontWeight: '700',
                         }}
@@ -473,10 +475,10 @@ export function PerfilScreen({
           ...cd({
             padding: 15,
             marginBottom: 12,
-            backgroundColor: isDark ? '#1a1a2e' : '#f5f5ff',
+            backgroundColor: T.acBg,
           }),
           borderWidth: 1,
-          borderColor: T.accent + '30',
+          borderColor: brand.primary + '40',
           borderRadius: 16,
         }}
       >
@@ -616,7 +618,7 @@ export function PerfilScreen({
                             daysUntil <= 7
                               ? '#dc2626'
                               : daysUntil <= 30
-                                ? '#f59e0b'
+                                ? reading.fg
                                 : T.accent,
                           borderRadius: 8,
                           paddingHorizontal: 8,
@@ -712,6 +714,8 @@ function GoalsList({
   setCompletedTodos,
   onSelectUni,
 }) {
+  const { domain } = useTheme()
+  const reading = domain.goal
   const [bookMenu, setBookMenu] = useState(null)
 
   const persistReadBooks = newRead => setReadBooks(newRead)
@@ -855,7 +859,7 @@ function GoalsList({
                         backgroundColor: isCompleted
                           ? T.accent + '10'
                           : isReading
-                            ? '#f59e0b10'
+                            ? reading.bg
                             : 'transparent',
                       }}
                     >
@@ -903,14 +907,14 @@ function GoalsList({
                               flex: 1,
                               padding: 4,
                               borderRadius: 6,
-                              backgroundColor: '#f59e0b30',
+                              backgroundColor: reading.bg,
                               borderWidth: 1,
-                              borderColor: '#f59e0b',
+                              borderColor: reading.fg,
                             }}
                           >
                             <Text
                               style={{
-                                color: '#f59e0b',
+                                color: reading.fg,
                                 fontSize: 9,
                                 fontWeight: '700',
                                 textAlign: 'center',
@@ -966,13 +970,13 @@ function GoalsList({
                               backgroundColor: isCompleted
                                 ? T.accent
                                 : isReading
-                                  ? '#f59e0b'
+                                  ? reading.fg
                                   : T.card2,
                               borderWidth: 2,
                               borderColor: isCompleted
                                 ? T.accent
                                 : isReading
-                                  ? '#f59e0b'
+                                  ? reading.fg
                                   : T.border,
                               alignItems: 'center',
                               justifyContent: 'center',

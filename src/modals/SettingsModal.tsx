@@ -179,14 +179,16 @@ export function SettingsModal({
             onLogout()
           }}
           style={{
-            backgroundColor: '#dc2626',
+            backgroundColor: 'transparent',
             borderRadius: 14,
             padding: 15,
             alignItems: 'center',
             marginBottom: 12,
+            borderWidth: 1,
+            borderColor: '#DC2626',
           }}
         >
-          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>
+          <Text style={{ color: '#DC2626', fontSize: 15, fontWeight: '700' }}>
             Sair
           </Text>
         </TouchableOpacity>

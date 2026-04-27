@@ -17,13 +17,16 @@ export const AVATAR_PRESETS: string[] = [
   '🧠',
 ]
 
+// Avatar gradient pairs — re-tuned to harmonise with the violet primary.
+// Each pair pairs a violet/indigo with a complementary warm or cool accent so
+// users still get visual variety, without clashing with the brand purple.
 export const AVATAR_COLORS: [string, string][] = [
-  ['#00E5A0', '#0099ff'],
-  ['#e11d48', '#f97316'],
-  ['#8b5cf6', '#ec4899'],
-  ['#3b82f6', '#06b6d4'],
-  ['#f59e0b', '#ef4444'],
-  ['#10b981', '#14b8a6'],
-  ['#6366f1', '#8b5cf6'],
-  ['#f43f5e', '#f97316'],
+  ['#7C5CFF', '#A78BFA'], // brand violet → soft lavender
+  ['#6366F1', '#A78BFA'], // indigo → lavender
+  ['#8B5CF6', '#EC4899'], // violet → pink
+  ['#7C5CFF', '#06B6D4'], // violet → cyan
+  ['#9333EA', '#F472B6'], // purple → rose
+  ['#6D4DEF', '#22D3EE'], // deep violet → sky
+  ['#A78BFA', '#F59E0B'], // lavender → amber
+  ['#5B21B6', '#F472B6'], // deep purple → pink
 ]

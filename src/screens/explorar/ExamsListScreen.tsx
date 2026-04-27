@@ -183,7 +183,7 @@ export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
                   alignItems: 'center',
                   padding: 14,
                   borderRadius: 12,
-                  backgroundColor: isDark ? '#1a2e1a' : '#f0fdf4',
+                  backgroundColor: T.acBg,
                   borderWidth: 1,
                   borderColor: T.accent + '40',
                   marginBottom: 8,
@@ -214,14 +214,14 @@ export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
                 </View>
                 <View
                   style={{
-                    backgroundColor: '#fbbf24',
+                    backgroundColor: T.accent,
                     paddingHorizontal: 10,
                     paddingVertical: 4,
                     borderRadius: 8,
                   }}
                 >
                   <Text
-                    style={{ color: '#000', fontSize: 11, fontWeight: '700' }}
+                    style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '700' }}
                   >
                     Em breve
                   </Text>
@@ -342,7 +342,7 @@ export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
                       {exam.pdfUrl ? (
                         <View
                           style={{
-                            backgroundColor: '#22c55e30',
+                            backgroundColor: T.acBg,
                             paddingHorizontal: 6,
                             paddingVertical: 2,
                             borderRadius: 6,
@@ -350,7 +350,7 @@ export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
                         >
                           <Text
                             style={{
-                              color: '#22c55e',
+                              color: T.accent,
                               fontSize: 10,
                               fontWeight: '700',
                             }}

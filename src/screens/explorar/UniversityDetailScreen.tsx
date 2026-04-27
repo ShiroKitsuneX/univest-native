@@ -1,10 +1,16 @@
 import { useState } from 'react'
-import { View, Text, TouchableOpacity, ScrollView, Linking } from 'react-native'
+import {
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { useCardStyle, useLabelStyle } from '@/theme/styles'
 import { fmtCount } from '@/utils/format'
 import { useProgressStore } from '@/stores/progressStore'
-import { PageHeader } from '@/shared/components/PageHeader'
 
 export function UniversityDetailScreen({
   selUni,
@@ -12,7 +18,7 @@ export function UniversityDetailScreen({
   onToggleFollow,
   onShowExams,
 }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, brand, domain, radius, typography } = useTheme()
 
   const readBooks = useProgressStore(s => s.readBooks)
   const setReadBooks = useProgressStore(s => s.setReadBooks)
@@ -21,46 +27,57 @@ export function UniversityDetailScreen({
   const [bookMenu, setBookMenu] = useState(null)
 
   const lbl = useLabelStyle()
-  const cd = useCardStyle(14)
+  const cd = useCardStyle(radius.md)
 
   const persistReadBooks = newRead => setReadBooks(newRead)
 
+  // Reading-in-progress state borrows the goal-domain pastel (warm amber);
+  // finished state uses the brand primary (violet). Both pair with their
+  // matching `fg` for icon strokes.
+  const goalAccent = domain.goal
+  const readingBg = goalAccent.bg
+  const readingFg = goalAccent.fg
+  const doneBg = T.acBg
+  const doneFg = brand.primary
+
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: T.bg }}>
       <TouchableOpacity
         onPress={onBack}
-        style={{
-          paddingHorizontal: 14,
-          paddingVertical: 8,
-          borderRadius: 12,
-          backgroundColor: T.card2,
-          borderWidth: 1,
-          borderColor: T.border,
-          alignSelf: 'flex-start',
-          margin: 16,
-        }}
+        style={[
+          styles.backBtn,
+          {
+            backgroundColor: T.card2,
+            borderColor: T.border,
+            borderRadius: radius.md,
+          },
+        ]}
       >
         <Text style={{ color: T.sub, fontSize: 12, fontWeight: '700' }}>
           ← Voltar
         </Text>
       </TouchableOpacity>
+
+      {/* Hero card — uses the university's brand colour for the surface,
+          white text always on top. */}
       <View
-        style={{
-          marginHorizontal: 16,
-          borderRadius: 22,
-          padding: 22,
-          backgroundColor: selUni.color,
-        }}
+        style={[
+          styles.hero,
+          {
+            backgroundColor: selUni.color,
+            borderRadius: radius.xl,
+          },
+        ]}
       >
         <Text style={{ fontSize: 30, marginBottom: 8 }}>
           {selUni.name.slice(0, 2)}
         </Text>
-        <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800' }}>
+        <Text style={[typography.title, { color: '#FFFFFF' }]}>
           {selUni.name}
         </Text>
         <Text
           style={{
-            color: 'rgba(255,255,255,.65)',
+            color: 'rgba(255,255,255,0.65)',
             fontSize: 12,
             marginBottom: 8,
           }}
@@ -69,7 +86,7 @@ export function UniversityDetailScreen({
         </Text>
         <Text
           style={{
-            color: 'rgba(255,255,255,.8)',
+            color: 'rgba(255,255,255,0.85)',
             fontSize: 12,
             lineHeight: 20,
             marginBottom: 14,
@@ -77,74 +94,74 @@ export function UniversityDetailScreen({
         >
           {selUni.description}
         </Text>
-        <View
-          style={{
-            flexDirection: 'row',
-            gap: 10,
-            alignItems: 'center',
-            flexWrap: 'wrap',
-          }}
-        >
+        <View style={styles.heroActionRow}>
           <TouchableOpacity
             onPress={() => onToggleFollow(selUni, !selUni.followed)}
-            style={{
-              paddingHorizontal: 18,
-              paddingVertical: 9,
-              borderRadius: 13,
-              backgroundColor: selUni.followed ? '#dc2626' : T.accent,
-            }}
+            style={[
+              styles.followBtn,
+              {
+                borderRadius: radius.md,
+                backgroundColor: selUni.followed
+                  ? 'rgba(255,255,255,0.18)'
+                  : '#FFFFFF',
+                borderWidth: selUni.followed ? 1 : 0,
+                borderColor: 'rgba(255,255,255,0.4)',
+              },
+            ]}
           >
             <Text
               style={{
-                color: selUni.followed ? '#fff' : AT,
+                color: selUni.followed ? '#FFFFFF' : selUni.color,
                 fontSize: 13,
                 fontWeight: '800',
               }}
             >
-              {selUni.followed ? '🚫 Deixar de seguir' : '+ Seguir'}
+              {selUni.followed ? '✓ Seguindo' : '+ Seguir'}
             </Text>
           </TouchableOpacity>
-          <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11 }}>
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>
             👥{' '}
-            <Text style={{ color: '#fff', fontWeight: '800' }}>
+            <Text style={{ color: '#FFFFFF', fontWeight: '800' }}>
               {fmtCount(selUni.followersCount ?? selUni.followers)}
             </Text>{' '}
             seguidores
           </Text>
         </View>
       </View>
+
       {selUni.exams && selUni.exams.length > 0 && (
         <View
           style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}
         >
           <TouchableOpacity
             onPress={onShowExams}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: 14,
-              borderRadius: 14,
-              backgroundColor: selUni.color,
-            }}
+            activeOpacity={0.85}
+            style={[
+              styles.examsRow,
+              {
+                backgroundColor: selUni.color,
+                borderRadius: radius.md,
+              },
+            ]}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ fontSize: 22, marginRight: 12 }}>📝</Text>
               <View>
                 <Text
-                  style={{ color: '#fff', fontSize: 15, fontWeight: '800' }}
+                  style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800' }}
                 >
                   Provas Anteriores
                 </Text>
-                <Text style={{ color: 'rgba(255,255,255,.7)', fontSize: 11 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11 }}>
                   Consulte provas e simulados
                 </Text>
               </View>
             </View>
-            <Text style={{ color: '#fff', fontSize: 22 }}>→</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 22 }}>→</Text>
           </TouchableOpacity>
         </View>
       )}
+
       <View style={{ padding: 16, gap: 10 }}>
         <View style={cd({ padding: 16 })}>
           <Text style={[lbl, { marginBottom: 10 }]}>📅 Próximo Vestibular</Text>
@@ -160,14 +177,14 @@ export function UniversityDetailScreen({
           </Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {[
-              ['Inscrições', selUni.inscricao, T.accent],
-              ['Data da Prova', selUni.prova, '#c084fc'],
+              ['Inscrições', selUni.inscricao, brand.primary],
+              ['Data da Prova', selUni.prova, domain.simulado.fg],
             ].map(([l, v, c]) => (
               <View
                 key={l}
                 style={{
                   backgroundColor: T.card2,
-                  borderRadius: 10,
+                  borderRadius: radius.sm,
                   padding: 8,
                 }}
               >
@@ -183,6 +200,7 @@ export function UniversityDetailScreen({
             ))}
           </View>
         </View>
+
         <View style={cd({ padding: 16 })}>
           <Text style={[lbl, { marginBottom: 10 }]}>📖 Cursos</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7 }}>
@@ -191,7 +209,7 @@ export function UniversityDetailScreen({
                 key={c}
                 style={{
                   backgroundColor: T.card2,
-                  borderRadius: 10,
+                  borderRadius: radius.sm,
                   paddingHorizontal: 11,
                   paddingVertical: 5,
                   borderWidth: 1,
@@ -207,16 +225,10 @@ export function UniversityDetailScreen({
             ))}
           </View>
         </View>
+
         {selUni.books && selUni.books.length > 0 && (
           <View style={cd({ padding: 16 })}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 10,
-              }}
-            >
+            <View style={styles.booksHeader}>
               <Text style={[lbl, { marginBottom: 0 }]}>
                 📚 Livros Obrigatórios
               </Text>
@@ -267,9 +279,9 @@ export function UniversityDetailScreen({
                           marginHorizontal: isRead || isReading ? -8 : 0,
                           borderRadius: isRead || isReading ? 8 : 0,
                           backgroundColor: isRead
-                            ? T.accent + '10'
+                            ? doneBg
                             : isReading
-                              ? '#f59e0b10'
+                              ? readingBg
                               : 'transparent',
                           borderBottomWidth:
                             i < Math.min(selUni.books.length, 8) - 1 ? 1 : 0,
@@ -288,22 +300,13 @@ export function UniversityDetailScreen({
                                 persistReadBooks(newRead)
                                 setBookMenu(null)
                               }}
-                              style={{
-                                flex: 1,
-                                padding: 6,
-                                borderRadius: 6,
+                              style={[styles.menuBtn, {
                                 backgroundColor: T.card,
-                                borderWidth: 1,
                                 borderColor: T.border,
-                              }}
+                              }]}
                             >
                               <Text
-                                style={{
-                                  color: T.muted,
-                                  fontSize: 10,
-                                  fontWeight: '700',
-                                  textAlign: 'center',
-                                }}
+                                style={[styles.menuBtnText, { color: T.muted }]}
                               >
                                 ○
                               </Text>
@@ -318,22 +321,13 @@ export function UniversityDetailScreen({
                                 persistReadBooks(newRead)
                                 setBookMenu(null)
                               }}
-                              style={{
-                                flex: 1,
-                                padding: 6,
-                                borderRadius: 6,
-                                backgroundColor: '#f59e0b30',
-                                borderWidth: 1,
-                                borderColor: '#f59e0b',
-                              }}
+                              style={[styles.menuBtn, {
+                                backgroundColor: readingBg,
+                                borderColor: readingFg,
+                              }]}
                             >
                               <Text
-                                style={{
-                                  color: '#f59e0b',
-                                  fontSize: 10,
-                                  fontWeight: '700',
-                                  textAlign: 'center',
-                                }}
+                                style={[styles.menuBtnText, { color: readingFg }]}
                               >
                                 📖
                               </Text>
@@ -348,22 +342,13 @@ export function UniversityDetailScreen({
                                 persistReadBooks(newRead)
                                 setBookMenu(null)
                               }}
-                              style={{
-                                flex: 1,
-                                padding: 6,
-                                borderRadius: 6,
-                                backgroundColor: T.accent + '20',
-                                borderWidth: 1,
-                                borderColor: T.accent,
-                              }}
+                              style={[styles.menuBtn, {
+                                backgroundColor: doneBg,
+                                borderColor: doneFg,
+                              }]}
                             >
                               <Text
-                                style={{
-                                  color: T.accent,
-                                  fontSize: 10,
-                                  fontWeight: '700',
-                                  textAlign: 'center',
-                                }}
+                                style={[styles.menuBtnText, { color: doneFg }]}
                               >
                                 ✓
                               </Text>
@@ -382,15 +367,15 @@ export function UniversityDetailScreen({
                                 height: 24,
                                 borderRadius: 12,
                                 backgroundColor: isRead
-                                  ? T.accent
+                                  ? doneFg
                                   : isReading
-                                    ? '#f59e0b'
+                                    ? readingFg
                                     : T.card2,
                                 borderWidth: 2,
                                 borderColor: isRead
-                                  ? T.accent
+                                  ? doneFg
                                   : isReading
-                                    ? '#f59e0b'
+                                    ? readingFg
                                     : T.border,
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -400,7 +385,7 @@ export function UniversityDetailScreen({
                               {isRead && (
                                 <Text
                                   style={{
-                                    color: AT,
+                                    color: '#FFFFFF',
                                     fontSize: 10,
                                     fontWeight: '800',
                                   }}
@@ -409,7 +394,7 @@ export function UniversityDetailScreen({
                                 </Text>
                               )}
                               {isReading && (
-                                <Text style={{ color: '#fff', fontSize: 10 }}>
+                                <Text style={{ color: '#FFFFFF', fontSize: 10 }}>
                                   📖
                                 </Text>
                               )}
@@ -439,30 +424,83 @@ export function UniversityDetailScreen({
             )}
           </View>
         )}
+
         <TouchableOpacity
           onPress={() => Linking.openURL(selUni.site)}
-          style={{
-            backgroundColor: isDark ? '#0a1f15' : '#f0fdf4',
-            borderRadius: 14,
-            padding: 13,
-            borderWidth: 1,
-            borderColor: T.accent + '30',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
-          }}
+          style={[
+            styles.siteRow,
+            {
+              backgroundColor: T.acBg,
+              borderRadius: radius.md,
+              borderColor: brand.primary + '40',
+            },
+          ]}
         >
           <Text style={{ fontSize: 18 }}>🌐</Text>
           <View style={{ flex: 1 }}>
             <Text style={{ color: T.sub, fontSize: 10 }}>Site oficial</Text>
-            <Text style={{ color: T.accent, fontSize: 13, fontWeight: '700' }}>
+            <Text style={{ color: brand.primary, fontSize: 13, fontWeight: '700' }}>
               {selUni.site}
             </Text>
           </View>
-          <Text style={{ color: T.accent }}>›</Text>
+          <Text style={{ color: brand.primary }}>›</Text>
         </TouchableOpacity>
       </View>
       <View style={{ height: 16 }} />
     </ScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  backBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+    margin: 16,
+  },
+  hero: {
+    marginHorizontal: 16,
+    padding: 22,
+  },
+  heroActionRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  followBtn: {
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+  },
+  examsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+  },
+  booksHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  menuBtn: {
+    flex: 1,
+    padding: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  menuBtnText: {
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  siteRow: {
+    padding: 13,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+})

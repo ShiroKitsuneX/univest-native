@@ -1,7 +1,8 @@
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { useStoriesStore, type Story } from '@/stores/storiesStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { StoryCircle } from '@/components/StoryCircle'
+import { useTheme } from '@/theme/useTheme'
 
 type Group = {
   uniId: string
@@ -21,6 +22,7 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
   const viewedIds = useStoriesStore(s => s.viewedIds)
   const getFollowedUnis = useUniversitiesStore(s => s.getFollowedUnis)
   const fol = getFollowedUnis()
+  const { T, brand } = useTheme()
 
   const groupedStories = stories.reduce<Group[]>((acc, story) => {
     const existing = acc.find(g => g.uniId === story.uniId)
@@ -60,7 +62,7 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
         contentContainerStyle={{
           paddingHorizontal: 20,
           flexGrow: 1,
-          justifyContent: 'center',
+          justifyContent: groupedStories.length <= 4 ? 'center' : 'flex-start',
         }}
       >
         {groupedStories.map(group => (
@@ -75,30 +77,28 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
         {fol.length > 0 && groupedStories.length < 6 && (
           <TouchableOpacity
             onPress={goExplorar}
-            style={{ alignItems: 'center' }}
+            style={{ alignItems: 'center', marginRight: 14, width: 76 }}
           >
             <View
               style={{
                 width: 68,
                 height: 68,
                 borderRadius: 34,
-                backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                backgroundColor: T.acBg,
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderWidth: 2,
-                borderColor: 'rgba(139, 92, 246, 0.4)',
+                borderColor: brand.primary,
                 borderStyle: 'dashed',
               }}
             >
-              <Text
-                style={{ color: '#A855F7', fontSize: 28, fontWeight: '300' }}
-              >
+              <Text style={{ color: brand.primary, fontSize: 28, fontWeight: '300' }}>
                 +
               </Text>
             </View>
             <Text
               style={{
-                color: '#8b949e',
+                color: T.sub,
                 fontSize: 11,
                 fontWeight: '600',
                 marginTop: 6,

@@ -14,7 +14,9 @@ import { PageHeader } from '@/shared/components/PageHeader'
 
 export function BooksListScreen({ onBack }) {
   const insets = useSafeAreaInsets()
-  const { T, isDark } = useTheme()
+  const { T, isDark, domain } = useTheme()
+  // Goal-domain pastel keys the "Reading in progress" affordance app-wide.
+  const reading = domain.goal
 
   const unis = useUniversitiesStore(s => s.unis)
   const readBooks = useProgressStore(s => s.readBooks)
@@ -146,15 +148,15 @@ export function BooksListScreen({ onBack }) {
                         padding: 14,
                         borderRadius: 14,
                         backgroundColor: isRead
-                          ? T.accent + '15'
+                          ? T.acBg
                           : isReading
-                            ? '#f59e0b15'
+                            ? reading.bg
                             : T.card2,
                         borderWidth: 1,
                         borderColor: isRead
                           ? T.accent + '40'
                           : isReading
-                            ? '#f59e0b40'
+                            ? reading.fg + '55'
                             : T.border,
                       }}
                     >
@@ -202,14 +204,14 @@ export function BooksListScreen({ onBack }) {
                               flex: 1,
                               padding: 10,
                               borderRadius: 10,
-                              backgroundColor: '#f59e0b30',
+                              backgroundColor: reading.bg,
                               borderWidth: 1,
-                              borderColor: '#f59e0b',
+                              borderColor: reading.fg,
                             }}
                           >
                             <Text
                               style={{
-                                color: '#f59e0b',
+                                color: reading.fg,
                                 fontSize: 12,
                                 fontWeight: '700',
                                 textAlign: 'center',

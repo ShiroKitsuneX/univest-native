@@ -314,11 +314,11 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
             onPress={() => Linking.openURL(site)}
             disabled={!site}
             style={{
-              backgroundColor: isDark ? '#0a1f15' : '#f0fdf4',
+              backgroundColor: T.acBg,
               borderRadius: 14,
               padding: 13,
               borderWidth: 1,
-              borderColor: T.accent + '30',
+              borderColor: T.accent + '40',
               flexDirection: 'row',
               alignItems: 'center',
               gap: 10,
@@ -638,7 +638,7 @@ function EditModal({
               alignItems: 'center',
             }}
           >
-            <Text style={{ color: isDark ? '#000' : '#fff', fontWeight: '700' }}>
+            <Text style={{ color: '#FFFFFF', fontWeight: '700' }}>
               {loading ? 'Salvando...' : 'Salvar'}
             </Text>
           </TouchableOpacity>

@@ -223,7 +223,7 @@ export function OnboardingScreen() {
                 >
                   <Text
                     style={{
-                      color: picking === n ? AT : T.sub,
+                      color: picking === n ? '#FFFFFF' : T.sub,
                       fontSize: 11,
                       fontWeight: '700',
                     }}
@@ -402,17 +402,19 @@ export function OnboardingScreen() {
                     paddingHorizontal: 12,
                     paddingVertical: 7,
                     borderRadius: 11,
-                    backgroundColor: u.followed ? '#dc2626' : T.accent,
+                    backgroundColor: u.followed ? T.card2 : T.accent,
+                    borderWidth: u.followed ? 1 : 0,
+                    borderColor: T.border,
                   }}
                 >
                   <Text
                     style={{
-                      color: u.followed ? '#fff' : AT,
+                      color: u.followed ? T.sub : '#FFFFFF',
                       fontSize: 11,
                       fontWeight: '800',
                     }}
                   >
-                    {u.followed ? 'Seguindo' : '+ Seguir'}
+                    {u.followed ? '✓ Seguindo' : '+ Seguir'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -493,7 +495,7 @@ export function OnboardingScreen() {
           >
             <Text
               style={{
-                color: canNext ? AT : T.muted,
+                color: canNext ? '#FFFFFF' : T.muted,
                 fontSize: 15,
                 fontWeight: '800',
               }}

@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react'
 import {
-  View,
   Modal,
   ScrollView,
-  TouchableOpacity,
   TouchableWithoutFeedback,
+  View,
 } from 'react-native'
 import type { ThemeColors } from '@/theme/palette'
 
@@ -12,6 +11,8 @@ type Props = {
   visible: boolean
   onClose: () => void
   children: ReactNode
+  // Theme colours from `useTheme()`. Passed down rather than read here so the
+  // sheet stays a thin presentational shell with no store dependency.
   T: ThemeColors
   height?: number
 }
@@ -34,7 +35,7 @@ export function BottomSheet({
         <View
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0,0,0,.72)',
+            backgroundColor: 'rgba(0,0,0,0.55)',
             justifyContent: 'flex-end',
           }}
         >
@@ -42,8 +43,8 @@ export function BottomSheet({
             <View
               style={{
                 backgroundColor: T.card,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
+                borderTopLeftRadius: 22,
+                borderTopRightRadius: 22,
                 minHeight: height,
                 borderTopWidth: 1,
                 borderColor: T.border,
@@ -51,13 +52,14 @@ export function BottomSheet({
             >
               <View
                 style={{
-                  width: 36,
+                  width: 40,
                   height: 4,
-                  backgroundColor: T.border,
+                  backgroundColor: T.muted,
+                  opacity: 0.5,
                   borderRadius: 2,
                   alignSelf: 'center',
-                  marginTop: 12,
-                  marginBottom: 4,
+                  marginTop: 10,
+                  marginBottom: 6,
                 }}
               />
               <ScrollView

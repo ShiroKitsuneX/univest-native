@@ -1,26 +1,35 @@
 import { useRef } from 'react'
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  Animated,
   ScrollView,
   StatusBar,
-  Animated,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/theme/useTheme'
 import { useIcons } from '@/stores/hooks/useIcons'
 
+const TIERS: Array<[id: string, ic: string, label: string, tint: string]> = [
+  ['vestibular', '🎯', 'Vestibulares & ENEM', '#7C5CFF'],
+  ['graduacao', '🎓', 'Graduação & Pós-graduação', '#A78BFA'],
+  ['mestrado', '🔬', 'Mestrado & Doutorado', '#6366F1'],
+  ['tecnico', '📚', 'Ensino Médio & Técnico', '#0EA5E9'],
+  ['cursos', '📖', 'Cursos e outros', '#F59E0B'],
+]
+
 export function WelcomeScreen({ navigation }: { navigation: any }) {
   const insets = useSafeAreaInsets()
-  const { T, isDark, AT } = useTheme()
+  const { T, isDark, brand, radius, typography, shadow } = useTheme()
   const getIcon = useIcons()
 
   const loginBtnScale = useRef(new Animated.Value(1)).current
 
   const handleEnterPress = () => {
     Animated.spring(loginBtnScale, {
-      toValue: 0.9,
+      toValue: 0.94,
       useNativeDriver: true,
     }).start()
     setTimeout(() => {
@@ -33,7 +42,7 @@ export function WelcomeScreen({ navigation }: { navigation: any }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: T.bg, overflow: 'hidden' }}>
+    <View style={[styles.wrap, { backgroundColor: T.bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <ScrollView
         bounces={false}
@@ -46,61 +55,60 @@ export function WelcomeScreen({ navigation }: { navigation: any }) {
           paddingBottom: insets.bottom + 28,
         }}
       >
-        <Text style={{ fontSize: 64, textAlign: 'center', marginBottom: 14 }}>
-          🎓
-        </Text>
-        <Text
-          style={{
-            fontSize: 34,
-            fontWeight: '800',
-            color: T.text,
-            textAlign: 'center',
-            marginBottom: 8,
-          }}
+        <View
+          style={[
+            styles.logoTile,
+            {
+              backgroundColor: T.card,
+              borderColor: T.border,
+              borderRadius: radius.xl,
+              alignSelf: 'center',
+            },
+            shadow.primary,
+          ]}
         >
-          Uni<Text style={{ color: T.accent }}>Vest</Text>
+          <Text style={styles.logoEmoji}>🎓</Text>
+        </View>
+        <Text
+          style={[
+            typography.title,
+            { color: T.text, textAlign: 'center', marginBottom: 6 },
+          ]}
+        >
+          Uni<Text style={{ color: brand.primary }}>Vest</Text>
         </Text>
         <Text
-          style={{
-            color: T.sub,
-            fontSize: 14,
-            textAlign: 'center',
-            lineHeight: 24,
-            marginBottom: 32,
-          }}
+          style={[
+            typography.body,
+            {
+              color: T.sub,
+              textAlign: 'center',
+              lineHeight: 22,
+              marginBottom: 28,
+              paddingHorizontal: 12,
+            },
+          ]}
         >
           Seu portal inteligente para toda a jornada acadêmica
         </Text>
         <View style={{ gap: 10, marginBottom: 32 }}>
-          {[
-            ['vestibular', '🎯', 'Vestibulares & ENEM', '#e11d48'],
-            ['graduacao', '🎓', 'Graduação & Pós-graduação', '#7c3aed'],
-            ['mestrado', '🔬', 'Mestrado & Doutorado', '#2563eb'],
-            ['tecnico', '📚', 'Ensino Médio & Técnico', '#059669'],
-            ['cursos', '📖', 'Cursos e outros', '#f59e0b'],
-          ].map(([id, ic, l, cor]) => (
+          {TIERS.map(([id, ic, l, cor]) => (
             <View
               key={id}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: T.card,
-                borderRadius: 16,
-                padding: 14,
-                borderWidth: 1,
-                borderColor: T.border,
-                gap: 14,
-              }}
+              style={[
+                styles.tierRow,
+                {
+                  backgroundColor: T.card,
+                  borderColor: T.border,
+                  borderRadius: radius.lg,
+                },
+              ]}
             >
               <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: cor + '22',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                style={[
+                  styles.tierIcon,
+                  { backgroundColor: cor + '22', borderRadius: radius.sm },
+                ]}
               >
                 <Text style={{ fontSize: 22 }}>{getIcon(id, ic)}</Text>
               </View>
@@ -119,24 +127,51 @@ export function WelcomeScreen({ navigation }: { navigation: any }) {
         </View>
         <TouchableOpacity onPress={handleEnterPress} activeOpacity={0.9}>
           <Animated.View
-            style={{
-              padding: 16,
-              borderRadius: 18,
-              backgroundColor: T.accent,
-              alignItems: 'center',
-              transform: [{ scale: loginBtnScale }],
-              shadowColor: T.accent,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-            }}
+            style={[
+              styles.cta,
+              {
+                backgroundColor: brand.primary,
+                borderRadius: radius.md,
+                transform: [{ scale: loginBtnScale }],
+              },
+              shadow.primary,
+            ]}
           >
-            <Text style={{ color: AT, fontSize: 16, fontWeight: '800' }}>
-              Entrar ou criar conta
-            </Text>
+            <Text style={styles.ctaText}>Entrar ou criar conta</Text>
           </Animated.View>
         </TouchableOpacity>
       </ScrollView>
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  wrap: { flex: 1, overflow: 'hidden' },
+  logoTile: {
+    width: 88,
+    height: 88,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+    borderWidth: 1,
+  },
+  logoEmoji: { fontSize: 48 },
+  tierRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderWidth: 1,
+    gap: 14,
+  },
+  tierIcon: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cta: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  ctaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+})

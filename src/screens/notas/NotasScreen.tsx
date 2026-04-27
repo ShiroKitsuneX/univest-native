@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { useCardStyle, useLabelStyle } from '@/theme/styles'
+import { TAG_D, TAG_L } from '@/theme/palette'
 import { BarChart } from 'react-native-chart-kit'
 import { NOTAS_CORTE } from '@/data/notasCorte'
 import { ENEM_SUBJECTS, subjectScore } from '@/data/subjects'
@@ -17,7 +18,15 @@ import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 
 export function NotasScreen({ onEditCourses, onAddGrade }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, isDark, AT, brand, domain } = useTheme()
+  // Notas-domain accent (cool blue) keys "Meu Objetivo" and the comparison
+  // hero so they read as analytical/data while the brand violet is reserved
+  // for primary CTAs and active selections.
+  const notas = domain.notas
+  // The "Área para melhorar" warning block reads as `alert` semantically;
+  // tag families have the matching warm-amber roll for both themes.
+  const alertTag = isDark ? TAG_D.alert : TAG_L.alert
+  const alert = { fg: alertTag.tx, bg: alertTag.bg, b: alertTag.b }
 
   const c1 = useOnboardingStore(s => s.c1)
   const c2 = useOnboardingStore(s => s.c2)
@@ -61,14 +70,19 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
       }),
     [gs]
   )
+  // Chart colours read from the brand primary so trend lines and dots match
+  // the violet hero treatment used elsewhere in Notas.
   const chartConfig = {
     backgroundGradientFrom: T.card,
     backgroundGradientTo: T.card,
     decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(0, 229, 160, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(139, 148, 158, ${opacity})`,
+    color: (opacity = 1) => `rgba(124, 92, 255, ${opacity})`,
+    labelColor: (opacity = 1) =>
+      isDark
+        ? `rgba(156, 154, 184, ${opacity})`
+        : `rgba(90, 84, 120, ${opacity})`,
     style: { borderRadius: 16 },
-    propsForDots: { r: '4', strokeWidth: '1', stroke: T.accent },
+    propsForDots: { r: '4', strokeWidth: '1', stroke: brand.primary },
   }
   const filtN = useMemo(() => {
     const uCourses = [c1, c2].filter(Boolean)
@@ -98,12 +112,12 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
     >
       <View
         style={{
-          backgroundColor: isDark ? '#1a2e4a' : '#dbeafe',
+          backgroundColor: notas.bg,
           borderRadius: 16,
           padding: 16,
           marginBottom: 16,
           borderWidth: 1,
-          borderColor: isDark ? '#3b82f6' : '#93c5fd',
+          borderColor: notas.fg + '55',
         }}
       >
         <View
@@ -118,7 +132,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
             <Text style={{ fontSize: 18 }}>🎯</Text>
             <Text
               style={{
-                color: isDark ? '#60a5fa' : '#1d4ed8',
+                color: notas.fg,
                 fontSize: 14,
                 fontWeight: '700',
               }}
@@ -129,17 +143,17 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
           <TouchableOpacity
             onPress={onEditCourses}
             style={{
-              backgroundColor: isDark ? '#3b82f6' : '#fff',
+              backgroundColor: T.card,
               paddingHorizontal: 10,
               paddingVertical: 4,
               borderRadius: 8,
               borderWidth: 1,
-              borderColor: isDark ? '#60a5fa' : '#1d4ed8',
+              borderColor: notas.fg + '66',
             }}
           >
             <Text
               style={{
-                color: isDark ? '#fff' : '#1d4ed8',
+                color: notas.fg,
                 fontSize: 10,
                 fontWeight: '700',
               }}
@@ -159,17 +173,17 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
           {c1 ? (
             <View
               style={{
-                backgroundColor: isDark ? '#1e3a5f' : '#fff',
+                backgroundColor: T.card,
                 paddingHorizontal: 14,
                 paddingVertical: 8,
                 borderRadius: 20,
                 borderWidth: 1,
-                borderColor: isDark ? '#60a5fa' : '#1d4ed8',
+                borderColor: notas.fg + '66',
               }}
             >
               <Text
                 style={{
-                  color: isDark ? '#60a5fa' : '#1d4ed8',
+                  color: notas.fg,
                   fontSize: 13,
                   fontWeight: '700',
                 }}
@@ -178,16 +192,14 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
               </Text>
             </View>
           ) : (
-            <Text
-              style={{ color: isDark ? '#60a5fa' : '#1d4ed8', fontSize: 12 }}
-            >
+            <Text style={{ color: notas.fg, fontSize: 12 }}>
               Selecione seu curso
             </Text>
           )}
           {c2 && (
             <View
               style={{
-                backgroundColor: isDark ? '#161b27' : '#f0f0f0',
+                backgroundColor: T.card2,
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 borderRadius: 16,
@@ -201,13 +213,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
             </View>
           )}
         </View>
-        <Text
-          style={{
-            color: isDark ? '#94a3b8' : '#64748b',
-            fontSize: 10,
-            marginTop: 8,
-          }}
-        >
+        <Text style={{ color: T.sub, fontSize: 10, marginTop: 8 }}>
           Os cursos selecionados guiam toda a análise abaixo
         </Text>
       </View>
@@ -428,11 +434,11 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
           {weak && (
             <View
               style={{
-                backgroundColor: isDark ? '#2a1800' : '#fff7ed',
+                backgroundColor: alert.bg,
                 borderRadius: 16,
                 padding: 14,
                 borderWidth: 1,
-                borderColor: isDark ? '#78350f' : '#fed7aa',
+                borderColor: alert.fg + '55',
                 marginBottom: 14,
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -444,7 +450,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                   width: 44,
                   height: 44,
                   borderRadius: 22,
-                  backgroundColor: isDark ? '#78350f' : '#fed7aa',
+                  backgroundColor: alert.fg + '33',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
@@ -454,7 +460,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    color: '#f59e0b',
+                    color: alert.fg,
                     fontSize: 10,
                     fontWeight: '800',
                     textTransform: 'uppercase',
@@ -465,7 +471,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                 </Text>
                 <Text
                   style={{
-                    color: isDark ? '#fbbf24' : '#c2410c',
+                    color: alert.fg,
                     fontSize: 14,
                     fontWeight: '800',
                     marginTop: 2,
@@ -473,19 +479,13 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                 >
                   {weak.subject}
                 </Text>
-                <Text
-                  style={{
-                    color: isDark ? '#fbbf24' : '#c2410c',
-                    fontSize: 11,
-                    opacity: 0.8,
-                  }}
-                >
+                <Text style={{ color: alert.fg, fontSize: 11, opacity: 0.8 }}>
                   {weak.v} pts na última prova
                 </Text>
               </View>
               <View
                 style={{
-                  backgroundColor: isDark ? '#78350f' : '#fed7aa',
+                  backgroundColor: alert.fg + '22',
                   borderRadius: 10,
                   paddingHorizontal: 10,
                   paddingVertical: 6,
@@ -493,7 +493,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
               >
                 <Text
                   style={{
-                    color: isDark ? '#fbbf24' : '#92400e',
+                    color: alert.fg,
                     fontSize: 13,
                     fontWeight: '800',
                   }}
@@ -525,7 +525,12 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
                 chartConfig={{
                   ...chartConfig,
                   // @ts-ignore - barColors is a valid property but missing from types
-                  barColors: ['#60a5fa', '#f87171', '#4ade80', '#fbbf24'],
+                  barColors: [
+                    notas.fg,
+                    '#F472B6',
+                    domain.news.fg,
+                    domain.goal.fg,
+                  ],
                 }}
                 verticalLabelRotation={0}
                 xAxisLabel=""
@@ -689,17 +694,17 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
             {compareMode && (
               <View
                 style={{
-                  backgroundColor: isDark ? '#1a2e4a' : '#dbeafe',
+                  backgroundColor: notas.bg,
                   borderRadius: 12,
                   padding: 12,
                   marginBottom: 12,
                   borderWidth: 1,
-                  borderColor: isDark ? '#3b82f6' : '#93c5fd',
+                  borderColor: notas.fg + '55',
                 }}
               >
                 <Text
                   style={{
-                    color: isDark ? '#60a5fa' : '#1d4ed8',
+                    color: notas.fg,
                     fontSize: 11,
                     fontWeight: '700',
                     marginBottom: 8,

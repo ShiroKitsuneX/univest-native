@@ -3,7 +3,9 @@ import { useTheme } from '@/theme/useTheme'
 import { BottomSheet } from '@/components/BottomSheet'
 
 export function ExamDetailModal({ exam, onClose }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, isDark, AT, brand, domain } = useTheme()
+  const goal = domain.goal
+  const notas = domain.notas
 
   return (
     <BottomSheet visible={!!exam && !exam?.isList} onClose={onClose} T={T}>
@@ -36,17 +38,17 @@ export function ExamDetailModal({ exam, onClose }) {
             </Text>
             <View
               style={{
-                backgroundColor: isDark ? '#2a2a1a' : '#fffbeb',
+                backgroundColor: goal.bg,
                 borderRadius: 14,
                 padding: 16,
                 marginBottom: 16,
                 borderWidth: 1,
-                borderColor: isDark ? '#5c4d1a' : '#fcd34d',
+                borderColor: goal.fg + '55',
               }}
             >
               <Text
                 style={{
-                  color: '#f59e0b',
+                  color: goal.fg,
                   fontSize: 14,
                   fontWeight: '800',
                   marginBottom: 6,
@@ -200,15 +202,15 @@ export function ExamDetailModal({ exam, onClose }) {
                     justifyContent: 'center',
                     padding: 14,
                     borderRadius: 14,
-                    backgroundColor: isDark ? '#1a2e4a' : '#dbeafe',
+                    backgroundColor: notas.bg,
                     borderWidth: 1,
-                    borderColor: isDark ? '#3b82f6' : '#93c5fd',
+                    borderColor: notas.fg + '55',
                   }}
                 >
                   <Text style={{ fontSize: 16, marginRight: 6 }}>📄</Text>
                   <Text
                     style={{
-                      color: '#60a5fa',
+                      color: notas.fg,
                       fontSize: 13,
                       fontWeight: '700',
                     }}
@@ -224,7 +226,7 @@ export function ExamDetailModal({ exam, onClose }) {
                     justifyContent: 'center',
                     padding: 14,
                     borderRadius: 14,
-                    backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5',
+                    backgroundColor: T.card2,
                   }}
                 >
                   <Text style={{ color: T.muted, fontSize: 12 }}>
