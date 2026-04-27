@@ -13,8 +13,11 @@ import {
 } from 'react-native'
 import type { ThemeColors } from '@/theme/palette'
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85
+
+const HEADER_HEIGHT = 80
+const TAB_BAR_HEIGHT = 50
 
 type Props = {
   visible: boolean
@@ -28,8 +31,8 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
   const slideAnim = useRef(new Animated.Value(PANEL_WIDTH)).current
   const fadeAnim = useRef(new Animated.Value(0)).current
 
-  const HEADER_HEIGHT = 60 + insets.top
-  const TAB_BAR_HEIGHT = 60 + insets.bottom
+  const panelTop = HEADER_HEIGHT + insets.top
+  const panelBottom = TAB_BAR_HEIGHT + insets.bottom
 
   useEffect(() => {
     const animations = [
@@ -69,8 +72,8 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
             {
               backgroundColor: T.card,
               transform: [{ translateX: slideAnim }],
-              paddingTop: HEADER_HEIGHT,
-              paddingBottom: TAB_BAR_HEIGHT,
+              top: panelTop,
+              bottom: panelBottom,
             },
           ]}
         >
@@ -104,8 +107,6 @@ const styles = StyleSheet.create({
   panel: {
     position: 'absolute',
     right: 0,
-    top: 0,
-    bottom: 0,
     width: PANEL_WIDTH,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
