@@ -15,6 +15,7 @@ import type { ThemeColors } from '@/theme/palette'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85
+const TAB_BAR_HEIGHT = 50
 
 type Props = {
   visible: boolean
@@ -67,7 +68,7 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
               backgroundColor: T.card,
               transform: [{ translateX: slideAnim }],
               top: panelTop,
-              bottom: 0,
+              bottom: TAB_BAR_HEIGHT + insets.bottom,
             },
           ]}
         >
@@ -101,10 +102,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     width: PANEL_WIDTH,
-    top: 0,
-    bottom: 0,
     borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 20,
   },
   handle: {
     width: 36,
