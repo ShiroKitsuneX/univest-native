@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   updateDoc,
+  setDoc,
   query,
   orderBy,
   where,
@@ -83,4 +84,38 @@ export async function deleteNotification(
   if (!userId || !notificationId) return
   const notificationPath = firestorePaths.notification(userId, notificationId)
   await deleteDoc(doc(db, getPath(...notificationPath)))
+}
+
+export type CreateNotificationInput = {
+  userId: string
+  type: AppNotification['type']
+  title: string
+  body: string
+  uniId?: string
+  postId?: string
+  createdBy?: string
+}
+
+export async function createNotification(
+  input: CreateNotificationInput
+): Promise<string> {
+  const { userId, type, title, body, uniId, postId, createdBy } = input
+  if (!userId || !title || !body) return ''
+
+  const ref = doc(collection(db, 'notifications'))
+  const notificationData = {
+    userId,
+    type,
+    title,
+    body,
+    uniId: uniId || null,
+    postId: postId || null,
+    read: false,
+    createdBy: createdBy || null,
+    createdAt: new Date(),
+    id: ref.id,
+  }
+
+  await setDoc(ref, notificationData)
+  return ref.id
 }

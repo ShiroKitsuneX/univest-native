@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Svg, { Path } from 'react-native-svg'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
@@ -23,6 +23,7 @@ import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useIcons } from '@/stores/hooks/useIcons'
 import { useAuthStore } from '@/stores/authStore'
+import { useNotificationsStore } from '@/stores/notificationsStore'
 import { FeedScreen } from '@/screens/feed/FeedScreen'
 import { NotasScreen } from '@/screens/notas/NotasScreen'
 import { PerfilScreen } from '@/screens/perfil/PerfilScreen'
@@ -82,9 +83,16 @@ function TabHeader({
   const insets = useSafeAreaInsets()
   const { T, brand, typography } = useTheme()
   const { onOpenSettings } = useMain()
-  const av = useProfileStore(s => s.av)
-  const avBgIdx = useProfileStore(s => s.avBgIdx)
+  const currentUser = useAuthStore(s => s.currentUser)
+  const unreadCount = useNotificationsStore(s => s.unreadCount)
+  const loadUnreadCount = useNotificationsStore(s => s.loadUnreadCount)
   const [notificationsVisible, setNotificationsVisible] = useState(false)
+
+  useEffect(() => {
+    if (currentUser?.uid) {
+      loadUnreadCount(currentUser.uid)
+    }
+  }, [currentUser?.uid])
 
   const subtitle =
     route.name === 'ExplorarTab'
@@ -131,6 +139,13 @@ function TabHeader({
             ]}
           >
             <Text style={{ fontSize: 16 }}>🔔</Text>
+            {unreadCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: T.accent }]}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         ) : (
           <View style={{ width: 40 }} />
@@ -331,6 +346,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
   },
   tabItem: {
     flex: 1,
