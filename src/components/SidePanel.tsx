@@ -13,8 +13,10 @@ import {
 } from 'react-native'
 import type { ThemeColors } from '@/theme/palette'
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85
+const HEADER_HEIGHT = 100
+const TAB_BAR_HEIGHT = 80
 
 type Props = {
   visible: boolean
@@ -66,8 +68,8 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
             {
               backgroundColor: T.card,
               transform: [{ translateX: slideAnim }],
-              paddingTop: 12 + insets.top,
-              paddingBottom: insets.bottom,
+              paddingTop: HEADER_HEIGHT + 12,
+              paddingBottom: TAB_BAR_HEIGHT + insets.bottom,
             },
           ]}
         >
