@@ -6,19 +6,42 @@ export function ShareModal({ item, onClose }) {
   const { T, isDark } = useTheme()
 
   return (
-    <BottomSheet visible={!!item} onClose={onClose} T={T}>
+    <BottomSheet visible={!!item} onClose={onClose} T={T} height={200}>
       {item && (
         <View style={{ padding: 20, paddingBottom: 24 }}>
-          <Text
+          <View
             style={{
-              color: T.text,
-              fontSize: 17,
-              fontWeight: '800',
-              marginBottom: 4,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 12,
             }}
           >
-            📤 Compartilhar
-          </Text>
+            <Text
+              style={{
+                color: T.text,
+                fontSize: 17,
+                fontWeight: '800',
+              }}
+            >
+              Compartilhar
+            </Text>
+            <TouchableOpacity
+              onPress={onClose}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: T.card2,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ color: T.sub, fontSize: 18, fontWeight: '600' }}>
+                ✕
+              </Text>
+            </TouchableOpacity>
+          </View>
           <Text
             style={{
               color: T.sub,
