@@ -23,6 +23,11 @@ export const firestorePaths = {
     ['posts', String(postId), 'likes', userId] as const,
 
   reports: () => ['reports'] as const,
+
+  notifications: () => ['notifications'] as const,
+  notification: (userId: string, notificationId: string) =>
+    ['notifications', userId, notificationId] as const,
+
   courses: () => ['cursos'] as const,
   icons: () => ['icones'] as const,
 

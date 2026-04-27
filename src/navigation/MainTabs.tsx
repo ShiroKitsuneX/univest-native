@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import { useState } from 'react'
 import Svg, { Path } from 'react-native-svg'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
@@ -28,6 +29,7 @@ import { PerfilScreen } from '@/screens/perfil/PerfilScreen'
 import { InstitutionAdminScreen } from '@/screens/perfil/InstitutionAdminScreen'
 import { MainCtx, useMain, type MainHandlers } from '@/navigation/mainContext'
 import { ExplorarStack } from '@/navigation/ExplorarStack'
+import { NotificationsModal } from '@/modals/NotificationsModal'
 
 const Tab = createBottomTabNavigator()
 
@@ -82,10 +84,7 @@ function TabHeader({
   const { onOpenSettings } = useMain()
   const av = useProfileStore(s => s.av)
   const avBgIdx = useProfileStore(s => s.avBgIdx)
-  const uType = useOnboardingStore(s => s.uType) as
-    | { emoji?: string; label?: string }
-    | null
-    | undefined
+  const [notificationsVisible, setNotificationsVisible] = useState(false)
 
   const subtitle =
     route.name === 'ExplorarTab'
@@ -93,6 +92,8 @@ function TabHeader({
       : route.name === 'NotasTab'
         ? 'Notas de corte & suas provas'
         : null
+
+  const showBell = route.name === 'FeedTab'
 
   return (
     <View style={{ backgroundColor: T.bg }}>
@@ -121,6 +122,16 @@ function TabHeader({
           >
             <Text style={{ fontSize: 16 }}>⚙️</Text>
           </TouchableOpacity>
+        ) : showBell ? (
+          <TouchableOpacity
+            onPress={() => setNotificationsVisible(true)}
+            style={[
+              styles.headerBtn,
+              { backgroundColor: T.card2, borderColor: T.border },
+            ]}
+          >
+            <Text style={{ fontSize: 16 }}>🔔</Text>
+          </TouchableOpacity>
         ) : (
           <View style={{ width: 40 }} />
         )}
@@ -130,6 +141,10 @@ function TabHeader({
           <Text style={[typography.caption, { color: T.sub }]}>{subtitle}</Text>
         </View>
       )}
+      <NotificationsModal
+        visible={notificationsVisible}
+        onClose={() => setNotificationsVisible(false)}
+      />
     </View>
   )
 }

@@ -30,6 +30,9 @@ export type MainHandlers = {
   onShowSaved?: () => void
   onShare?: (post: unknown) => void
 
+  // Notifications
+  onOpenNotifications?: () => void
+
   // Location / discovery
   onOpenLocation?: () => void
   onOpenDiscover?: () => void
