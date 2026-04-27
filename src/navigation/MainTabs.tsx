@@ -28,7 +28,6 @@ import { PerfilScreen } from '@/screens/perfil/PerfilScreen'
 import { InstitutionAdminScreen } from '@/screens/perfil/InstitutionAdminScreen'
 import { MainCtx, useMain, type MainHandlers } from '@/navigation/mainContext'
 import { ExplorarStack } from '@/navigation/ExplorarStack'
-import { Avatar } from '@/shared/components'
 
 const Tab = createBottomTabNavigator()
 
