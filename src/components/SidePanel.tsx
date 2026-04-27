@@ -15,7 +15,7 @@ import type { ThemeColors } from '@/theme/palette'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85
-const TAB_BAR_HEIGHT = 50
+const TAB_BAR_HEIGHT = 52
 
 type Props = {
   visible: boolean
