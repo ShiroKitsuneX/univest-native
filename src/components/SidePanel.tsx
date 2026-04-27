@@ -15,7 +15,7 @@ import type { ThemeColors } from '@/theme/palette'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85
-const TAB_BAR_HEIGHT = 52
+const TAB_BAR_HEIGHT = 50
 
 type Props = {
   visible: boolean
@@ -72,7 +72,6 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
             },
           ]}
         >
-          <View style={[styles.handle, { backgroundColor: T.muted }]} />
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -104,12 +103,5 @@ const styles = StyleSheet.create({
     width: PANEL_WIDTH,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 12,
   },
 })
