@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useRef, useEffect } from 'react'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   Animated,
   Dimensions,
@@ -22,6 +23,7 @@ type Props = {
 }
 
 export function SidePanel({ visible, onClose, children, T }: Props) {
+  const insets = useSafeAreaInsets()
   const slideAnim = useRef(new Animated.Value(PANEL_WIDTH)).current
   const backdropAnim = useRef(new Animated.Value(0)).current
 
@@ -55,11 +57,6 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
     }
   }, [visible])
 
-  const translateX = slideAnim.interpolate({
-    inputRange: [0, PANEL_WIDTH],
-    outputRange: [0, PANEL_WIDTH],
-  })
-
   return (
     <Modal
       visible={visible}
@@ -67,7 +64,7 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
       animationType="none"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingTop: insets.top }]}>
         <Animated.View
           style={[
             styles.backdrop,
@@ -85,7 +82,9 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
             styles.panel,
             {
               backgroundColor: T.card,
-              transform: [{ translateX }],
+              transform: [{ translateX: slideAnim }],
+              paddingTop: 12 + insets.top,
+              paddingBottom: insets.bottom,
             },
           ]}
         >
@@ -107,6 +106,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
   backdrop: {
     flex: 1,
@@ -123,7 +123,6 @@ const styles = StyleSheet.create({
     width: PANEL_WIDTH,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
-    paddingTop: 12,
   },
   handle: {
     width: 36,
