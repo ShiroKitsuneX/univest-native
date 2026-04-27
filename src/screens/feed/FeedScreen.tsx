@@ -424,22 +424,6 @@ export function FeedScreen({
                       {fmtCount(item.sharesCount || 0)}
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => reportItem(item)}
-                    style={styles.actionBtn}
-                  >
-                    <SvgIcon name="flag" size={18} color={T.muted} />
-                    <Text
-                      style={{
-                        color: T.muted,
-                        fontSize: 12,
-                        fontWeight: '600',
-                        marginLeft: 6,
-                      }}
-                    >
-                      Reportar
-                    </Text>
-                  </TouchableOpacity>
                   <View style={{ flex: 1 }} />
                   <TouchableOpacity
                     onPress={() =>
