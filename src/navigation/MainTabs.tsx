@@ -102,7 +102,10 @@ function TabHeader({
         ? 'Notas de corte & suas provas'
         : null
 
-  const showBell = route.name === 'FeedTab'
+  const showBell =
+    route.name === 'FeedTab' ||
+    route.name === 'ExplorarTab' ||
+    route.name === 'NotasTab'
 
   return (
     <View style={{ backgroundColor: T.bg }}>
