@@ -340,14 +340,14 @@ export function FeedScreen({
                       {item.icon} {item.tag}
                     </Text>
                   </View>
-                  <View>
+                  <View style={{ flex: 1 }}>
                     <TouchableOpacity
                       onPress={() =>
                         setMenuOpenFor(menuOpenFor === item.id ? null : item.id)
                       }
                       style={{ padding: 4 }}
                     >
-                      <Text style={{ color: T.muted, fontSize: 16 }}>⋯</Text>
+                      <Text style={{ color: T.muted, fontSize: 18 }}>⋯</Text>
                     </TouchableOpacity>
                     {menuOpenFor === item.id && (
                       <View
@@ -465,11 +465,13 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     paddingBottom: 12,
+    position: 'relative',
   },
   postMenu: {
     position: 'absolute',
-    right: 8,
-    top: 30,
+    right: 0,
+    top: 24,
+    minWidth: 140,
     borderRadius: 8,
     borderWidth: 1,
     zIndex: 100,
