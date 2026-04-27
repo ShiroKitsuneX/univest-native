@@ -107,7 +107,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, paddingTop: 16, paddingBottom: 24 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
       keyboardShouldPersistTaps="handled"
     >
       <View

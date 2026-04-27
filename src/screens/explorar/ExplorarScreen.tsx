@@ -80,7 +80,7 @@ export function ExplorarScreen({
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, paddingTop: 16, paddingBottom: 16 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 16 }}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
@@ -158,17 +158,13 @@ export function ExplorarScreen({
             justifyContent: 'center',
           }}
         >
-          <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 16 }}>
-            ›
-          </Text>
+          <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 16 }}>›</Text>
         </View>
       </TouchableOpacity>
       <SBox val={query} set={setQuery} ph="Buscar universidade…" T={T} />
       {hasSearch && (
         <View style={styles.searchSummary}>
-          <Text
-            style={{ color: brand.primary, fontSize: 12, fontWeight: '600' }}
-          >
+          <Text style={{ color: brand.primary, fontSize: 12, fontWeight: '600' }}>
             🔍 {filtU.length} resultado{filtU.length !== 1 ? 's' : ''}
           </Text>
           <Text style={{ color: T.muted, fontSize: 11, marginLeft: 8 }}>
@@ -224,9 +220,7 @@ export function ExplorarScreen({
                 justifyContent: 'center',
               }}
             >
-              <Text
-                style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}
-              >
+              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
                 {u.name.slice(0, 2)}
               </Text>
             </View>
@@ -248,13 +242,7 @@ export function ExplorarScreen({
                       paddingVertical: 2,
                     }}
                   >
-                    <Text
-                      style={{
-                        color: '#FFFFFF',
-                        fontSize: 8,
-                        fontWeight: '800',
-                      }}
-                    >
+                    <Text style={{ color: '#FFFFFF', fontSize: 8, fontWeight: '800' }}>
                       🎯
                     </Text>
                   </View>
@@ -263,14 +251,7 @@ export function ExplorarScreen({
               <Text style={{ color: T.sub, fontSize: 11 }} numberOfLines={1}>
                 {u.fullName}
               </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 5,
-                  marginTop: 5,
-                  alignItems: 'center',
-                }}
-              >
+              <View style={{ flexDirection: 'row', gap: 5, marginTop: 5, alignItems: 'center' }}>
                 {[u.state, u.type].map(x => (
                   <View
                     key={x}

@@ -122,8 +122,6 @@ function TabHeader({
           >
             <Text style={{ fontSize: 16 }}>⚙️</Text>
           </TouchableOpacity>
-        ) : route.name === 'FeedTab' ? (
-          <Avatar glyph={av} bgIdx={avBgIdx} size={36} bordered={false} />
         ) : (
           <View style={{ width: 40 }} />
         )}

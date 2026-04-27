@@ -72,7 +72,7 @@ export function PerfilScreen({
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, paddingTop: 16, paddingBottom: 24 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
     >
       <View style={{ ...cd(), overflow: 'hidden', marginBottom: 12 }}>
         <View
