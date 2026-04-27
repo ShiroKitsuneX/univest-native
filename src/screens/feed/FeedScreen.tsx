@@ -340,6 +340,12 @@ export function FeedScreen({
                       {item.icon} {item.tag}
                     </Text>
                   </View>
+                  <TouchableOpacity
+                    onPress={() => reportItem(item)}
+                    style={{ padding: 4 }}
+                  >
+                    <Text style={{ color: T.muted, fontSize: 16 }}>⋯</Text>
+                  </TouchableOpacity>
                 </View>
                 <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
                   <Text
