@@ -47,6 +47,7 @@ export function FeedScreen({
   const [viewerVisible, setViewerVisible] = useState(false)
   const [selectedStoryGroup, setSelectedStoryGroup] = useState(null)
   const [selectedStoryIndex, setSelectedStoryIndex] = useState(0)
+  const [menuOpenFor, setMenuOpenFor] = useState<string | number | null>(null)
 
   useEffect(() => {
     loadStories()
@@ -340,12 +341,36 @@ export function FeedScreen({
                       {item.icon} {item.tag}
                     </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => reportItem(item)}
-                    style={{ padding: 4 }}
-                  >
-                    <Text style={{ color: T.muted, fontSize: 16 }}>⋯</Text>
-                  </TouchableOpacity>
+                  <View>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setMenuOpenFor(menuOpenFor === item.id ? null : item.id)
+                      }
+                      style={{ padding: 4 }}
+                    >
+                      <Text style={{ color: T.muted, fontSize: 16 }}>⋯</Text>
+                    </TouchableOpacity>
+                    {menuOpenFor === item.id && (
+                      <View
+                        style={[
+                          styles.postMenu,
+                          { backgroundColor: T.card, borderColor: T.border },
+                        ]}
+                      >
+                        <TouchableOpacity
+                          onPress={() => {
+                            setMenuOpenFor(null)
+                            reportItem(item)
+                          }}
+                          style={{ paddingVertical: 10, paddingHorizontal: 16 }}
+                        >
+                          <Text style={{ color: T.text, fontSize: 14 }}>
+                            🚩 Reportar
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
                 </View>
                 <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
                   <Text
@@ -457,6 +482,19 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     paddingBottom: 12,
+  },
+  postMenu: {
+    position: 'absolute',
+    right: 8,
+    top: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 5,
   },
   postFooter: {
     flexDirection: 'row',
