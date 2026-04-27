@@ -62,7 +62,6 @@ export async function setPostLike(
   const postPath = firestorePaths.post(postId)
   const postSnap = await getDoc(doc(db, getPath(...postPath)))
   if (!postSnap.exists()) {
-    console.log('Post not in Firestore, skipping like update')
     return
   }
 
@@ -104,7 +103,6 @@ export async function incrementPostShares(postId: string) {
   const postPath = firestorePaths.post(postId)
   const postSnap = await getDoc(doc(db, getPath(...postPath)))
   if (!postSnap.exists()) {
-    console.log('Post not in Firestore, skipping share update')
     return
   }
   await updateDoc(doc(db, getPath(...postPath)), { sharesCount: increment(1) })
