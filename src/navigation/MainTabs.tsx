@@ -24,6 +24,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useIcons } from '@/stores/hooks/useIcons'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
+import { SvgIcon } from '@/shared/components/SvgIcon'
 import { FeedScreen } from '@/screens/feed/FeedScreen'
 import { NotasScreen } from '@/screens/notas/NotasScreen'
 import { PerfilScreen } from '@/screens/perfil/PerfilScreen'
@@ -138,7 +139,7 @@ function TabHeader({
               { backgroundColor: T.card2, borderColor: T.border },
             ]}
           >
-            <Text style={{ fontSize: 16 }}>🔔</Text>
+            <SvgIcon name="notifications" size={20} color={T.text} />
             {unreadCount > 0 && (
               <View style={[styles.badge, { backgroundColor: T.accent }]}>
                 <Text style={styles.badgeText}>
