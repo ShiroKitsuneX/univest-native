@@ -15,7 +15,6 @@ import type { ThemeColors } from '@/theme/palette'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85
-const TAB_BAR_HEIGHT = 60
 
 type Props = {
   visible: boolean
@@ -30,7 +29,6 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
   const fadeAnim = useRef(new Animated.Value(0)).current
 
   const panelTop = insets.top
-  const panelBottom = TAB_BAR_HEIGHT + insets.bottom
 
   useEffect(() => {
     Animated.parallel([
@@ -69,7 +67,7 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
               backgroundColor: T.card,
               transform: [{ translateX: slideAnim }],
               top: panelTop,
-              bottom: panelBottom,
+              bottom: 0,
             },
           ]}
         >
@@ -103,8 +101,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     width: PANEL_WIDTH,
+    top: 0,
+    bottom: 0,
     borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   handle: {
     width: 36,
