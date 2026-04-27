@@ -164,7 +164,6 @@ export function FeedScreen({
     <View style={{ flex: 1, backgroundColor: T.bg }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 16 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -175,9 +174,6 @@ export function FeedScreen({
         }
       >
         <StoriesStrip onStoryPress={handleStoryPress} goExplorar={goExplorar} />
-        <View
-          style={{ height: 1, backgroundColor: T.border, marginBottom: 16 }}
-        />
         {upcoming.length > 0 && (
           <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text
