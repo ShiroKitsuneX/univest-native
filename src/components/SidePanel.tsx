@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   Animated,
   Dimensions,
+  Easing,
   Modal,
   ScrollView,
   TouchableWithoutFeedback,
@@ -25,36 +26,25 @@ type Props = {
 export function SidePanel({ visible, onClose, children, T }: Props) {
   const insets = useSafeAreaInsets()
   const slideAnim = useRef(new Animated.Value(PANEL_WIDTH)).current
-  const backdropAnim = useRef(new Animated.Value(0)).current
+  const fadeAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start()
-    } else {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: PANEL_WIDTH,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start()
-    }
+    const animations = [
+      Animated.timing(slideAnim, {
+        toValue: visible ? 0 : PANEL_WIDTH,
+        duration: 320,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: visible ? 1 : 0,
+        duration: 240,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]
+
+    Animated.parallel(animations).start()
   }, [visible])
 
   return (
@@ -65,14 +55,7 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
       onRequestClose={onClose}
     >
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
-        <Animated.View
-          style={[
-            styles.backdrop,
-            {
-              opacity: backdropAnim,
-            },
-          ]}
-        >
+        <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback onPress={onClose}>
             <View style={styles.backdropTouch} />
           </TouchableWithoutFeedback>
