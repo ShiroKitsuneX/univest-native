@@ -1,4 +1,10 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 import Svg, { Path } from 'react-native-svg'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
@@ -87,9 +93,7 @@ function TabHeader({
       ? 'Encontre sua universidade'
       : route.name === 'NotasTab'
         ? 'Notas de corte & suas provas'
-        : route.name === 'PerfilTab'
-          ? `${uType?.emoji || '👤'} ${uType?.label || 'Meu Perfil'}`
-          : null
+        : null
 
   return (
     <View style={{ backgroundColor: T.bg }}>
