@@ -24,12 +24,7 @@ import {
   reportPost,
   incrementShareCount,
 } from '@/features/feed/services/feedService'
-import {
-  Button,
-  Card,
-  EmptyState,
-  SvgIcon,
-} from '@/shared/components'
+import { Button, Card, EmptyState, SvgIcon } from '@/shared/components'
 
 export function FeedScreen({
   refreshing,
@@ -169,6 +164,7 @@ export function FeedScreen({
     <View style={{ flex: 1, backgroundColor: T.bg }}>
       <ScrollView
         style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 16 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -313,7 +309,11 @@ export function FeedScreen({
                     }}
                   >
                     <Text
-                      style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: 13,
+                        fontWeight: '800',
+                      }}
                     >
                       {ui?.name?.slice(0, 2) || ''}
                     </Text>
@@ -354,18 +354,11 @@ export function FeedScreen({
                   >
                     {item.title}
                   </Text>
-                  <Text
-                    style={{ color: T.sub, fontSize: 13, lineHeight: 20 }}
-                  >
+                  <Text style={{ color: T.sub, fontSize: 13, lineHeight: 20 }}>
                     {item.body}
                   </Text>
                 </View>
-                <View
-                  style={[
-                    styles.postFooter,
-                    { borderTopColor: T.border },
-                  ]}
-                >
+                <View style={[styles.postFooter, { borderTopColor: T.border }]}>
                   <TouchableOpacity
                     onPress={() => toggleLike(item)}
                     style={styles.actionBtn}
