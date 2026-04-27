@@ -287,7 +287,6 @@ export function FeedScreen({
                 padding={0}
                 radius={radius.lg}
                 style={{
-                  overflow: 'hidden',
                   borderLeftWidth: 4,
                   borderLeftColor: ui?.color || brand.primary,
                 }}
