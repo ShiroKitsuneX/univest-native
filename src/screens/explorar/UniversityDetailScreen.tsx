@@ -4,6 +4,7 @@ import { useTheme } from '@/theme/useTheme'
 import { useCardStyle, useLabelStyle } from '@/theme/styles'
 import { fmtCount } from '@/utils/format'
 import { useProgressStore } from '@/stores/progressStore'
+import { PageHeader } from '@/shared/components/PageHeader'
 
 export function UniversityDetailScreen({
   selUni,

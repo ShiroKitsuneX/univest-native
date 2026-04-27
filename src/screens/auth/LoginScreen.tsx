@@ -140,34 +140,28 @@ export function LoginScreen({ navigation }: { navigation: any }) {
           flexGrow: 1,
           justifyContent: 'center',
           padding: 20,
-          paddingTop: insets.top + 20,
+          paddingTop: 10,
           paddingBottom: insets.bottom + 20,
         }}
       >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{ marginBottom: 20 }}
-        >
-          <Text style={{ color: T.sub, fontSize: 16 }}>← Voltar</Text>
-        </TouchableOpacity>
-
-        <Text style={{ fontSize: 44, textAlign: 'center', marginBottom: 8 }}>
-          🎓
-        </Text>
-        <Text
-          style={{
-            color: T.text,
-            fontSize: 22,
-            fontWeight: '800',
-            textAlign: 'center',
-            marginBottom: 20,
-          }}
-        >
-          UniVest
-        </Text>
-
         {!forgotMode && !passwordSent && (
           <>
+            <Text
+              style={{ fontSize: 44, textAlign: 'center', marginBottom: 8 }}
+            >
+              🎓
+            </Text>
+            <Text
+              style={{
+                color: T.text,
+                fontSize: 22,
+                fontWeight: '800',
+                textAlign: 'center',
+                marginBottom: 20,
+              }}
+            >
+              UniVest
+            </Text>
             <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
               {[
                 ['login', 'Entrar'],
@@ -327,6 +321,27 @@ export function LoginScreen({ navigation }: { navigation: any }) {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {loginMode === 'login' && (
+              <TouchableOpacity
+                onPress={() => {
+                  setForgotMode(true)
+                  setAuthError('')
+                }}
+                style={{
+                  padding: 10,
+                  paddingLeft: 0,
+                  marginTop: 2,
+                  marginBottom: 12,
+                }}
+              >
+                <Text
+                  style={{ color: T.accent, fontSize: 13, fontWeight: '600' }}
+                >
+                  Esqueceu a senha?
+                </Text>
+              </TouchableOpacity>
+            )}
 
             {loginMode === 'signup' && (
               <View style={{ marginBottom: 12, marginTop: -4 }}>
@@ -521,7 +536,7 @@ export function LoginScreen({ navigation }: { navigation: any }) {
                       )}
                     </View>
                   </TouchableOpacity>
-                  <Text style={{ color: T.sub, fontSize: 12, flex: 1 }}>
+                  <Text style={{ color: T.sub, fontSize: 12 }}>
                     Li e aceito os{' '}
                   </Text>
                   <TouchableOpacity
@@ -577,17 +592,18 @@ export function LoginScreen({ navigation }: { navigation: any }) {
 
             {loginMode === 'login' && (
               <TouchableOpacity
-                onPress={() => {
-                  setForgotMode(true)
-                  setAuthError('')
-                }}
-                style={{ padding: 10, alignItems: 'center', marginTop: 8 }}
+                onPress={() => navigation.goBack()}
+                style={{ padding: 10, alignItems: 'center', marginTop: 16 }}
               >
-                <Text
-                  style={{ color: T.accent, fontSize: 13, fontWeight: '600' }}
-                >
-                  Esqueceu a senha?
-                </Text>
+                <Text style={{ color: T.muted, fontSize: 13 }}>Fechar</Text>
+              </TouchableOpacity>
+            )}
+            {loginMode === 'signup' && (
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={{ padding: 10, alignItems: 'center', marginTop: 16 }}
+              >
+                <Text style={{ color: T.muted, fontSize: 13 }}>Fechar</Text>
               </TouchableOpacity>
             )}
           </>

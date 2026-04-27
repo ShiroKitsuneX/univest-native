@@ -10,7 +10,7 @@ import { WelcomeScreen } from '@/screens/auth/WelcomeScreen'
 import { LoginScreen } from '@/screens/auth/LoginScreen'
 import { TermsScreen } from '@/screens/auth/TermsScreen'
 import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen'
-import { TermsReacceptModal } from '@/modals/TermsReacceptModal'
+import { TermsReacceptModal } from '@/features/auth/modals/TermsReacceptModal'
 
 const Stack = createNativeStackNavigator()
 
@@ -57,7 +57,14 @@ export function RootNavigator({ Main }: Props) {
           <>
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Terms" component={TermsScreen} />
+            <Stack.Screen
+              name="Terms"
+              component={TermsScreen}
+              options={{
+                animation: 'slide_from_bottom',
+                animationDuration: 300,
+              }}
+            />
           </>
         ) : !done && !isInstitution ? (
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />

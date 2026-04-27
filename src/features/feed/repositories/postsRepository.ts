@@ -11,6 +11,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore'
 import { db } from '@/core/firebase/client'
+import { auth } from '@/core/firebase/client'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 
 export async function fetchPosts() {
@@ -52,8 +53,20 @@ export async function setPostLike(
   userId: string,
   liked: boolean
 ) {
-  const likePath = firestorePaths.postLike(postId, userId)
+  const currentUser = auth.currentUser
+  if (!currentUser) {
+    throw new Error('User not authenticated')
+  }
+  await currentUser.getIdToken(true)
+
   const postPath = firestorePaths.post(postId)
+  const postSnap = await getDoc(doc(db, getPath(...postPath)))
+  if (!postSnap.exists()) {
+    console.log('Post not in Firestore, skipping like update')
+    return
+  }
+
+  const likePath = firestorePaths.postLike(postId, userId)
 
   if (liked) {
     await setDoc(doc(db, getPath(...likePath)), {
@@ -84,6 +97,15 @@ export async function addReport(input: {
 }
 
 export async function incrementPostShares(postId: string) {
+  const currentUser = auth.currentUser
+  if (currentUser) {
+    await currentUser.getIdToken(true)
+  }
   const postPath = firestorePaths.post(postId)
+  const postSnap = await getDoc(doc(db, getPath(...postPath)))
+  if (!postSnap.exists()) {
+    console.log('Post not in Firestore, skipping share update')
+    return
+  }
   await updateDoc(doc(db, getPath(...postPath)), { sharesCount: increment(1) })
 }

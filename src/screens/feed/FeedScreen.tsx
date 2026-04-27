@@ -23,6 +23,7 @@ import {
   reportPost,
   incrementShareCount,
 } from '@/features/feed/services/feedService'
+import { SvgIcon } from '@/shared/components/SvgIcon'
 
 const COLORS = {
   glassBg: 'rgba(255,255,255,0.05)',
@@ -456,14 +457,17 @@ export function FeedScreen({
                       marginRight: 4,
                     }}
                   >
-                    <Text style={{ fontSize: 16, marginRight: 6 }}>
-                      {isL ? '❤️' : '🤍'}
-                    </Text>
+                    <SvgIcon
+                      name={isL ? 'heart' : 'heart'}
+                      size={18}
+                      color={isL ? '#f87171' : '#6b7280'}
+                    />
                     <Text
                       style={{
                         color: isL ? '#f87171' : '#6b7280',
                         fontSize: 12,
                         fontWeight: '600',
+                        marginLeft: 6,
                       }}
                     >
                       {fmtCount(
@@ -481,12 +485,13 @@ export function FeedScreen({
                       marginRight: 4,
                     }}
                   >
-                    <Text style={{ fontSize: 16, marginRight: 6 }}>📤</Text>
+                    <SvgIcon name="shareSocial" size={18} color="#6b7280" />
                     <Text
                       style={{
                         color: '#6b7280',
                         fontSize: 12,
                         fontWeight: '600',
+                        marginLeft: 6,
                       }}
                     >
                       {fmtCount(item.sharesCount || 0)}
@@ -501,12 +506,13 @@ export function FeedScreen({
                       paddingVertical: 6,
                     }}
                   >
-                    <Text style={{ fontSize: 16, marginRight: 6 }}>🚩</Text>
+                    <SvgIcon name="flag" size={18} color="#6b7280" />
                     <Text
                       style={{
                         color: '#6b7280',
                         fontSize: 12,
                         fontWeight: '600',
+                        marginLeft: 6,
                       }}
                     >
                       Reportar
@@ -519,7 +525,11 @@ export function FeedScreen({
                     }
                     style={{ paddingHorizontal: 4 }}
                   >
-                    <Text style={{ fontSize: 20 }}>{isS ? '🔖' : '🏷️'}</Text>
+                    <SvgIcon
+                      name="bookmark"
+                      size={20}
+                      color={isS ? '#A855F7' : '#6b7280'}
+                    />
                   </TouchableOpacity>
                 </View>
               </View>

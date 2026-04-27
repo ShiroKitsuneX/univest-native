@@ -4,8 +4,14 @@ import { useTheme } from '@/theme/useTheme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getMonthFromExamLabel } from '@/utils/dates'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
+import { PageHeader } from '@/shared/components/PageHeader'
 
-export function FollowingScreen({ onBack, onExplore, onSelectUni, onOpenSort }) {
+export function FollowingScreen({
+  onBack,
+  onExplore,
+  onSelectUni,
+  onOpenSort,
+}) {
   const insets = useSafeAreaInsets()
   const { T, isDark, AT } = useTheme()
 

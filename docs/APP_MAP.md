@@ -16,6 +16,88 @@ Sempre que uma funcionalidade for criada, alterada, removida ou redefinida, este
 
 ---
 
+## Terminologia
+
+### Screen (Tela)
+
+Uma view que preenche a tela inteira do dispositivo. É uma rota completa no React Navigation.
+
+### Modal (Popup)
+
+Uma view que aparece SOBRE outras telas, cobrindo parcial ou totalmente o conteúdo. Usado para ações rápidas, confirmações ou fluxos detalhados.
+
+### Page (Página)
+
+Sinônimo de Screen no contexto deste app.
+
+---
+
+## Inventário de Telas, Modais e Navegação
+
+### SCREENS (Telas Cheias)
+
+| #   | Arquivo                    | Localização             | Fluxo/Tab            |
+| --- | -------------------------- | ----------------------- | -------------------- |
+| 1   | SplashScreen.tsx           | src/screens/            | Início do app        |
+| 2   | WelcomeScreen.tsx          | src/screens/auth/       | Auth - Landing       |
+| 3   | LoginScreen.tsx            | src/screens/auth/       | Auth - Login/Signup  |
+| 4   | TermsScreen.tsx            | src/screens/auth/       | Auth - Termos        |
+| 5   | OnboardingScreen.tsx       | src/screens/onboarding/ | Onboarding           |
+| 6   | FeedScreen.tsx             | src/screens/feed/       | Feed Tab             |
+| 7   | ExplorarScreen.tsx         | src/screens/explorar/   | Explorar Tab         |
+| 8   | FollowingScreen.tsx        | src/screens/explorar/   | Explorar             |
+| 9   | UniversityDetailScreen.tsx | src/screens/explorar/   | Explorar             |
+| 10  | ExamsListScreen.tsx        | src/screens/explorar/   | Explorar             |
+| 11  | BooksListScreen.tsx        | src/screens/explorar/   | Explorar             |
+| 12  | NotasScreen.tsx            | src/screens/notas/      | Notas Tab            |
+| 13  | PerfilScreen.tsx           | src/screens/perfil/     | Perfil Tab           |
+| 14  | InstitutionAdminScreen.tsx | src/screens/perfil/     | Perfil (Instituição) |
+
+### MODALS (Popups/Overlays)
+
+| #   | Arquivo                   | Propósito             |
+| --- | ------------------------- | --------------------- |
+| 1   | SettingsModal.tsx         | Configurações gerais  |
+| 2   | ShareModal.tsx            | Compartilhar conteúdo |
+| 3   | UniSortModal.tsx          | Ordenar universidades |
+| 4   | SavedPostsModal.tsx       | Posts salvos          |
+| 5   | GoalsModal.tsx            | Metas/propostas       |
+| 6   | AddGradeModal.tsx         | Adicionar nota        |
+| 7   | EventDetailModal.tsx      | Detalhes do evento    |
+| 8   | DiscoverCoursesModal.tsx  | Descobrir cursos      |
+| 9   | ExamDetailModal.tsx       | Detalhes da prova     |
+| 10  | LocationSettingsModal.tsx | Localização           |
+| 11  | AvatarPickerModal.tsx     | Escolher avatar       |
+| 12  | EditNameModal.tsx         | Editar nome           |
+| 13  | EditCoursesModal.tsx      | Editar cursos         |
+
+### NAVIGATION (Apenas rotas - não são telas)
+
+| Arquivo           | Propósito                     |
+| ----------------- | ----------------------------- |
+| RootNavigator.tsx | Auth → Main                   |
+| MainTabs.tsx      | Abas principais               |
+| ExplorarStack.tsx | Navegação interno de Explorar |
+
+---
+
+## Fluxo de reaceite dos Termos e Condições
+
+Quando os Termos e Condições são atualizados no banco:
+
+1. **TermsReacceptModal** aparece como modal sobre qualquer tela
+2. O usuário deve aceitar para continuar usando o app
+3. O modal mostra "Aceitar Termos e Continuar" ou "Sair do App"
+
+### Termos e Condições - Fluxo de reaceite
+
+| Caso                  | Tipo   | Comportamento                                  |
+| --------------------- | ------ | ---------------------------------------------- |
+| Primeiro acessoSignup | Screen | TermsScreen - navegação normal                 |
+| Termos atualizados    | Modal  | TermsReacceptModal - popup sobre qualquer tela |
+
+---
+
 ## Legenda de status
 
 - **Implementado**: já existe no app atual
@@ -45,6 +127,7 @@ Além da experiência para usuários comuns, o app já possui uma base inicial p
 ## Inventário atual de catálogos e dados seedados
 
 ### Perfis acadêmicos suportados no onboarding
+
 **Implementado**
 
 O app reconhece hoje 11 perfis de usuário:
@@ -64,6 +147,7 @@ O app reconhece hoje 11 perfis de usuário:
 Esses perfis definem o contexto do usuário dentro do app e aparecem no perfil.
 
 ### Áreas de descoberta de cursos
+
 **Implementado**
 
 O modal de descoberta de cursos trabalha hoje com 7 áreas:
@@ -79,6 +163,7 @@ O modal de descoberta de cursos trabalha hoje com 7 áreas:
 Essas áreas somam atualmente **39 cursos seedados** no catálogo local.
 
 ### Catálogo inicial de instituições
+
 **Implementado / Parcial**
 
 O catálogo local atual possui **21 entradas principais**, incluindo:
@@ -96,6 +181,7 @@ Distribuição atual:
 - 2 técnicas
 
 ### Conteúdos seedados de apoio
+
 **Implementado / Parcial**
 
 O app também possui conteúdo local de fallback para não depender 100% do Firebase:
@@ -116,6 +202,7 @@ Isso significa que parte importante da experiência já funciona com fallback lo
 ## Tipos de conta
 
 ## 1. Conta de usuário comum
+
 **Implementado**
 
 É a conta padrão criada via cadastro por e-mail e senha.
@@ -134,6 +221,7 @@ Essa conta:
 - acompanha livros, provas e tarefas
 
 ## 2. Conta institucional
+
 **Implementado / Parcial**
 
 Uma conta institucional é identificada por:
@@ -155,6 +243,7 @@ Ainda faltam vários recursos institucionais planejados, mas a base já existe.
 ## Fluxo global do app
 
 ## 1. Bootstrap inicial
+
 **Implementado**
 
 Ao abrir o app, o fluxo atual é:
@@ -192,6 +281,7 @@ Ao abrir o app, o fluxo atual é:
 ## 2. Fluxo de autenticação
 
 ## Tela de boas-vindas
+
 **Implementado**
 
 A tela inicial apresenta:
@@ -212,6 +302,7 @@ Hoje a tela comunica visualmente estes blocos:
 - Cursos e outros
 
 ## Modal de autenticação
+
 **Implementado**
 
 Ao tocar no CTA principal, abre um modal com 3 subfluxos:
@@ -221,6 +312,7 @@ Ao tocar no CTA principal, abre um modal com 3 subfluxos:
 3. recuperação de senha
 
 ### Login
+
 **Implementado**
 
 Campos:
@@ -235,6 +327,7 @@ Comportamentos:
 - traduz erros comuns do Firebase para mensagens amigáveis
 
 ### Cadastro
+
 **Implementado**
 
 Campos:
@@ -265,6 +358,7 @@ Ao cadastrar:
 - `done` inicia como `false`
 
 ### Recuperação de senha
+
 **Implementado**
 
 Fluxo:
@@ -274,6 +368,7 @@ Fluxo:
 - se tudo der certo, aparece confirmação de e-mail enviado
 
 ## Termos e Condições
+
 **Implementado / Parcial**
 
 Hoje existe:
@@ -293,11 +388,13 @@ Limitações atuais:
 ---
 
 ## 3. Fluxo de onboarding do usuário comum
+
 **Implementado / Parcial**
 
 O onboarding atual possui 3 etapas.
 
 ## Etapa 1 - Perfil acadêmico
+
 **Implementado**
 
 Pergunta principal:
@@ -313,6 +410,7 @@ Impacto dessa escolha:
 - esse dado personaliza a leitura futura do app, mesmo que ainda não condicione tudo visualmente
 
 ## Etapa 2 - Cursos de interesse
+
 **Implementado**
 
 O usuário escolhe:
@@ -335,6 +433,7 @@ Esses dados alimentam depois:
 - comparações com notas de corte
 
 ## Etapa 3 - Universidades para seguir
+
 **Implementado**
 
 O usuário escolhe universidades que deseja seguir já no onboarding.
@@ -353,6 +452,7 @@ Ao concluir o onboarding:
 - o usuário entra no app principal
 
 ## Observação arquitetural importante
+
 **Parcial**
 
 Embora exista store para o onboarding, a tela ainda faz persistência remota direta do término em Firestore. Isso funciona, mas é uma dívida técnica que deve ser migrada para a arquitetura final de service/repository.
@@ -362,6 +462,7 @@ Embora exista store para o onboarding, a tela ainda faz persistência remota dir
 ## 4. Estrutura principal do app autenticado
 
 ## Navegação principal
+
 **Implementado**
 
 O app principal é organizado em 4 abas:
@@ -393,6 +494,7 @@ Dentro de `ExplorarTab`:
 - `Following`
 
 ## Cabeçalho por aba
+
 **Implementado**
 
 - Feed: mostra avatar do usuário
@@ -401,6 +503,7 @@ Dentro de `ExplorarTab`:
 - Perfil: mostra botão de configurações
 
 ## Modais globais orquestrados no app principal
+
 **Implementado**
 
 Hoje o app principal abre estes modais:
@@ -430,6 +533,7 @@ Esses modais compõem parte essencial da experiência e não são acessórios; m
 Centralizar novidades de universidades seguidas e conteúdo acadêmico relevante.
 
 ## Stories de universidades
+
 **Implementado / Parcial**
 
 O topo do feed usa um strip de stories.
@@ -443,6 +547,7 @@ O topo do feed usa um strip de stories.
 - se houver poucas stories e o usuário seguir universidades, aparece CTA `Seguir`
 
 ### Viewer de stories
+
 **Implementado**
 
 Ao abrir um grupo de stories:
@@ -458,6 +563,7 @@ Ao abrir um grupo de stories:
 - a visualização incrementa `viewsCount` remotamente
 
 ### Modelo atual das stories
+
 **Implementado / Parcial**
 
 Cada story contém hoje:
@@ -477,6 +583,7 @@ Cada story contém hoje:
 - instituição ainda não tem fluxo completo de publicação dentro da UI
 
 ## Contagem regressiva de provas
+
 **Implementado**
 
 O feed exibe um bloco `Contagem regressiva` quando existem universidades-meta com provas futuras.
@@ -493,6 +600,7 @@ Ao tocar:
 - o usuário navega para o detalhe da universidade correspondente
 
 ## Lista principal de posts
+
 **Implementado / Parcial**
 
 O feed carrega posts do Firebase, com fallback para dados locais.
@@ -515,6 +623,7 @@ O feed carrega posts do Firebase, com fallback para dados locais.
 - contadores de curtidas e compartilhamentos
 
 ## Interações do post
+
 **Implementado**
 
 ### Curtir
@@ -542,6 +651,7 @@ O feed carrega posts do Firebase, com fallback para dados locais.
 - os posts salvos aparecem no perfil/modal de salvos
 
 ## Estado vazio do feed
+
 **Implementado**
 
 Quando não há posts e nem universidades seguidas:
@@ -558,6 +668,7 @@ Quando não há posts e nem universidades seguidas:
 Permitir descoberta, filtro e navegação por instituições, cursos e vestibulares.
 
 ## Personalização por destino de estudos
+
 **Implementado**
 
 Se o usuário ainda não definiu onde quer estudar:
@@ -566,6 +677,7 @@ Se o usuário ainda não definiu onde quer estudar:
 - isso alimenta filtros da aba Explorar
 
 ## Entrada para descoberta de cursos
+
 **Implementado**
 
 Existe um card em destaque:
@@ -574,6 +686,7 @@ Existe um card em destaque:
 - abre `DiscoverCoursesModal`
 
 ## Busca de universidades
+
 **Implementado**
 
 A busca atual considera:
@@ -587,6 +700,7 @@ A busca atual considera:
 - comparação sem acentos
 
 ## Filtros por estado
+
 **Implementado**
 
 A aba possui chips horizontais com:
@@ -596,6 +710,7 @@ A aba possui chips horizontais com:
 - demais estados válidos encontrados no catálogo
 
 ## Lista de universidades
+
 **Implementado**
 
 Cada card mostra:
@@ -611,6 +726,7 @@ Ao tocar:
 - navega para `UniversityDetail`
 
 ## UniversityDetail
+
 **Implementado / Parcial**
 
 A tela de detalhe da universidade concentra hoje:
@@ -628,6 +744,7 @@ A tela de detalhe da universidade concentra hoje:
 - link para site oficial
 
 ## Seguir universidade
+
 **Implementado / Parcial**
 
 O follow/unfollow faz hoje:
@@ -645,6 +762,7 @@ Isso personaliza:
 - lista `Seguindo`
 
 ## Livros obrigatórios dentro da universidade
+
 **Implementado**
 
 Cada livro pode estar em 3 estados:
@@ -662,6 +780,7 @@ Isso alimenta:
 - resumo de livros na aba `Perfil`
 
 ## Lista de provas (`ExamsList`)
+
 **Implementado / Parcial**
 
 Quando a universidade tem provas seedadas, o usuário acessa uma tela específica.
@@ -697,6 +816,7 @@ Mostram:
 Ao tocar em qualquer prova, abre `ExamDetailModal`.
 
 ## Modal de detalhes de prova
+
 **Implementado**
 
 ### Para prova futura
@@ -723,6 +843,7 @@ Mostra:
 - botão para PDF quando disponível
 
 ## Lista global de livros (`BooksList`)
+
 **Implementado**
 
 A partir do perfil, o usuário pode abrir a lista consolidada de livros.
@@ -735,6 +856,7 @@ Funcionalidades atuais:
 - visualização consolidada de todos os livros do ecossistema seguido/seedado
 
 ## Lista de universidades seguidas (`Following`)
+
 **Implementado**
 
 A tela `Seguindo` mostra:
@@ -752,6 +874,7 @@ A tela `Seguindo` mostra:
 Concentrar desempenho acadêmico do usuário, histórico de provas/simulados e comparação com notas de corte.
 
 ## Resumo do objetivo atual
+
 **Implementado**
 
 No topo da aba `Notas`, o app mostra:
@@ -762,6 +885,7 @@ No topo da aba `Notas`, o app mostra:
 - mensagem contextual dizendo que as análises abaixo usam essas escolhas
 
 ## Notas de corte
+
 **Implementado / Parcial**
 
 O bloco de notas de corte permite:
@@ -781,6 +905,7 @@ Cada card mostra:
 - barra visual proporcional
 
 ## Minhas notas
+
 **Implementado**
 
 O usuário pode adicionar notas pelo modal `AddGradeModal`.
@@ -803,6 +928,7 @@ O usuário pode adicionar notas pelo modal `AddGradeModal`.
 - o modal reseta seus campos
 
 ## Filtros de notas
+
 **Implementado**
 
 A aba permite filtrar:
@@ -812,6 +938,7 @@ A aba permite filtrar:
 - simulados
 
 ## Empty state da aba
+
 **Implementado**
 
 Se não existir nenhuma nota compatível com o filtro:
@@ -820,6 +947,7 @@ Se não existir nenhuma nota compatível com o filtro:
 - orienta o usuário a adicionar notas
 
 ## Insight de área fraca
+
 **Implementado**
 
 Quando existe pelo menos uma nota:
@@ -829,6 +957,7 @@ Quando existe pelo menos uma nota:
 - exibe card de atenção com score correspondente
 
 ## Evolução por área
+
 **Implementado / Parcial**
 
 Existe visualização de evolução com gráfico de barras.
@@ -845,6 +974,7 @@ Observação importante:
 - Redação existe no modelo de dados e no comparativo, mas não entra nesse gráfico específico
 
 ## Comparativo `Você vs Meta`
+
 **Implementado / Parcial**
 
 O app monta uma comparação por área entre:
@@ -861,6 +991,7 @@ Cada linha mostra:
 - indicador visual de acima/abaixo
 
 ## Modo comparar no histórico
+
 **Implementado / Parcial**
 
 No bloco `Histórico`, o usuário pode ligar o modo `Comparar`.
@@ -872,6 +1003,7 @@ Quando ativo:
 - exibe diferença em pontos
 
 ## Histórico de provas
+
 **Implementado**
 
 Cada item do histórico mostra:
@@ -892,6 +1024,7 @@ Cada item do histórico mostra:
 Reunir identidade do usuário, progresso, metas, tarefas, livros, universidades seguidas, salvos e eventos.
 
 ## Cabeçalho do perfil
+
 **Implementado**
 
 O card principal mostra:
@@ -906,6 +1039,7 @@ O card principal mostra:
 - estatísticas rápidas
 
 ## Estatísticas do topo
+
 **Implementado**
 
 O perfil mostra hoje:
@@ -921,6 +1055,7 @@ Atalhos embutidos:
 - tocar em `salvos` abre o modal de salvos
 
 ## Card `Meu Objetivo`
+
 **Implementado**
 
 Mostra:
@@ -936,6 +1071,7 @@ Se o usuário não possui notas:
 - aparece CTA para ir para a aba `Notas`
 
 ## Resumo de livros
+
 **Implementado**
 
 O perfil resume o progresso de leitura com base em `readBooks`.
@@ -947,6 +1083,7 @@ Estados resumidos:
 - CTA para abrir lista completa de livros
 
 ## Sistema de metas e tarefas
+
 **Implementado / Parcial**
 
 Este é um dos recursos mais importantes do app atual.
@@ -996,6 +1133,7 @@ Ao tocar na universidade-meta:
 - o usuário navega para o detalhe da universidade
 
 ## Provas das suas metas
+
 **Implementado**
 
 Quando existem provas futuras nas universidades-meta:
@@ -1004,6 +1142,7 @@ Quando existem provas futuras nas universidades-meta:
 - cada item exibe data, universidade, fase e contagem regressiva em dias
 
 ## Próximos eventos
+
 **Implementado / Parcial**
 
 O perfil exibe eventos acadêmicos seedados.
@@ -1019,6 +1158,7 @@ Ao tocar:
 - abre `EventDetailModal`
 
 ## Modal de evento
+
 **Implementado**
 
 Mostra:
@@ -1033,6 +1173,7 @@ Mostra:
 ## Configurações e modais do usuário
 
 ## SettingsModal
+
 **Implementado**
 
 Centraliza configurações gerais do usuário.
@@ -1058,6 +1199,7 @@ Entradas disponíveis hoje:
 - sair
 
 ## AvatarPickerModal
+
 **Implementado**
 
 Permite escolher:
@@ -1066,6 +1208,7 @@ Permite escolher:
 - cor de fundo do avatar
 
 ## EditNameModal
+
 **Implementado**
 
 Permite editar:
@@ -1074,6 +1217,7 @@ Permite editar:
 - sobrenome
 
 ## EditCoursesModal
+
 **Implementado**
 
 Permite alterar:
@@ -1083,6 +1227,7 @@ Permite alterar:
 - busca no catálogo completo
 
 ## LocationSettingsModal
+
 **Implementado**
 
 Permite configurar dois contextos diferentes:
@@ -1098,6 +1243,7 @@ Cada contexto possui:
 O fluxo atual usa Brasil como país padrão.
 
 ## GoalsModal
+
 **Implementado / Parcial**
 
 Permite selecionar universidades-meta.
@@ -1111,6 +1257,7 @@ Hoje ele foca em:
 No futuro esse fluxo deve virar um sistema mais completo de planejamento acadêmico.
 
 ## SavedPostsModal
+
 **Implementado**
 
 Mostra todos os posts salvos pelo usuário.
@@ -1123,6 +1270,7 @@ Cada item exibe:
 - resumo
 
 ## ShareModal
+
 **Implementado / Parcial**
 
 Hoje oferece:
@@ -1136,6 +1284,7 @@ Observação:
 - o modo `Copiar` hoje só mostra alerta de sucesso; não há integração completa com clipboard real dentro deste fluxo
 
 ## UniSortModal
+
 **Implementado / Parcial**
 
 Permite definir como ordenar universidades seguidas:
@@ -1158,6 +1307,7 @@ Esse recurso já existe no estado global, mas a entrada visual dele ainda não e
 Oferecer uma experiência administrativa para universidades gerenciarem suas próprias informações.
 
 ## Fluxo atual
+
 **Implementado / Parcial**
 
 Quando o usuário autenticado possui:
@@ -1168,6 +1318,7 @@ Quando o usuário autenticado possui:
 A aba `Perfil` deixa de renderizar o perfil comum e passa a renderizar `InstitutionAdminScreen`.
 
 ## O que a instituição consegue fazer hoje
+
 **Implementado / Parcial**
 
 ### Identidade visual
@@ -1224,6 +1375,7 @@ O recurso está funcional, mas ainda incompleto.
 ## Fontes atuais de dados
 
 ### Firebase
+
 **Implementado / Parcial**
 
 Coleções e estruturas já usadas:
@@ -1241,6 +1393,7 @@ Coleções e estruturas já usadas:
 - `universidades/{uniId}/stories`
 
 ### Dados locais seedados
+
 **Implementado**
 
 Arquivos principais usados como fallback ou catálogo base:
@@ -1255,6 +1408,7 @@ Arquivos principais usados como fallback ou catálogo base:
 - `subjects`
 
 ## Estado global por domínio
+
 **Implementado**
 
 ### `authStore`
@@ -1323,6 +1477,7 @@ Arquivos principais usados como fallback ou catálogo base:
 ## Regras funcionais importantes para IA e desenvolvimento
 
 ## O que já personaliza a experiência hoje
+
 **Implementado**
 
 Os seguintes dados realmente impactam a experiência atual:
@@ -1338,6 +1493,7 @@ Os seguintes dados realmente impactam a experiência atual:
 - tema e avatar
 
 ## Diferença entre universidades seguidas e universidades-meta
+
 **Implementado e muito importante**
 
 Esses dois conceitos são diferentes e não devem ser misturados:
@@ -1387,36 +1543,43 @@ Os dois domínios se cruzam no perfil e nas comparações de nota de corte, mas 
 ## Funcionalidades já existentes mas ainda simplificadas
 
 ## 1. Stories institucionais
+
 **Parcial**
 
 Já existem backend, store e viewer, mas ainda falta um fluxo completo de criação dentro da interface institucional.
 
 ## 2. Feed remoto
+
 **Parcial**
 
 O app já busca posts reais, mas ainda depende de fallback seedado para garantir experiência mínima.
 
 ## 3. Notas de corte
+
 **Parcial**
 
 Já existe comparação funcional, mas o catálogo ainda é pequeno e local.
 
 ## 4. Eventos
+
 **Parcial**
 
 Já existe listagem e detalhe, mas ainda com base em dataset seedado pequeno.
 
 ## 5. Institution mode
+
 **Parcial**
 
 Já existe edição de alguns campos, mas ainda não é um painel institucional completo.
 
 ## 6. Localização
+
 **Parcial**
 
 O fluxo de estado/cidade está implementado, mas hoje é centrado no Brasil e ainda não cobre todos os cenários internacionais ou institucionais.
 
 ## 7. Ordenação de universidades
+
 **Parcial**
 
 A lógica já existe, mas o fluxo de descoberta/uso disso ainda pode ser melhor integrado na experiência principal.
@@ -1428,6 +1591,7 @@ A lógica já existe, mas o fluxo de descoberta/uso disso ainda pode ser melhor 
 Abaixo estão as funcionalidades e frentes de produto que já aparecem como direção desejada em `docs/notes.md`, `INSTITUTION_IMPROVEMENTS.md`, `CHANGES_SINCE_LAST_SESSION.md` e documentos de arquitetura.
 
 ## Auth e onboarding
+
 **Planejado**
 
 - termos e condições vindo do banco
@@ -1439,6 +1603,7 @@ Abaixo estão as funcionalidades e frentes de produto que já aparecem como dire
 - revisão do fluxo visual de autenticação
 
 ## Feed
+
 **Planejado**
 
 - resumo/calendário de vestibulares no topo
@@ -1451,6 +1616,7 @@ Abaixo estão as funcionalidades e frentes de produto que já aparecem como dire
 - feed mais baseado em interesse declarado
 
 ## Explorar
+
 **Planejado**
 
 - navegador hierárquico de cursos por área > subárea > curso
@@ -1463,6 +1629,7 @@ Abaixo estão as funcionalidades e frentes de produto que já aparecem como dire
 - badge de verificação para instituições
 
 ## Notas e simuladores
+
 **Planejado**
 
 - separação ainda mais explícita entre provas reais e simulados
@@ -1475,6 +1642,7 @@ Abaixo estão as funcionalidades e frentes de produto que já aparecem como dire
 - simulador `Consigo passar?`
 
 ## Perfil e planejamento
+
 **Planejado**
 
 - perfil modular com seções reordenáveis
@@ -1487,6 +1655,7 @@ Abaixo estão as funcionalidades e frentes de produto que já aparecem como dire
 - sugestões de rotas alternativas se o objetivo principal estiver distante
 
 ## Conteúdo acadêmico extra
+
 **Planejado**
 
 - flashcards
@@ -1497,6 +1666,7 @@ Abaixo estão as funcionalidades e frentes de produto que já aparecem como dire
 - FIES/Prouni/rotas alternativas
 
 ## Institution mode
+
 **Planejado**
 
 - autenticação institucional mais robusta
@@ -1510,6 +1680,7 @@ Abaixo estão as funcionalidades e frentes de produto que já aparecem como dire
 - distinção clara entre conta estudante e conta institucional em settings e UX
 
 ## Dados e arquitetura
+
 **Planejado**
 
 - mais catálogos vindos do banco em vez de hardcoded
