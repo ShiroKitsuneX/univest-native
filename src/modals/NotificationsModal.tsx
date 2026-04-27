@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
-import { BottomSheet } from '@/components/BottomSheet'
+import { SidePanel } from '@/components/SidePanel'
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import { useAuthStore } from '@/stores/authStore'
 import { timeAgo } from '@/utils/format'
@@ -60,7 +60,7 @@ export function NotificationsModal({ visible, onClose }) {
   }
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} T={T} height={70}>
+    <SidePanel visible={visible} onClose={onClose} T={T}>
       <View style={styles.container} onTouchStart={handleOpenNotifications}>
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: T.text }]}>
@@ -128,7 +128,7 @@ export function NotificationsModal({ visible, onClose }) {
           )}
         </ScrollView>
       </View>
-    </BottomSheet>
+    </SidePanel>
   )
 }
 
