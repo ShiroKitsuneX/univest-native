@@ -13,10 +13,9 @@ import {
 } from 'react-native'
 import type { ThemeColors } from '@/theme/palette'
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window')
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const PANEL_WIDTH = SCREEN_WIDTH * 0.85
 
-const HEADER_HEIGHT = 80
 const TAB_BAR_HEIGHT = 50
 
 type Props = {
@@ -31,11 +30,11 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
   const slideAnim = useRef(new Animated.Value(PANEL_WIDTH)).current
   const fadeAnim = useRef(new Animated.Value(0)).current
 
-  const panelTop = HEADER_HEIGHT + insets.top
+  const panelTop = insets.top
   const panelBottom = TAB_BAR_HEIGHT + insets.bottom
 
   useEffect(() => {
-    const animations = [
+    Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: visible ? 0 : PANEL_WIDTH,
         duration: 320,
@@ -48,9 +47,7 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
-    ]
-
-    Animated.parallel(animations).start()
+    ]).start()
   }, [visible])
 
   return (
@@ -60,7 +57,7 @@ export function SidePanel({ visible, onClose, children, T }: Props) {
       animationType="none"
       onRequestClose={onClose}
     >
-      <View style={[styles.overlay, { paddingTop: insets.top }]}>
+      <View style={styles.overlay}>
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback onPress={onClose}>
             <View style={styles.backdropTouch} />
@@ -95,7 +92,6 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
   backdrop: {
     flex: 1,
