@@ -463,7 +463,8 @@ const styles = StyleSheet.create({
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingLeft: 0,
+    paddingRight: 8,
     paddingVertical: 6,
     marginRight: 4,
   },
