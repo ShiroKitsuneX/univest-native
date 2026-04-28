@@ -16,7 +16,7 @@ import { useProfileStore } from '@/stores/profileStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useGeo } from '@/stores/hooks/useGeo'
 import { logger } from '@/services/logger'
-import { Pill } from '@/shared/components'
+import { Pill, PressScale, VerifiedBadge } from '@/shared/components'
 
 export function ExplorarScreen({
   refreshing,
@@ -80,7 +80,7 @@ export function ExplorarScreen({
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 16 }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 16 }}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
@@ -91,6 +91,18 @@ export function ExplorarScreen({
         />
       }
     >
+      {/* Screen title — replaces the dropped TabHeader chrome. Uses display
+          typography so the page owns its top, matching the inspiration's
+          "Learning Overview" / "Dashboard" hero pattern. */}
+      <View style={{ marginBottom: 18 }}>
+        <Text style={[typography.title, { color: T.text, fontSize: 28 }]}>
+          Explorar
+        </Text>
+        <Text style={{ color: T.sub, fontSize: 13, marginTop: 4 }}>
+          Encontre sua universidade
+        </Text>
+      </View>
+
       {!studyStateId && (
         <TouchableOpacity
           onPress={onOpenLocation}
@@ -196,20 +208,18 @@ export function ExplorarScreen({
       </ScrollView>
       <View style={{ gap: 10 }}>
         {filtU.map(u => (
-          <TouchableOpacity
-            key={u.id}
-            onPress={() => onSelectUni(u)}
-            activeOpacity={0.85}
-            style={{
-              ...cd(),
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 12,
-              padding: 14,
-              borderLeftWidth: u.followed ? 3 : 0,
-              borderLeftColor: u.color,
-            }}
-          >
+          <PressScale key={u.id} onPress={() => onSelectUni(u)}>
+            <View
+              style={{
+                ...cd(),
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                padding: 14,
+                borderLeftWidth: u.followed ? 3 : 0,
+                borderLeftColor: u.color,
+              }}
+            >
             <View
               style={{
                 width: 50,
@@ -233,6 +243,7 @@ export function ExplorarScreen({
                 >
                   {u.name}
                 </Text>
+                {u.verified && <VerifiedBadge size={12} />}
                 {userStudyState && u.state === userStudyState && (
                   <View
                     style={{
@@ -274,7 +285,8 @@ export function ExplorarScreen({
                 </Text>
               </View>
             </View>
-          </TouchableOpacity>
+            </View>
+          </PressScale>
         ))}
       </View>
     </ScrollView>

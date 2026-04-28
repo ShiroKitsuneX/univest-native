@@ -22,6 +22,10 @@ export type University = {
   prova?: string
   site?: string
   type?: string
+  // Accredited-institution flag. Render the blue ✓ badge next to the name
+  // wherever the uni is displayed. Source-of-truth: Firestore field of the
+  // same name. Local seed data uses it for ENEM by default.
+  verified?: boolean
 }
 
 export type Exam = {

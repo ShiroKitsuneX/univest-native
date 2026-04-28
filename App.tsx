@@ -23,6 +23,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useAuthStore } from '@/stores/authStore'
 import { RootNavigator } from '@/navigation/RootNavigator'
 import { MainTabs } from '@/navigation/MainTabs'
+import { refreshPosts } from '@/features/feed/services/feedService'
 import { ShareModal } from '@/modals/ShareModal'
 import { UniSortModal } from '@/modals/UniSortModal'
 import { AddGradeModal } from '@/modals/AddGradeModal'
@@ -68,10 +69,9 @@ function MainApp() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
     try {
-      await Promise.all([
-        useUniversitiesStore.getState().load(),
-        usePostsStore.getState().load(),
-      ])
+      const posts = await refreshPosts()
+      usePostsStore.getState().setPosts(posts)
+      await Promise.all([useUniversitiesStore.getState().load()])
       if (currentUser) {
         await usePostsStore.getState().loadLikesFor(currentUser.uid)
       }

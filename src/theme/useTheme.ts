@@ -54,7 +54,12 @@ export function useTheme(): ThemeResult {
     () => ({
       T: isDark ? DK : LT,
       isDark,
-      AT: isDark ? '#000' : '#fff',
+      // `AT` (= "Accent Text") is the text colour to use on top of any
+      // surface filled with `T.accent`. Now that `accent` is always violet
+      // `#7C5CFF` on both themes, the only correct text colour is white.
+      // (Historically `AT` was theme-flipped, which produced black-on-violet
+      // CTAs on dark mode — invisible.)
+      AT: '#FFFFFF',
       brand: BRAND,
       domain: isDark ? DOMAIN_D : DOMAIN_L,
       tokens,

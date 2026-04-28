@@ -9,7 +9,7 @@ export const FEED = [
     title: 'FUVEST 2026 — Inscrições abertas!',
     body: 'As inscrições para a FUVEST 2026 estão abertas. Período: 01/08 a 15/09/2025. Taxa: R$ 190,00.',
     time: '2h atrás',
-    likes: 2341,
+    likes: 0,
   },
   {
     id: 'f2',
@@ -18,10 +18,10 @@ export const FEED = [
     type: 'lista',
     icon: '📚',
     tag: 'Lista de Obras',
-    title: 'Lista de obras literárias FUVEST 2026 divulgada',
-    body: 'A USP divulgou as 8 obras obrigatórias: Dom Casmurro, Vidas Secas, Morte e Vida Severina e outras 5.',
+    title: 'Lista de obras literárias FUVEST 2026.divulgada',
+    body: 'A USPdivulgou as 8 obras obrigatórias: Dom Casmurro, Vidas Secas, Morte e Vida Severina e outras 5.',
     time: '1d atrás',
-    likes: 5820,
+    likes: 0,
   },
   {
     id: 'f3',
@@ -31,9 +31,9 @@ export const FEED = [
     icon: '📊',
     tag: 'Notas de Corte',
     title: 'Notas de corte Medicina UNICAMP 2025',
-    body: 'A nota de corte para Medicina na UNICAMP em 2025 foi de 87,3 pontos. Confira o histórico.',
+    body: 'A nota de corte para Medicina na UNICAMP em 2025 foi de 87,3 pontos. Veja o histórico.',
     time: '3d atrás',
-    likes: 8910,
+    likes: 0,
   },
   {
     id: 'f4',
@@ -45,7 +45,7 @@ export const FEED = [
     title: 'Simulado COMVEST 2025 disponível para download',
     body: 'A UNICAMP disponibilizou o simulado oficial com gabarito. Treine com a prova real!',
     time: '5d atrás',
-    likes: 12400,
+    likes: 0,
   },
   {
     id: 'f5',
@@ -57,6 +57,6 @@ export const FEED = [
     title: 'USP sobe no ranking mundial de universidades',
     body: 'A USP subiu 15 posições no QS World University Rankings 2025, mantendo-se a melhor da América Latina.',
     time: '1 sem atrás',
-    likes: 19200,
+    likes: 0,
   },
 ]

@@ -2,8 +2,19 @@ import {
   setPostLike,
   addReport,
   incrementPostShares,
+  fetchPosts,
 } from '../repositories/postsRepository'
 import { logger } from '@/services/logger'
+
+export async function refreshPosts() {
+  try {
+    const posts = await fetchPosts()
+    return posts
+  } catch (error) {
+    logger.warn('refreshPosts error:', error)
+    throw error
+  }
+}
 
 export async function togglePostLike(
   postId: string,

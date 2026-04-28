@@ -5,7 +5,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useUniversitiesStore } from '@/stores/universitiesStore'
+import { ensureExamReminders } from '@/features/feed/services/notificationsService'
 import Svg, { Path } from 'react-native-svg'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
@@ -87,25 +89,28 @@ function TabHeader({
   const currentUser = useAuthStore(s => s.currentUser)
   const unreadCount = useNotificationsStore(s => s.unreadCount)
   const loadUnreadCount = useNotificationsStore(s => s.loadUnreadCount)
+  const goalsUnis = useUniversitiesStore(s => s.goalsUnis)
   const [notificationsVisible, setNotificationsVisible] = useState(false)
 
+  // On sign-in (or whenever the user/goal-list changes) refresh the unread
+  // badge AND idempotently seed exam-reminder notifications. The reminder
+  // generator is dedupe-keyed so re-running this on every change is safe.
   useEffect(() => {
-    if (currentUser?.uid) {
-      loadUnreadCount(currentUser.uid)
-    }
-  }, [currentUser?.uid])
+    const uid = currentUser?.uid
+    if (!uid) return
+    loadUnreadCount(uid)
+    ensureExamReminders(uid, goalsUnis).then(() => {
+      // Re-pull the badge once reminders may have been created so the user
+      // sees the new count without having to open the modal first.
+      loadUnreadCount(uid)
+    })
+  }, [currentUser?.uid, goalsUnis])
 
-  const subtitle =
-    route.name === 'ExplorarTab'
-      ? 'Encontre sua universidade'
-      : route.name === 'NotasTab'
-        ? 'Notas de corte & suas provas'
-        : null
-
-  const showBell =
-    route.name === 'FeedTab' ||
-    route.name === 'ExplorarTab' ||
-    route.name === 'NotasTab'
+  // Every screen owns its own hero ("Olá, Anna 👋", "Explorar", "Notas",
+  // etc.) — so the global TabHeader stays minimal: bell on the right, cog on
+  // Perfil. No competing brand title at the top of every screen.
+  const showBell = route.name !== 'PerfilTab'
+  const showCog = route.name === 'PerfilTab'
 
   return (
     <View style={{ backgroundColor: T.bg }}>
@@ -113,18 +118,13 @@ function TabHeader({
         style={{
           paddingHorizontal: 20,
           paddingTop: insets.top + 6,
-          paddingBottom: 10,
+          paddingBottom: 4,
           flexDirection: 'row',
           alignItems: 'center',
+          justifyContent: 'flex-end',
         }}
       >
-        <View style={{ width: 40 }} />
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={[typography.title, { color: T.text }]}>
-            Uni<Text style={{ color: brand.primary }}>Vest</Text>
-          </Text>
-        </View>
-        {route.name === 'PerfilTab' ? (
+        {showCog ? (
           <TouchableOpacity
             onPress={onOpenSettings}
             style={[
@@ -132,7 +132,7 @@ function TabHeader({
               { backgroundColor: T.card2, borderColor: T.border },
             ]}
           >
-            <Text style={{ fontSize: 16 }}>⚙️</Text>
+            <SvgIcon name="cog" size={18} color={T.text} />
           </TouchableOpacity>
         ) : showBell ? (
           <TouchableOpacity
@@ -155,11 +155,6 @@ function TabHeader({
           <View style={{ width: 40 }} />
         )}
       </View>
-      {subtitle && (
-        <View style={{ paddingHorizontal: 20, paddingBottom: 8 }}>
-          <Text style={[typography.caption, { color: T.sub }]}>{subtitle}</Text>
-        </View>
-      )}
       <NotificationsModal
         visible={notificationsVisible}
         onClose={() => setNotificationsVisible(false)}
