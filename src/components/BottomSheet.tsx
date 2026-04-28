@@ -1,29 +1,18 @@
 import type { ReactNode } from 'react'
-import {
-  Modal,
-  ScrollView,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native'
+import { Modal, ScrollView, TouchableWithoutFeedback, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import type { ThemeColors } from '@/theme/palette'
 
 type Props = {
   visible: boolean
   onClose: () => void
   children: ReactNode
-  // Theme colours from `useTheme()`. Passed down rather than read here so the
-  // sheet stays a thin presentational shell with no store dependency.
   T: ThemeColors
-  height?: number
 }
 
-export function BottomSheet({
-  visible,
-  onClose,
-  children,
-  T,
-  height = 200,
-}: Props) {
+export function BottomSheet({ visible, onClose, children, T }: Props) {
+  const insets = useSafeAreaInsets()
+
   return (
     <Modal
       visible={visible}
@@ -45,9 +34,10 @@ export function BottomSheet({
                 backgroundColor: T.card,
                 borderTopLeftRadius: 22,
                 borderTopRightRadius: 22,
-                minHeight: height,
+                maxHeight: '90%',
                 borderTopWidth: 1,
                 borderColor: T.border,
+                paddingBottom: insets.bottom + 10,
               }}
             >
               <View
@@ -65,7 +55,6 @@ export function BottomSheet({
               <ScrollView
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
-                style={{ flex: 1 }}
               >
                 {children}
               </ScrollView>

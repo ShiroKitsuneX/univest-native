@@ -80,7 +80,7 @@ export function ExplorarScreen({
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 16 }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 16 }}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl
@@ -91,6 +91,18 @@ export function ExplorarScreen({
         />
       }
     >
+      {/* Screen title — replaces the dropped TabHeader chrome. Uses display
+          typography so the page owns its top, matching the inspiration's
+          "Learning Overview" / "Dashboard" hero pattern. */}
+      <View style={{ marginBottom: 18 }}>
+        <Text style={[typography.title, { color: T.text, fontSize: 28 }]}>
+          Explorar
+        </Text>
+        <Text style={{ color: T.sub, fontSize: 13, marginTop: 4 }}>
+          Encontre sua universidade
+        </Text>
+      </View>
+
       {!studyStateId && (
         <TouchableOpacity
           onPress={onOpenLocation}

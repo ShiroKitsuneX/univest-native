@@ -11,6 +11,8 @@ import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useProgressStore } from '@/stores/progressStore'
 import { usePostsStore } from '@/stores/postsStore'
 import { useGeo } from '@/stores/hooks/useGeo'
+import { StatCard } from '@/shared/components/StatCard'
+import { SvgIcon } from '@/shared/components/SvgIcon'
 
 export function PerfilScreen({
   onChangePhoto,
@@ -24,7 +26,7 @@ export function PerfilScreen({
   onSelectUni,
   goNotas,
 }) {
-  const { T, isDark, AT, brand, domain } = useTheme()
+  const { T, isDark, AT, brand, domain, typography } = useTheme()
   // Reading-progress amber → goal-domain accent (warm pastel).
   const reading = domain.goal
 
@@ -69,98 +71,105 @@ export function PerfilScreen({
   const cd = useCardStyle()
   const lbl = useLabelStyle()
 
+  // Stats summary used by the 2x2 StatCard grid below the hero. Real data;
+  // each tile maps to a domain accent for scan-by-colour dashboards.
+  const provasCount = gs.filter(g => g.type !== 'simulado').length
+  const simuladosCount = gs.filter(g => g.type === 'simulado').length
+  const savedCount = Object.values(saved).filter(Boolean).length
+
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
     >
-      <View style={{ ...cd(), overflow: 'hidden', marginBottom: 12 }}>
-        <View
+      {/* Hero card — big avatar with violet ring, name in title typography,
+          subtle user-type caption, and a small "edit name" pencil. Replaces
+          the old curved-banner-with-stats pattern. */}
+      <View style={{ alignItems: 'center', marginTop: 4, marginBottom: 24 }}>
+        <TouchableOpacity onPress={onChangePhoto} activeOpacity={0.85}>
+          <View
+            style={{
+              width: 108,
+              height: 108,
+              borderRadius: 54,
+              padding: 4,
+              backgroundColor: brand.primary,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <View
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+                backgroundColor: AVATAR_COLORS[avBgIdx][0],
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 3,
+                borderColor: T.bg,
+              }}
+            >
+              <Text style={{ fontSize: 46 }}>{av}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={onChangeName}
           style={{
-            height: 80,
-            backgroundColor: AVATAR_COLORS[avBgIdx][0] + '44',
-            borderBottomWidth: 1,
-            borderColor: T.border,
-          }}
-        />
-        <View
-          style={{
+            marginTop: 14,
+            flexDirection: 'row',
             alignItems: 'center',
-            marginTop: -40,
-            paddingBottom: 20,
-            paddingHorizontal: 22,
+            gap: 6,
           }}
         >
-          <TouchableOpacity
-            onPress={onChangePhoto}
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              backgroundColor: AVATAR_COLORS[avBgIdx][0],
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 4,
-              borderColor: T.card,
-            }}
-          >
-            <Text style={{ fontSize: 36 }}>{av}</Text>
-          </TouchableOpacity>
           <Text
-            style={{
-              color: T.muted,
-              fontSize: 10,
-              marginTop: 4,
-              marginBottom: 8,
-            }}
+            style={[
+              typography.title,
+              { color: T.text, fontSize: 22, textAlign: 'center' },
+            ]}
           >
-            Toque para alterar foto
+            {nome}
+            {sobrenome ? ' ' + sobrenome : ''}
           </Text>
-          <TouchableOpacity onPress={onChangeName}>
-            <Text style={{ color: T.text, fontSize: 18, fontWeight: '800' }}>
-              {nome}
-              {sobrenome ? ' ' + sobrenome : ''}
-            </Text>
-          </TouchableOpacity>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              marginTop: 4,
-              marginBottom: 12,
-            }}
-          >
-            <Text>{uType?.emoji || ''}</Text>
-            <Text style={{ color: T.sub, fontSize: 12 }}>
-              {uType?.label || ''}
-            </Text>
-          </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              gap: 8,
-              marginBottom: 4,
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
-          >
+          <Text style={{ color: T.muted, fontSize: 12 }}>✏️</Text>
+        </TouchableOpacity>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            marginTop: 6,
+          }}
+        >
+          {uType?.id === 'prevestu' ? (
+            <SvgIcon name="rocket" size={14} color={brand.primary} />
+          ) : (
+            <Text style={{ fontSize: 13 }}>{uType?.emoji || ''}</Text>
+          )}
+          <Text style={{ color: T.sub, fontSize: 12, fontWeight: '600' }}>
+            {uType?.label || ''}
+          </Text>
+        </View>
+
+        {/* Course chips — slim, single line. The brand-violet 1ª chip
+            anchors visual hierarchy. */}
+        {(c1 || c2) && (
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
             {!!c1 && (
               <TouchableOpacity
                 onPress={onEditCourses}
                 style={{
-                  backgroundColor: T.acBg,
-                  paddingHorizontal: 12,
-                  paddingVertical: 4,
-                  borderRadius: 20,
-                  borderWidth: 1,
-                  borderColor: T.accent + '40',
+                  backgroundColor: brand.primary,
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  borderRadius: 999,
                 }}
               >
-                <Text
-                  style={{ color: T.accent, fontSize: 11, fontWeight: '700' }}
-                >
-                  1ª {c1}
+                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>
+                  🎯 {c1}
                 </Text>
               </TouchableOpacity>
             )}
@@ -170,103 +179,87 @@ export function PerfilScreen({
                 style={{
                   backgroundColor: T.card2,
                   paddingHorizontal: 12,
-                  paddingVertical: 4,
-                  borderRadius: 20,
+                  paddingVertical: 6,
+                  borderRadius: 999,
                   borderWidth: 1,
                   borderColor: T.border,
                 }}
               >
-                <Text style={{ color: T.sub, fontSize: 11, fontWeight: '700' }}>
+                <Text style={{ color: T.sub, fontSize: 12, fontWeight: '600' }}>
                   2ª {c2}
                 </Text>
               </TouchableOpacity>
             )}
-            <TouchableOpacity
-              onPress={onEditCourses}
-              style={{
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 16,
-                backgroundColor: T.card2,
-                borderWidth: 1,
-                borderColor: T.border,
-              }}
-            >
-              <Text style={{ color: T.sub, fontSize: 10 }}>✏️</Text>
-            </TouchableOpacity>
           </View>
-          {(cityId || stateId || studyCityId || studyStateId) && (
-            <View style={{ marginBottom: 12 }}>
-              {cityId && stateId && (
-                <Text
-                  style={{ color: T.sub, fontSize: 11, textAlign: 'center' }}
-                >
-                  📍 {getCityDisplayName(cityId)}, {stateId}
-                </Text>
-              )}
-              {studyCityId && studyStateId && (
-                <Text
-                  style={{
-                    color: T.muted,
-                    fontSize: 10,
-                    textAlign: 'center',
-                    marginTop: 2,
-                  }}
-                >
-                  🎯 Pretendo estudar em {getCityDisplayName(studyCityId)},{' '}
-                  {studyStateId}
-                </Text>
-              )}
-            </View>
-          )}
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              gap: 0,
-              width: '100%',
-              borderTopWidth: 1,
-              borderColor: T.border,
-              paddingTop: 14,
-            }}
-          >
-            {[
-              { v: followedCount, l: 'seguindo', isFollowing: true },
-              { v: gs.filter(g => g.type !== 'simulado').length, l: 'provas' },
-              {
-                v: gs.filter(g => g.type === 'simulado').length,
-                l: 'simulados',
-              },
-              {
-                v: Object.values(saved).filter(Boolean).length,
-                l: 'salvos',
-                isSaved: true,
-              },
-            ].map(({ v, l, isFollowing, isSaved }, i, arr) => (
-              <TouchableOpacity
-                key={l}
-                onPress={() => {
-                  if (isFollowing && v > 0) onShowFollowing()
-                  else if (isSaved && v > 0) onShowSaved()
-                }}
-                style={{
-                  flex: 1,
-                  alignItems: 'center',
-                  borderRightWidth: i < arr.length - 1 ? 1 : 0,
-                  borderColor: T.border,
-                  paddingVertical: 4,
-                }}
+        )}
+
+        {(cityId || stateId || studyCityId || studyStateId) && (
+          <View style={{ marginTop: 10, alignItems: 'center' }}>
+            {cityId && stateId && (
+              <Text style={{ color: T.muted, fontSize: 11 }}>
+                📍 {getCityDisplayName(cityId)}, {stateId}
+              </Text>
+            )}
+            {studyCityId && studyStateId && (
+              <Text
+                style={{ color: T.muted, fontSize: 10, marginTop: 2 }}
               >
-                <Text
-                  style={{ color: T.accent, fontSize: 18, fontWeight: '800' }}
-                >
-                  {v}
-                </Text>
-                <Text style={{ color: T.muted, fontSize: 9 }}>{l}</Text>
-              </TouchableOpacity>
-            ))}
+                🎯 Pretendo estudar em {getCityDisplayName(studyCityId)},{' '}
+                {studyStateId}
+              </Text>
+            )}
           </View>
+        )}
+      </View>
+
+      {/* Stats grid — 4 stat cards in a 2x2 arrangement. Domain accent tones
+          give each a glanceable pastel; values come from real store data. */}
+      <Text style={[typography.eyebrow, { color: T.muted, marginBottom: 10 }]}>
+        SUAS ESTATÍSTICAS
+      </Text>
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={followedCount > 0 ? onShowFollowing : undefined}
+          activeOpacity={followedCount > 0 ? 0.85 : 1}
+        >
+          <StatCard
+            tone="progress"
+            icon={<Text style={{ fontSize: 18 }}>🏛️</Text>}
+            value={followedCount}
+            label="Seguindo"
+          />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <StatCard
+            tone="simulado"
+            icon={<Text style={{ fontSize: 18 }}>📋</Text>}
+            value={simuladosCount}
+            label="Simulados"
+          />
         </View>
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 24 }}>
+        <View style={{ flex: 1 }}>
+          <StatCard
+            tone="notas"
+            icon={<Text style={{ fontSize: 18 }}>📝</Text>}
+            value={provasCount}
+            label="Provas"
+          />
+        </View>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={savedCount > 0 ? onShowSaved : undefined}
+          activeOpacity={savedCount > 0 ? 0.85 : 1}
+        >
+          <StatCard
+            tone="news"
+            icon={<Text style={{ fontSize: 18 }}>🔖</Text>}
+            value={savedCount}
+            label="Salvos"
+          />
+        </TouchableOpacity>
       </View>
 
       <View

@@ -55,12 +55,12 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
   }
 
   return (
-    <View style={{ paddingVertical: 12 }}>
+    <View style={{ paddingVertical: 6 }}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
-          paddingHorizontal: 20,
+          paddingHorizontal: 16,
           flexGrow: 1,
           justifyContent: groupedStories.length <= 4 ? 'center' : 'flex-start',
         }}
@@ -92,7 +92,13 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
                 borderStyle: 'dashed',
               }}
             >
-              <Text style={{ color: brand.primary, fontSize: 28, fontWeight: '300' }}>
+              <Text
+                style={{
+                  color: brand.primary,
+                  fontSize: 28,
+                  fontWeight: '300',
+                }}
+              >
                 +
               </Text>
             </View>

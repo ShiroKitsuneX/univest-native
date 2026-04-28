@@ -13,7 +13,7 @@ export const USER_TYPES = [
   },
   {
     id: 'prevestu',
-    emoji: '🎯',
+    emoji: '',
     label: 'Pré-vestibulando',
     sub: 'Me preparando para vestibulares',
   },

@@ -6,7 +6,7 @@ export function ShareModal({ item, onClose }) {
   const { T, isDark } = useTheme()
 
   return (
-    <BottomSheet visible={!!item} onClose={onClose} T={T} height={200}>
+    <BottomSheet visible={!!item} onClose={onClose} T={T}>
       {item && (
         <View style={{ padding: 20, paddingBottom: 24 }}>
           <View

@@ -14,7 +14,7 @@ export function StoryCircle({
   uniColor,
   isViewed,
   onPress,
-  size = 68,
+  size = 56,
 }: Props) {
   const { T, brand, shadow } = useTheme()
   const ringColor = isViewed ? T.border : brand.primary
