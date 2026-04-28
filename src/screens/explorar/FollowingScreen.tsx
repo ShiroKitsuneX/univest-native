@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/theme/useTheme'
 import { getMonthFromExamLabel } from '@/utils/dates'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
-import { Button, EmptyState, PressScale, VerifiedBadge } from '@/shared/components'
+import { Button, EmptyState } from '@/shared/components'
 
 export function FollowingScreen({
   onBack,
@@ -87,50 +87,48 @@ export function FollowingScreen({
         ) : (
           <View style={{ gap: 10, marginBottom: 40 }}>
             {fol.map(u => (
-              <PressScale key={u.id} onPress={() => onSelectUni(u)}>
+              <TouchableOpacity
+                key={u.id}
+                onPress={() => onSelectUni(u)}
+                activeOpacity={0.85}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 14,
+                  borderRadius: radius.md,
+                  backgroundColor: T.card,
+                  borderWidth: 1,
+                  borderColor: T.border,
+                }}
+              >
                 <View
                   style={{
-                    flexDirection: 'row',
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: u.color,
                     alignItems: 'center',
-                    padding: 14,
-                    borderRadius: radius.md,
-                    backgroundColor: T.card,
-                    borderWidth: 1,
-                    borderColor: T.border,
+                    justifyContent: 'center',
                   }}
                 >
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: u.color,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                  <Text
+                    style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}
                   >
-                    <Text
-                      style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}
-                    >
-                      {u.name.slice(0, 2)}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text
-                        style={{ color: T.text, fontSize: 14, fontWeight: '700' }}
-                      >
-                        {u.name}
-                      </Text>
-                      {u.verified && <VerifiedBadge size={11} />}
-                    </View>
-                    <Text style={{ color: T.sub, fontSize: 11 }}>
-                      {u.fullName}
-                    </Text>
-                  </View>
-                  <Text style={{ color: brand.primary, fontSize: 20 }}>›</Text>
+                    {u.name.slice(0, 2)}
+                  </Text>
                 </View>
-              </PressScale>
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text
+                    style={{ color: T.text, fontSize: 14, fontWeight: '700' }}
+                  >
+                    {u.name}
+                  </Text>
+                  <Text style={{ color: T.sub, fontSize: 11 }}>
+                    {u.fullName}
+                  </Text>
+                </View>
+                <Text style={{ color: brand.primary, fontSize: 20 }}>›</Text>
+              </TouchableOpacity>
             ))}
           </View>
         )}

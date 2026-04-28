@@ -29,7 +29,7 @@ export function WelcomeScreen({ navigation }: { navigation: any }) {
 
   const handleEnterPress = () => {
     Animated.spring(loginBtnScale, {
-      toValue: 0.96,
+      toValue: 0.94,
       useNativeDriver: true,
     }).start()
     setTimeout(() => {
@@ -42,81 +42,56 @@ export function WelcomeScreen({ navigation }: { navigation: any }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: T.bg, overflow: 'hidden' }}>
+    <View style={[styles.wrap, { backgroundColor: T.bg }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-
-      {/* Soft violet halo behind the hero — gives the screen depth without
-          a gradient lib. Three stacked rgba-violet circles. */}
-      <View
-        pointerEvents="none"
-        style={[
-          styles.halo,
-          {
-            top: insets.top - 80,
-            backgroundColor: brand.primary,
-            opacity: isDark ? 0.18 : 0.12,
-          },
-        ]}
-      />
-
       <ScrollView
         bounces={false}
         style={{ flex: 1 }}
         contentContainerStyle={{
           flexGrow: 1,
+          justifyContent: 'center',
           padding: 28,
-          paddingTop: insets.top + 56,
+          paddingTop: insets.top + 28,
           paddingBottom: insets.bottom + 28,
         }}
       >
-        {/* Hero block — big logo tile with primary glow, centered display
-            wordmark, supportive subtitle. Matches the inspiration pattern
-            of "big anchor + supportive caption" for landing screens. */}
-        <View style={{ alignItems: 'center', marginBottom: 28 }}>
-          <View
-            style={[
-              styles.logoTile,
-              {
-                backgroundColor: brand.primary,
-                borderRadius: radius.xl,
-              },
-              shadow.primary,
-            ]}
-          >
-            <Text style={styles.logoEmoji}>🎓</Text>
-          </View>
-          <Text
-            style={[
-              typography.title,
-              {
-                color: T.text,
-                fontSize: 36,
-                marginTop: 18,
-                textAlign: 'center',
-                letterSpacing: -1,
-              },
-            ]}
-          >
-            Uni<Text style={{ color: brand.primary }}>Vest</Text>
-          </Text>
-          <Text
-            style={{
-              color: T.sub,
-              fontSize: 15,
-              textAlign: 'center',
-              marginTop: 8,
-              maxWidth: 300,
-              lineHeight: 22,
-            }}
-          >
-            Sua jornada acadêmica começa aqui ✨
-          </Text>
+        <View
+          style={[
+            styles.logoTile,
+            {
+              backgroundColor: T.card,
+              borderColor: T.border,
+              borderRadius: radius.xl,
+              alignSelf: 'center',
+            },
+            shadow.primary,
+          ]}
+        >
+          <Text style={styles.logoEmoji}>🎓</Text>
         </View>
-
-        {/* Tier list — soft rounded cards, icon tile in the tier colour at
-            22% opacity, label on the right. Less visual noise than coloured
-            backgrounds; the colour reads as a category cue, not a fill. */}
-        <View style={{ gap: 8, marginBottom: 24 }}>
+        <Text
+          style={[
+            typography.title,
+            { color: T.text, textAlign: 'center', marginBottom: 6 },
+          ]}
+        >
+          Uni<Text style={{ color: brand.primary }}>Vest</Text>
+        </Text>
+        <Text
+          style={[
+            typography.body,
+            {
+              color: T.sub,
+              textAlign: 'center',
+              lineHeight: 22,
+              marginBottom: 28,
+              paddingHorizontal: 12,
+            },
+          ]}
+        >
+          Seu portal inteligente para toda a jornada acadêmica
+        </Text>
+        <View style={{ gap: 10, marginBottom: 32 }}>
           {TIERS.map(([id, ic, l, cor]) => (
             <View
               key={id}
@@ -125,7 +100,7 @@ export function WelcomeScreen({ navigation }: { navigation: any }) {
                 {
                   backgroundColor: T.card,
                   borderColor: T.border,
-                  borderRadius: radius.md,
+                  borderRadius: radius.lg,
                 },
               ]}
             >
@@ -147,19 +122,10 @@ export function WelcomeScreen({ navigation }: { navigation: any }) {
               >
                 {l}
               </Text>
-              <View
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: cor,
-                }}
-              />
             </View>
           ))}
         </View>
-
-        <TouchableOpacity onPress={handleEnterPress} activeOpacity={0.92}>
+        <TouchableOpacity onPress={handleEnterPress} activeOpacity={0.9}>
           <Animated.View
             style={[
               styles.cta,
@@ -174,37 +140,22 @@ export function WelcomeScreen({ navigation }: { navigation: any }) {
             <Text style={styles.ctaText}>Entrar ou criar conta</Text>
           </Animated.View>
         </TouchableOpacity>
-
-        <Text
-          style={{
-            color: T.muted,
-            fontSize: 11,
-            textAlign: 'center',
-            marginTop: 16,
-          }}
-        >
-          Ao continuar você concorda com nossos termos
-        </Text>
       </ScrollView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  halo: {
-    position: 'absolute',
-    width: 380,
-    height: 380,
-    borderRadius: 190,
-    alignSelf: 'center',
-  },
+  wrap: { flex: 1, overflow: 'hidden' },
   logoTile: {
     width: 88,
     height: 88,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 18,
+    borderWidth: 1,
   },
-  logoEmoji: { fontSize: 44 },
+  logoEmoji: { fontSize: 48 },
   tierRow: {
     flexDirection: 'row',
     alignItems: 'center',

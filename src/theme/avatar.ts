@@ -29,8 +29,4 @@ export const AVATAR_COLORS: [string, string][] = [
   ['#6D4DEF', '#22D3EE'], // deep violet → sky
   ['#A78BFA', '#F59E0B'], // lavender → amber
   ['#5B21B6', '#F472B6'], // deep purple → pink
-  ['#14B8A6', '#2DD4BF'], // teal → teal lighter
-  ['#F59E0B', '#FBBF24'], // amber → amber lighter
-  ['#EF4444', '#F87171'], // red → red lighter
-  ['#10B981', '#34D399'], // emerald → emerald lighter
 ]

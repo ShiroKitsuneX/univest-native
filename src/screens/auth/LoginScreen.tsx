@@ -507,7 +507,7 @@ export function LoginScreen({ navigation }: { navigation: any }) {
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    marginTop: 20,
+                    marginTop: 8,
                     marginBottom: 12,
                   }}
                 >

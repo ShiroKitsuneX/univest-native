@@ -5,18 +5,6 @@ import { logger } from '@/services/logger'
 type Props = { children: ReactNode }
 type State = { err: Error | null }
 
-// ErrorBoundary is the safety-net rendered when everything else has failed,
-// so hooks aren't available — colours are hardcoded against the dark
-// palette specifically. Mirrors the brand violet from `palette.ts > BRAND`.
-const FALLBACK = {
-  bg: '#0B0B12',
-  card: '#15151F',
-  text: '#ECEAFB',
-  sub: '#9C9AB8',
-  primary: '#7C5CFF',
-  err: '#F87171',
-}
-
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
@@ -40,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
       <View
         style={{
           flex: 1,
-          backgroundColor: FALLBACK.bg,
+          backgroundColor: '#0d1117',
           padding: 24,
           justifyContent: 'center',
         }}
@@ -50,7 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
         </Text>
         <Text
           style={{
-            color: FALLBACK.text,
+            color: '#e6edf3',
             fontSize: 20,
             fontWeight: '800',
             textAlign: 'center',
@@ -61,7 +49,7 @@ export class ErrorBoundary extends Component<Props, State> {
         </Text>
         <Text
           style={{
-            color: FALLBACK.sub,
+            color: '#8b949e',
             fontSize: 13,
             textAlign: 'center',
             marginBottom: 20,
@@ -72,14 +60,14 @@ export class ErrorBoundary extends Component<Props, State> {
         <ScrollView
           style={{
             maxHeight: 180,
-            backgroundColor: FALLBACK.card,
+            backgroundColor: '#161b27',
             borderRadius: 12,
             padding: 12,
             marginBottom: 20,
           }}
         >
           <Text
-            style={{ color: FALLBACK.err, fontSize: 11, fontFamily: 'Courier' }}
+            style={{ color: '#f87171', fontSize: 11, fontFamily: 'Courier' }}
           >
             {msg}
           </Text>
@@ -89,11 +77,11 @@ export class ErrorBoundary extends Component<Props, State> {
           style={{
             padding: 14,
             borderRadius: 14,
-            backgroundColor: FALLBACK.primary,
+            backgroundColor: '#00E5A0',
             alignItems: 'center',
           }}
         >
-          <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '800' }}>
+          <Text style={{ color: '#000', fontSize: 15, fontWeight: '800' }}>
             Tentar novamente
           </Text>
         </TouchableOpacity>

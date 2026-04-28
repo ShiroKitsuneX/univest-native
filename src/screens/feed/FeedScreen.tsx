@@ -5,11 +5,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { TAG_D, TAG_L } from '@/theme/palette'
 import { FEED } from '@/data/feed'
+import { timeAgo, fmtCount } from '@/utils/format'
 import { getMonthFromExamLabel } from '@/utils/dates'
 import { usePostsStore } from '@/stores/postsStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
@@ -22,16 +24,7 @@ import {
   reportPost,
   incrementShareCount,
 } from '@/features/feed/services/feedService'
-import {
-  Button,
-  Card,
-  EmptyState,
-  FeedSkeleton,
-  HeroGreeting,
-  PressScale,
-} from '@/shared/components'
-import { useProfileStore } from '@/stores/profileStore'
-import { PostCard } from '@/features/feed/components/PostCard'
+import { Button, Card, EmptyState, SvgIcon } from '@/shared/components'
 
 export function FeedScreen({
   refreshing,
@@ -40,8 +33,12 @@ export function FeedScreen({
   onSelectUni,
   onShare,
 }) {
-  const { T, isDark, brand, typography } = useTheme()
+  const { T, isDark, brand, radius, typography } = useTheme()
   const TG = isDark ? TAG_D : TAG_L
+
+  // Urgency tone for the upcoming-exam countdown chip when ≤ 30 days. We use
+  // the alert tag colour (warm amber/orange) so it reads at a glance without
+  // introducing a new red palette that doesn't exist elsewhere.
   const urgencyTone = TG.alert
 
   const stories = useStoriesStore(s => s.stories)
@@ -50,6 +47,7 @@ export function FeedScreen({
   const [viewerVisible, setViewerVisible] = useState(false)
   const [selectedStoryGroup, setSelectedStoryGroup] = useState(null)
   const [selectedStoryIndex, setSelectedStoryIndex] = useState(0)
+  const [menuOpenFor, setMenuOpenFor] = useState<string | number | null>(null)
 
   useEffect(() => {
     loadStories()
@@ -66,10 +64,7 @@ export function FeedScreen({
     setSelectedStoryGroup(null)
   }
 
-  const nome = useProfileStore(s => s.nome)
-
   const posts = usePostsStore(s => s.posts)
-  const loaded = usePostsStore(s => s.loaded)
   const liked = usePostsStore(s => s.liked)
   const setLiked = usePostsStore(s => s.setLiked)
   const saved = usePostsStore(s => s.saved)
@@ -166,34 +161,20 @@ export function FeedScreen({
     )
   }
 
-  // Skeleton appears while the live posts are loading and we haven't yet
-  // fallen back to FEED seed data. The seed FEED is non-empty, so once
-  // `feedItems` is populated we never render the skeleton again — only on
-  // the initial cold load before `loaded` flips.
-  const showSkeleton = !loaded && feedItems.length === 0
-
   return (
     <View style={{ flex: 1, backgroundColor: T.bg }}>
-      <StoriesStrip onStoryPress={handleStoryPress} goExplorar={goExplorar} />
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingTop: 30, paddingBottom: 16 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={brand.primary}
-            progressViewOffset={30}
+            colors={[brand.primary]}
           />
         }
       >
-        <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
-          <HeroGreeting
-            name={nome || 'aluno'}
-            subtitle="Veja o que está acontecendo"
-          />
-        </View>
-
+        <StoriesStrip onStoryPress={handleStoryPress} goExplorar={goExplorar} />
         {upcoming.length > 0 && (
           <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text
@@ -208,12 +189,13 @@ export function FeedScreen({
               {upcoming.map((e, i) => {
                 const urgent = e.daysUntil <= 30
                 return (
-                  <PressScale
+                  <TouchableOpacity
                     key={i}
                     onPress={() => {
                       const u = unis.find(x => x.id === e.uni.id)
                       if (u) onSelectUni(u)
                     }}
+                    activeOpacity={0.85}
                     style={{ marginRight: 12 }}
                   >
                     <Card
@@ -275,16 +257,13 @@ export function FeedScreen({
                         {e.name || 'Prova'}
                       </Text>
                     </Card>
-                  </PressScale>
+                  </TouchableOpacity>
                 )
               })}
             </ScrollView>
           </View>
         )}
-
-        {showSkeleton && <FeedSkeleton count={3} />}
-
-        {!showSkeleton && feedItems.length === 0 && fol.length === 0 && (
+        {feedItems.length === 0 && fol.length === 0 && (
           <EmptyState
             icon="🎓"
             title="Seu feed está vazio"
@@ -296,32 +275,172 @@ export function FeedScreen({
             }
           />
         )}
-
-        {!showSkeleton && feedItems.length > 0 && (
-          <View style={{ paddingHorizontal: 16, gap: 12 }}>
-            {feedItems.map(item => {
-              const tc = TG[item.type] || TG.news
-              const ui = unis.find(u => u.id === item.uniId)
-              return (
-                <PostCard
-                  key={item.id}
-                  post={item}
-                  uni={ui}
-                  liked={!!liked[item.id]}
-                  saved={!!saved[item.id]}
-                  tagColors={tc}
-                  onToggleLike={() => toggleLike(item)}
-                  onToggleSave={() =>
-                    setSaved(p => ({ ...p, [item.id]: !p[item.id] }))
-                  }
-                  onShare={() => shareItem(item)}
-                  onReport={() => reportItem(item)}
-                  onOpenUni={ui ? () => onSelectUni(ui) : undefined}
-                />
-              )
-            })}
-          </View>
-        )}
+        <View style={{ paddingHorizontal: 16, paddingBottom: 16, gap: 12 }}>
+          {feedItems.map(item => {
+            const tc = TG[item.type] || TG.news
+            const isL = liked[item.id]
+            const isS = saved[item.id]
+            const ui = unis.find(u => u.id === item.uniId)
+            return (
+              <Card
+                key={item.id}
+                padding={0}
+                radius={radius.lg}
+                style={{
+                  borderLeftWidth: 4,
+                  borderLeftColor: ui?.color || brand.primary,
+                }}
+              >
+                <View style={styles.postHeader}>
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: ui?.color || T.card2,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 2,
+                      borderColor: T.border,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: 13,
+                        fontWeight: '800',
+                      }}
+                    >
+                      {ui?.name?.slice(0, 2) || ''}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{ color: T.text, fontSize: 14, fontWeight: '700' }}
+                    >
+                      {item.uni}
+                    </Text>
+                    <Text style={[typography.caption, { color: T.muted }]}>
+                      {item.time || timeAgo(item.createdAt)}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      backgroundColor: tc.bg,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: radius.full,
+                      borderWidth: 1,
+                      borderColor: tc.b,
+                    }}
+                  >
+                    <Text
+                      style={{ color: tc.tx, fontSize: 11, fontWeight: '700' }}
+                    >
+                      {item.icon} {item.tag}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setMenuOpenFor(menuOpenFor === item.id ? null : item.id)
+                      }
+                      style={{ padding: 4 }}
+                    >
+                      <Text style={{ color: T.muted, fontSize: 18 }}>⋯</Text>
+                    </TouchableOpacity>
+                    {menuOpenFor === item.id && (
+                      <View
+                        style={[
+                          styles.postMenu,
+                          { backgroundColor: T.card, borderColor: T.border },
+                        ]}
+                      >
+                        <TouchableOpacity
+                          onPress={() => {
+                            setMenuOpenFor(null)
+                            reportItem(item)
+                          }}
+                          style={{ paddingVertical: 10, paddingHorizontal: 16 }}
+                        >
+                          <Text style={{ color: T.text, fontSize: 14 }}>
+                            🚩 Reportar
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <View style={{ paddingHorizontal: 16, paddingBottom: 14 }}>
+                  <Text
+                    style={[
+                      typography.headline,
+                      { color: T.text, marginBottom: 6, lineHeight: 22 },
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text style={{ color: T.sub, fontSize: 13, lineHeight: 20 }}>
+                    {item.body}
+                  </Text>
+                </View>
+                <View style={[styles.postFooter, { borderTopColor: T.border }]}>
+                  <TouchableOpacity
+                    onPress={() => toggleLike(item)}
+                    style={styles.actionBtn}
+                  >
+                    <SvgIcon
+                      name="heart"
+                      size={18}
+                      color={isL ? '#F87171' : T.muted}
+                    />
+                    <Text
+                      style={{
+                        color: isL ? '#F87171' : T.muted,
+                        fontSize: 12,
+                        fontWeight: '600',
+                        marginLeft: 6,
+                      }}
+                    >
+                      {fmtCount(
+                        Math.max(0, item.likesCount ?? item.likes ?? 0)
+                      )}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => shareItem(item)}
+                    style={styles.actionBtn}
+                  >
+                    <SvgIcon name="shareSocial" size={18} color={T.muted} />
+                    <Text
+                      style={{
+                        color: T.muted,
+                        fontSize: 12,
+                        fontWeight: '600',
+                        marginLeft: 6,
+                      }}
+                    >
+                      {fmtCount(item.sharesCount || 0)}
+                    </Text>
+                  </TouchableOpacity>
+                  <View style={{ flex: 1 }} />
+                  <TouchableOpacity
+                    onPress={() =>
+                      setSaved(p => ({ ...p, [item.id]: !p[item.id] }))
+                    }
+                    style={{ paddingHorizontal: 4 }}
+                  >
+                    <SvgIcon
+                      name="bookmark"
+                      size={20}
+                      color={isS ? brand.primary : T.muted}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            )
+          })}
+        </View>
       </ScrollView>
       <StoryViewer
         visible={viewerVisible}
@@ -339,5 +458,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 8,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    paddingBottom: 12,
+    position: 'relative',
+  },
+  postMenu: {
+    position: 'absolute',
+    right: 0,
+    top: 24,
+    minWidth: 140,
+    borderRadius: 8,
+    borderWidth: 1,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  postFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    paddingTop: 10,
+    borderTopWidth: 1,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 0,
+    paddingRight: 8,
+    paddingVertical: 6,
+    marginRight: 4,
   },
 })

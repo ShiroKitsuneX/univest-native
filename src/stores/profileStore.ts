@@ -126,10 +126,7 @@ export const useProfileStore = create<ProfileState>(
     (set, _get, api) => ({
       nome: '',
       sobrenome: '',
-      // Default to light: the redesign's strongest inspiration is the
-      // light-mode lavender dashboard. Users can flip via Settings; the
-      // existing `theme: 'auto'` wiring still respects system preference.
-      theme: 'light',
+      theme: 'dark',
       av: '🧑‍🎓',
       avBgIdx: 0,
       gs: INITIAL_GRADES,

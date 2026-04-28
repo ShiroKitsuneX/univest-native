@@ -8,10 +8,6 @@ export const UNIVERSITIES = [
     color: '#1a3a5c',
     followers: '890k',
     type: 'Nacional',
-    // Verified institution flag — renders a blue ✓ next to the name. Set on
-    // any accredited institution via Firestore; ENEM is verified by default
-    // because it's the federal exam, not a single university.
-    verified: true,
     description:
       'O maior exame educacional do Brasil. Usado para admissão em universidades públicas via SISU, Prouni e FIES.',
     courses: ['Todos os cursos via SISU'],

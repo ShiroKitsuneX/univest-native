@@ -13,7 +13,6 @@ import { completeOnboarding } from '@/features/onboarding/services/onboardingSer
 import { USER_TYPES } from '@/data/userTypes'
 import { ALL_COURSES } from '@/data/areas'
 import { SBox } from '@/components/SBox'
-import { SvgIcon } from '@/shared/components/SvgIcon'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useCoursesStore } from '@/stores/coursesStore'
@@ -151,13 +150,9 @@ export function OnboardingScreen() {
                   marginBottom: 8,
                 }}
               >
-                {uType?.id === ut.id ? (
-                  <SvgIcon name="rocket" size={24} color={T.accent} />
-                ) : (
-                  <Text style={{ fontSize: 24, marginRight: 14 }}>
-                    {ut.emoji || (ut.id === 'prevestu' ? '🎯' : '')}
-                  </Text>
-                )}
+                <Text style={{ fontSize: 24, marginRight: 14 }}>
+                  {getIcon('user_type_' + ut.id, ut.emoji)}
+                </Text>
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{ fontSize: 14, fontWeight: '700', color: T.text }}

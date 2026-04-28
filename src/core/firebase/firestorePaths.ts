@@ -25,12 +25,8 @@ export const firestorePaths = {
   reports: () => ['reports'] as const,
 
   notifications: () => ['notifications'] as const,
-  // Notifications are a single flat collection with a `userId` field, not a
-  // user-scoped subcollection. The previous 3-segment helper produced an
-  // invalid path (`notifications/{uid}/{id}` = collection/doc/field) and
-  // silently broke every write that used it.
-  notification: (notificationId: string) =>
-    ['notifications', notificationId] as const,
+  notification: (userId: string, notificationId: string) =>
+    ['notifications', userId, notificationId] as const,
 
   courses: () => ['cursos'] as const,
   icons: () => ['icones'] as const,
