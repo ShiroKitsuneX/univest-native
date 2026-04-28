@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Animated,
   Image,
@@ -57,6 +57,26 @@ export function PostCard({
   const [menuOpen, setMenuOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const bookmarkScale = useRef(new Animated.Value(1)).current
+  // Mount entrance — fade up from opacity 0 / +6px so newly-rendered posts
+  // settle in instead of popping. Cheap (one-shot, opacity+translateY).
+  const mountOpacity = useRef(new Animated.Value(0)).current
+  const mountTranslate = useRef(new Animated.Value(6)).current
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(mountOpacity, {
+        toValue: 1,
+        duration: 240,
+        useNativeDriver: true,
+      }),
+      Animated.spring(mountTranslate, {
+        toValue: 0,
+        useNativeDriver: true,
+        speed: 18,
+        bounciness: 4,
+      }),
+    ]).start()
+  }, [])
 
   const animateBookmark = () => {
     Animated.sequence([
@@ -86,7 +106,12 @@ export function PostCard({
     : body
 
   return (
-    <View>
+    <Animated.View
+      style={{
+        opacity: mountOpacity,
+        transform: [{ translateY: mountTranslate }],
+      }}
+    >
       <Card
         padding={0}
         radius={radius.lg}
@@ -276,7 +301,7 @@ export function PostCard({
           </View>
         </>
       )}
-    </View>
+    </Animated.View>
   )
 }
 

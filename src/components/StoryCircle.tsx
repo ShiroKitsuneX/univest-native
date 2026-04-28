@@ -1,5 +1,6 @@
-import { Text, TouchableOpacity, View } from 'react-native'
+import { Text, View } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
+import { PressScale } from '@/shared/components/PressScale'
 
 type Props = {
   uniName: string
@@ -21,8 +22,9 @@ export function StoryCircle({
   const ringWidth = isViewed ? 2 : 3
 
   return (
-    <TouchableOpacity
+    <PressScale
       onPress={onPress}
+      scaleTo={0.93}
       style={{ alignItems: 'center', marginRight: 14, width: size + 8 }}
     >
       <View
@@ -51,11 +53,12 @@ export function StoryCircle({
           fontWeight: '600',
           marginTop: 6,
           maxWidth: size + 12,
+          textAlign: 'center',
         }}
         numberOfLines={1}
       >
         {uniName}
       </Text>
-    </TouchableOpacity>
+    </PressScale>
   )
 }

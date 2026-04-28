@@ -11,6 +11,7 @@ import { useTheme } from '@/theme/useTheme'
 import { useCardStyle, useLabelStyle } from '@/theme/styles'
 import { fmtCount } from '@/utils/format'
 import { useProgressStore } from '@/stores/progressStore'
+import { VerifiedBadge } from '@/shared/components'
 
 export function UniversityDetailScreen({
   selUni,
@@ -72,9 +73,12 @@ export function UniversityDetailScreen({
         <Text style={{ fontSize: 30, marginBottom: 8 }}>
           {selUni.name.slice(0, 2)}
         </Text>
-        <Text style={[typography.title, { color: '#FFFFFF' }]}>
-          {selUni.name}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={[typography.title, { color: '#FFFFFF' }]}>
+            {selUni.name}
+          </Text>
+          {selUni.verified && <VerifiedBadge size={14} />}
+        </View>
         <Text
           style={{
             color: 'rgba(255,255,255,0.65)',
