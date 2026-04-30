@@ -12,6 +12,9 @@ export const UNIVERSITIES = [
     // any accredited institution via Firestore; ENEM is verified by default
     // because it's the federal exam, not a single university.
     verified: true,
+    // Equal-weight ENEM scoring. Other universities can override per-area
+    // weights via the same field on their Firestore doc.
+    examWeights: { l: 20, h: 20, n: 20, m: 20, r: 20 },
     description:
       'O maior exame educacional do Brasil. Usado para admissão em universidades públicas via SISU, Prouni e FIES.',
     courses: ['Todos os cursos via SISU'],

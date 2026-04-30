@@ -171,45 +171,28 @@ Per vestibular:
 ### Proposed Improvements
 
 #### Exams Separation
-- Real Exams: official (ENEM, FUVEST, etc.)
-- Mock Exams/Simulados: practice tests
-- Separate counts and history
+- [x] Real Exams vs Mock Exams separation *(`TIPO DE PROVA` tab row drives the stat grid + chart + weak-subject card; tab labels show live counts)*
+- [x] Separate counts and history
 
 #### Charts
-```    
-┌─────────────────────────────────────┐
-│         EXAMS OVERVIEW              │
-├─────────────────────────────────────┤
-│  Real Exams: ████ 24              │
-│  Mock Exams: ████████████ 112    │
-├─────────────────────────────────────┤
-│  [Month] [Year] [All Time]        │
-│  ┌─────────────────────────────┐   │
-│  │   Chart visualization     │   │
-│  └─────────────────────────────┘   │
-└─────────────────────────────────────┘
-```
+- [x] Period tabs: [Mês] [Ano] [Tudo] *(slices the chart by date)*
+- [x] Subject chips on the chart *(plot a single subject's progression or the average)*
+- [x] Custom `<MiniBarChart>` rendering rounded violet bars + "current value" tag floating over the latest
 
 #### Percentile / Competition
-- "You scored better than 73% of students"
-- Requires 5,000+ submissions for accuracy
-- Below threshold: "Not enough data"
-- All data anonymized
-- Opt-in only
+- [x] UI placeholder shipped *(`SUA POSIÇÃO · Em breve` card explains we're collecting anonymous data)*
+- [ ] Real percentile — needs aggregate backend (5,000+ submission threshold). Plug in once data exists.
 
 #### Admission Calculator (Peso)
-ENEM = (L+H+N+M+R)/5
-
-Custom weights per university:
-- USP 2025: L:20%, H:15%, N:15%, M:30%, R:20%
-- User enters scores → weighted final
-- "What if I improve X points?" simulator
-- Per-area impact visualization
+- [x] `<AdmissionCalcModal>` shipped *(weighted score vs cut-off, ± step buttons per subject for "what if I improve")*
+- [x] `examWeights` field on `University` (Firestore-driven) — falls back to equal weights when missing
+- [x] Entry points: "🧮 Calcular" on every notas-de-corte card + "🧮 Simular outra universidade →" under the Você-vs-Meta block
+- [x] Live recompute + delta vs cut-off ("✅ X pts acima da meta" / "Faltam Y pts")
 
 #### Filters
-- By subject
-- By year
-- By exam type
+- [x] By subject *(chart subject chips)*
+- [x] By year *(period tabs: month / year / all)*
+- [x] By exam type *(top type tabs + bottom history pills)*
 
 ---
 

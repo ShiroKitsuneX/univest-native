@@ -7,21 +7,13 @@ import { getStorage } from 'firebase/storage'
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const requireEnv = (key: string): string => {
-  const value = process.env[key]
-  if (!value) {
-    throw new Error(`Missing required env var: ${key}`)
-  }
-  return value
-}
-
 const firebaseConfig = {
-  apiKey: requireEnv('EXPO_PUBLIC_FIREBASE_API_KEY'),
-  authDomain: requireEnv('EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN'),
-  projectId: requireEnv('EXPO_PUBLIC_FIREBASE_PROJECT_ID'),
-  storageBucket: requireEnv('EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: requireEnv('EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: requireEnv('EXPO_PUBLIC_FIREBASE_APP_ID'),
+  apiKey: 'AIzaSyAzNGqLgXxT0NkNYXP3YJ0hS8BldLm5_gE',
+  authDomain: 'univest-6b10d.firebaseapp.com',
+  projectId: 'univest-6b10d',
+  storageBucket: 'univest-6b10d.firebasestorage.app',
+  messagingSenderId: '651202207735',
+  appId: '1:651202207735:ios:fc9bc24087a1a8b803d8f2',
 }
 
 const app = initializeApp(firebaseConfig)

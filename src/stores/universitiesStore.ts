@@ -26,6 +26,10 @@ export type University = {
   // wherever the uni is displayed. Source-of-truth: Firestore field of the
   // same name. Local seed data uses it for ENEM by default.
   verified?: boolean
+  // Per-subject weight percentages used by the admission calculator. Keys
+  // are ENEM subject codes (l/h/n/m/r); values are percentages summing to
+  // 100. When omitted, the calculator falls back to equal weight (20%).
+  examWeights?: { l: number; h: number; n: number; m: number; r: number }
 }
 
 export type Exam = {

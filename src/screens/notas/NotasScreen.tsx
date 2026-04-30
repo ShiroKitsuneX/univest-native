@@ -26,7 +26,7 @@ import {
   StreakBadge,
   type BarPoint,
 } from '@/shared/components'
-// import { AdmissionCalcModal } from '@/screens/notas/AdmissionCalcModal'
+import { AdmissionCalcModal } from '@/screens/notas/AdmissionCalcModal'
 import type { Grade } from '@/stores/profileStore'
 
 type TypeFilter = 'all' | 'prova' | 'simulado'

@@ -1,0 +1,140 @@
+diff --git a/node_modules/expo/ios/AppDelegates/EXReactRootViewFactory.h b/node_modules/expo/ios/AppDelegates/EXReactRootViewFactory.h
+index 2daec5d..d9e1ca6 100644
+--- a/node_modules/expo/ios/AppDelegates/EXReactRootViewFactory.h
++++ b/node_modules/expo/ios/AppDelegates/EXReactRootViewFactory.h
+@@ -23,17 +23,12 @@ NS_SWIFT_NAME(ExpoReactRootViewFactory)
+ 
+ /**
+  Calls super `viewWithModuleName:initialProperties:launchOptions:` from `RCTRootViewFactory`.
++ Note: the 4-arg variant with `devMenuConfiguration:` requires react-native
++ 0.83+; this app is on 0.81.5 so the 3-arg form is the only signature.
+  */
+-#if TARGET_OS_IOS || TARGET_OS_TV
+-- (UIView *)superViewWithModuleName:(NSString *)moduleName
+-                  initialProperties:(nullable NSDictionary *)initialProperties
+-                      launchOptions:(nullable NSDictionary *)launchOptions
+-               devMenuConfiguration:(nullable RCTDevMenuConfiguration *)devMenuConfiguration;
+-#else
+ - (UIView *)superViewWithModuleName:(NSString *)moduleName
+                   initialProperties:(nullable NSDictionary *)initialProperties
+                       launchOptions:(nullable NSDictionary *)launchOptions;
+-#endif
+ 
+ @end
+ 
+diff --git a/node_modules/expo/ios/AppDelegates/EXReactRootViewFactory.mm b/node_modules/expo/ios/AppDelegates/EXReactRootViewFactory.mm
+index 33e26db..26115ba 100644
+--- a/node_modules/expo/ios/AppDelegates/EXReactRootViewFactory.mm
++++ b/node_modules/expo/ios/AppDelegates/EXReactRootViewFactory.mm
+@@ -2,7 +2,6 @@
+ 
+ #import <Expo/EXReactRootViewFactory.h>
+ #import <Expo/RCTAppDelegateUmbrella.h>
+-#import <React/RCTDevMenu.h>
+ #import <ExpoModulesCore/EXReactDelegateProtocol.h>
+ 
+ @interface RCTRootViewFactory ()
+@@ -11,6 +10,10 @@ - (NSURL *)bundleURL;
+ 
+ @end
+ 
++// `RCTDevMenuConfiguration` only ships in react-native 0.83+. This app is on
++// 0.81.5, so the `#if TARGET_OS_IOS || TARGET_OS_TV` branch (4-arg form with
++// `devMenuConfiguration:`) does not compile. Patched to always use the
++// legacy 3-arg form regardless of platform.
+ @implementation EXReactRootViewFactory
+ 
+ - (instancetype)initWithReactDelegate:(nullable EXReactDelegate *)reactDelegate
+@@ -23,37 +26,13 @@ - (instancetype)initWithReactDelegate:(nullable EXReactDelegate *)reactDelegate
+   return self;
+ }
+ 
+-#if TARGET_OS_IOS || TARGET_OS_TV
+ - (UIView *)viewWithModuleName:(NSString *)moduleName
+              initialProperties:(nullable NSDictionary *)initialProperties
+                  launchOptions:(nullable NSDictionary *)launchOptions
+-          devMenuConfiguration:(RCTDevMenuConfiguration *)devMenuConfiguration
+ {
+   if (self.reactDelegate != nil) {
+     return [((id<EXReactDelegateProtocol>)self.reactDelegate) createReactRootViewWithModuleName:moduleName initialProperties:initialProperties launchOptions:launchOptions];
+   }
+-  return [super viewWithModuleName:moduleName initialProperties:initialProperties launchOptions:launchOptions devMenuConfiguration:devMenuConfiguration];
+-}
+-
+-- (UIView *)superViewWithModuleName:(NSString *)moduleName
+-                  initialProperties:(nullable NSDictionary *)initialProperties
+-                      launchOptions:(nullable NSDictionary *)launchOptions
+-               devMenuConfiguration:(nullable RCTDevMenuConfiguration *)devMenuConfiguration
+-{
+-  if (devMenuConfiguration == nil) {
+-    devMenuConfiguration = [RCTDevMenuConfiguration defaultConfiguration];
+-  }
+-
+-  return [super viewWithModuleName:moduleName initialProperties:initialProperties launchOptions:launchOptions devMenuConfiguration:devMenuConfiguration];
+-}
+-#else
+-- (UIView *)viewWithModuleName:(NSString *)moduleName
+-             initialProperties:(nullable NSDictionary *)initialProperties
+-                 launchOptions:(nullable NSDictionary *)launchOptions
+-{
+-  if (self.reactDelegate != nil) {
+-    return [self.reactDelegate createReactRootViewWithModuleName:moduleName initialProperties:initialProperties launchOptions:launchOptions];
+-  }
+   return [super viewWithModuleName:moduleName initialProperties:initialProperties launchOptions:launchOptions];
+ }
+ 
+@@ -63,7 +42,6 @@ - (UIView *)superViewWithModuleName:(NSString *)moduleName
+ {
+   return [super viewWithModuleName:moduleName initialProperties:initialProperties launchOptions:launchOptions];
+ }
+-#endif
+ 
+ - (NSURL *)bundleURL
+ {
+diff --git a/node_modules/expo/ios/AppDelegates/ExpoReactNativeFactory.swift b/node_modules/expo/ios/AppDelegates/ExpoReactNativeFactory.swift
+index 925e0f9..75b988e 100644
+--- a/node_modules/expo/ios/AppDelegates/ExpoReactNativeFactory.swift
++++ b/node_modules/expo/ios/AppDelegates/ExpoReactNativeFactory.swift
+@@ -109,39 +109,21 @@ public class ExpoReactNativeFactory: ExpoReactNativeFactoryObjC, ExpoReactNative
+     }
+ 
+     let rootView: UIView
++    // RCTDevMenuConfiguration is only available in react-native 0.83+. This
++    // app is on 0.81.5, so the iOS branch (4-arg with devMenuConfiguration)
++    // doesn't compile. Always take the 3-arg form.
+     if let factory = self.rootViewFactory as? ExpoReactRootViewFactory {
+-      // RCTDevMenuConfiguration is only available in react-native 0.83+
+-#if os(iOS) || os(tvOS)
+-      // When calling `recreateRootViewWithBundleURL:` from `EXReactRootViewFactory`,
+-      // we don't want to loop the ReactDelegate again. Otherwise, it will be an infinite loop.
+-      rootView = factory.superView(
+-        withModuleName: moduleName ?? defaultModuleName,
+-        initialProperties: initialProps,
+-        launchOptions: launchOptions ?? [:],
+-        devMenuConfiguration: self.devMenuConfiguration
+-      )
+-#else
+       rootView = factory.superView(
+         withModuleName: moduleName ?? defaultModuleName,
+         initialProperties: initialProps,
+         launchOptions: launchOptions ?? [:]
+       )
+-#endif
+     } else {
+-#if os(iOS) || os(tvOS)
+-      rootView = rootViewFactory.view(
+-        withModuleName: moduleName ?? defaultModuleName,
+-        initialProperties: initialProps,
+-        launchOptions: launchOptions,
+-        devMenuConfiguration: self.devMenuConfiguration
+-      )
+-#else
+       rootView = rootViewFactory.view(
+         withModuleName: moduleName ?? defaultModuleName,
+         initialProperties: initialProps,
+         launchOptions: launchOptions
+       )
+-#endif
+     }
+ 
+     return rootView
