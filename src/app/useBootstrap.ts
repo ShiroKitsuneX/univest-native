@@ -44,8 +44,12 @@ export function useBootstrap() {
             setUserData(fbData)
             const isInstitution = fbData.tipo === 'instituicao'
             if (isInstitution) {
-              setDone(true)
-              setStep(3)
+              // Institutions follow the user-doc `done` flag now — fresh
+              // accounts (`done !== true`) get routed to the dedicated
+              // institution onboarding screen via RootNavigator. Existing
+              // institutions whose doc already has done=true skip it.
+              setDone(fbData.done === true)
+              setStep(0)
               setUType(null)
             } else if (fbData.done === true) {
               useOnboardingStore.getState().hydrateFromFb(fbData)
@@ -85,12 +89,27 @@ export function useBootstrap() {
     useUniversitiesStore.getState().applyFollowedUnis(userData?.followedUnis)
   }, [])
 
+  // Posts load reacts to the auth state — on the initial mount `currentUser`
+  // is null because the Firebase auth listener hasn't fired yet. Subscribing
+  // ensures we (re)load posts the moment auth resolves and after every
+  // user-switch, instead of bailing out forever on cold open.
   useEffect(() => {
-    const currentUser = useAuthStore.getState().currentUser
-    if (!currentUser) return
-    ;(async () => {
-      await usePostsStore.getState().load()
-      await usePostsStore.getState().loadLikesFor(currentUser.uid)
-    })()
+    let lastUid: string | null = null
+    const run = (uid: string | null) => {
+      if (!uid || uid === lastUid) return
+      lastUid = uid
+      ;(async () => {
+        try {
+          await usePostsStore.getState().load()
+          await usePostsStore.getState().loadLikesFor(uid)
+        } catch (e) {
+          logger.warn('post bootstrap:', (e as Error)?.message)
+        }
+      })()
+    }
+    // Fire once for the current state, then subscribe to changes.
+    run(useAuthStore.getState().currentUser?.uid ?? null)
+    const unsub = useAuthStore.subscribe(s => run(s.currentUser?.uid ?? null))
+    return unsub
   }, [])
 }

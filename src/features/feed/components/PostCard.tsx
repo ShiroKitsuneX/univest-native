@@ -129,7 +129,12 @@ export function PostCard({
                 width: 44,
                 height: 44,
                 borderRadius: 22,
-                backgroundColor: uni?.color || T.card2,
+                // Always render a coloured tile when we have a uni record —
+                // fall back to the brand violet rather than the muted
+                // card2 so an institution post never looks "empty".
+                backgroundColor: uni
+                  ? uni.color || brand.primary
+                  : T.card2,
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderWidth: 2,
@@ -139,7 +144,9 @@ export function PostCard({
               <Text
                 style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}
               >
-                {uni?.name?.slice(0, 2) || ''}
+                {(uni?.name || post.uni || '')
+                  .slice(0, 2)
+                  .toUpperCase()}
               </Text>
             </View>
           </PressScale>

@@ -27,13 +27,14 @@ import { FeedScreen } from '@/screens/feed/FeedScreen'
 import { NotasScreen } from '@/screens/notas/NotasScreen'
 import { PerfilScreen } from '@/screens/perfil/PerfilScreen'
 import { InstitutionAdminScreen } from '@/screens/perfil/InstitutionAdminScreen'
+import { InstitutionAnalyticsScreen } from '@/features/institution/screens/InstitutionAnalyticsScreen'
 import { MainCtx, useMain, type MainHandlers } from '@/navigation/mainContext'
 import { ExplorarStack } from '@/navigation/ExplorarStack'
 import { NotificationsModal } from '@/features/feed/modals/NotificationsModal'
 
 const Tab = createBottomTabNavigator()
 
-type TabId = 'feed' | 'explorar' | 'notas' | 'perfil'
+type TabId = 'feed' | 'explorar' | 'notas' | 'analises' | 'perfil'
 // Each tab maps to one of our local SVG icons (loaded via `<SvgIcon>`).
 // Active vs inactive is communicated by colour alone — the icons are
 // solid-fill Ionicons SVGs imported from `src/assets/icons/`.
@@ -44,10 +45,14 @@ type TabMeta = {
   icon: import('@/shared/components/SvgIcon').IconName
 }
 
+// Tab metadata is keyed by tab `name` (the React Navigation route id).
+// Both `NotasTab` and `AnalisesTab` use the same `statsChart` glyph and
+// occupy the same slot — only one ever renders per account type.
 const TAB_META: TabMeta[] = [
   { name: 'FeedTab', id: 'feed', l: 'Feed', icon: 'home' },
   { name: 'ExplorarTab', id: 'explorar', l: 'Explorar', icon: 'search' },
   { name: 'NotasTab', id: 'notas', l: 'Notas', icon: 'statsChart' },
+  { name: 'AnalisesTab', id: 'analises', l: 'Análises', icon: 'statsChart' },
   { name: 'PerfilTab', id: 'perfil', l: 'Perfil', icon: 'person' },
 ]
 
@@ -229,6 +234,7 @@ function FeedTab() {
       refreshing={h.refreshing}
       onRefresh={h.onRefresh}
       goExplorar={() => navigation.navigate('ExplorarTab')}
+      onOpenCreator={h.onOpenCreator}
       onSelectUni={(u: University) => {
         h.onSelectUni?.(u)
         goUniDetail(navigation)
@@ -243,6 +249,10 @@ function NotasTab() {
   return (
     <NotasScreen onEditCourses={h.onEditCourses} onAddGrade={h.onAddGrade} />
   )
+}
+
+function AnalisesTab() {
+  return <InstitutionAnalyticsScreen />
 }
 
 function PerfilTab() {
@@ -289,6 +299,11 @@ type Props = {
 
 export function MainTabs({ handlers }: Props) {
   const { T } = useTheme()
+  // The third-tab slot swaps based on account type:
+  //   - common user → NotasTab (grades, cut-offs, calculator)
+  //   - institution → AnalisesTab (reach, engagement, top posts)
+  // Same statsChart glyph either way — only the label and screen change.
+  const isInstitution = useAuthStore(s => s.isInstitution)()
   return (
     <MainCtx.Provider value={handlers}>
       <Tab.Navigator
@@ -309,7 +324,11 @@ export function MainTabs({ handlers }: Props) {
             return { headerShown: focused === 'UniversityList' }
           }}
         />
-        <Tab.Screen name="NotasTab" component={NotasTab} />
+        {isInstitution ? (
+          <Tab.Screen name="AnalisesTab" component={AnalisesTab} />
+        ) : (
+          <Tab.Screen name="NotasTab" component={NotasTab} />
+        )}
         <Tab.Screen name="PerfilTab" component={PerfilTab} />
       </Tab.Navigator>
     </MainCtx.Provider>

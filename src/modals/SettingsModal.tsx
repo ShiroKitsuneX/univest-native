@@ -1,8 +1,13 @@
-import { View, Text, TouchableOpacity } from 'react-native'
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { BottomSheet } from '@/components/BottomSheet'
 import { useTheme } from '@/theme/useTheme'
 import { useProfileStore, type Theme } from '@/stores/profileStore'
 import { useAuthStore } from '@/stores/authStore'
+import { resetAllSocialCounters } from '@/core/maintenance/resetCounters'
+import { logger } from '@/core/logging/logger'
+
+declare const __DEV__: boolean | undefined
+const devMode = typeof __DEV__ !== 'undefined' ? __DEV__ : false
 
 export function SettingsModal({
   visible,
@@ -36,9 +41,61 @@ export function SettingsModal({
     letterSpacing: 0.8,
   }
 
+  // Confirmation + execution for the social-counters reset. Hidden behind
+  // `__DEV__` so it never reaches a production build. After running it
+  // once on a real device while signed in, you can delete this block —
+  // see docs/COUNTERS.md.
+  const handleResetCounters = () => {
+    Alert.alert(
+      '⚠️ Resetar contadores',
+      'Isto vai apagar TODOS os likes, zerar follows e shares de todas as universidades e usuários no Firestore. Esta ação não tem volta.\n\nTem certeza?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Resetar tudo',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Confirmar (último aviso)',
+              'Isto vai escrever em produção. Continuar?',
+              [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                  text: 'Sim, resetar',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const report = await resetAllSocialCounters()
+                      Alert.alert(
+                        'Contadores resetados',
+                        `Posts: ${report.postsTouched}\nLikes apagadas: ${report.likesDeleted}\nUniversidades: ${report.universitiesTouched}\nUsuários desfollowed: ${report.usersTouched}`
+                      )
+                    } catch (err) {
+                      logger.error(
+                        'reset counters failed:',
+                        (err as Error)?.message
+                      )
+                      Alert.alert(
+                        'Erro',
+                        'Não foi possível concluir. Veja o console para detalhes.'
+                      )
+                    }
+                  },
+                },
+              ]
+            )
+          },
+        },
+      ]
+    )
+  }
+
   return (
     <BottomSheet visible={visible} onClose={onClose} T={T}>
-      <View style={{ padding: 20, paddingBottom: 24 }}>
+      <ScrollView
+        style={{ maxHeight: 600 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 24 }}
+      >
         <View
           style={{
             flexDirection: 'row',
@@ -203,7 +260,60 @@ export function SettingsModal({
         >
           UniVest v4.0 · Feito com
         </Text>
-      </View>
+
+        {devMode && currentUser && (
+          <View
+            style={{
+              borderColor: '#DC2626',
+              borderWidth: 1,
+              borderRadius: 14,
+              padding: 14,
+              marginTop: 8,
+              backgroundColor: 'rgba(220,38,38,0.06)',
+            }}
+          >
+            <Text
+              style={{
+                color: '#DC2626',
+                fontSize: 11,
+                fontWeight: '800',
+                letterSpacing: 0.6,
+                textTransform: 'uppercase',
+                marginBottom: 6,
+              }}
+            >
+              ⚠️ Danger zone (dev only)
+            </Text>
+            <Text style={{ color: T.sub, fontSize: 12, lineHeight: 18 }}>
+              Apaga todos os likes, zera contadores de seguidores e shares,
+              e desfaz todos os follows. Use apenas para iniciar com a base
+              limpa antes de abrir o app a usuários reais.
+            </Text>
+            <TouchableOpacity
+              onPress={handleResetCounters}
+              style={{
+                marginTop: 10,
+                borderColor: '#DC2626',
+                borderWidth: 1,
+                borderRadius: 12,
+                paddingVertical: 10,
+                alignItems: 'center',
+                backgroundColor: 'transparent',
+              }}
+            >
+              <Text
+                style={{
+                  color: '#DC2626',
+                  fontSize: 13,
+                  fontWeight: '700',
+                }}
+              >
+                Resetar contadores sociais
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
     </BottomSheet>
   )
 }

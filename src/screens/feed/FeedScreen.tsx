@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -38,8 +39,10 @@ export function FeedScreen({
   goExplorar,
   onSelectUni,
   onShare,
+  onOpenCreator,
 }) {
-  const { T, isDark, brand, typography } = useTheme()
+  const { T, isDark, brand, typography, shadow } = useTheme()
+  const isInstitution = useAuthStore(s => s.isInstitution)()
   const TG = isDark ? TAG_D : TAG_L
   const urgencyTone = TG.alert
 
@@ -183,24 +186,29 @@ export function FeedScreen({
       <StoriesStrip onStoryPress={handleStoryPress} goExplorar={goExplorar} />
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingTop: 30, paddingBottom: 16 }}
+        contentContainerStyle={{ paddingTop: 8, paddingBottom: 16 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={brand.primary}
-            progressViewOffset={30}
           />
         }
       >
-        <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
-          <HeroGreeting
-            name={nome || 'aluno'}
-            subtitle="Veja o que está acontecendo"
-          />
-        </View>
+        {/* Greeting and goal-driven countdown are student concepts and
+            don't apply to institution accounts. Institutions enter Feed
+            primarily to publish (FAB) and to see how their content
+            renders alongside followed-uni stories. */}
+        {!isInstitution && (
+          <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
+            <HeroGreeting
+              name={nome || 'aluno'}
+              subtitle="Veja o que está acontecendo"
+            />
+          </View>
+        )}
 
-        {upcoming.length > 0 && (
+        {!isInstitution && upcoming.length > 0 && (
           <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
             <Text
               style={[
@@ -307,7 +315,10 @@ export function FeedScreen({
           <View style={{ paddingHorizontal: 16, gap: 12 }}>
             {feedItems.map(item => {
               const tc = TG[item.type] || TG.news
-              const ui = unis.find(u => u.id === item.uniId)
+              // Match on string-coerced ids — seed unis sometimes use
+              // numeric ids while remote `posts.uniId` is always a string.
+              // Strict `===` would silently miss the institution's own posts.
+              const ui = unis.find(u => String(u.id) === String(item.uniId))
               return (
                 <PostCard
                   key={item.id}
@@ -335,6 +346,25 @@ export function FeedScreen({
         initialIndex={selectedStoryIndex}
         onClose={handleCloseViewer}
       />
+
+      {/* Institution authoring entry — floats above the feed list. The
+          chooser sheet behind it picks between post and story composers. */}
+      {isInstitution && onOpenCreator && (
+        <Pressable
+          onPress={onOpenCreator}
+          accessibilityRole="button"
+          accessibilityLabel="Criar publicação ou story"
+          style={({ pressed }) => [
+            styles.fab,
+            { backgroundColor: brand.primary },
+            shadow.primary,
+            pressed && { transform: [{ scale: 0.96 }] },
+          ]}
+          hitSlop={8}
+        >
+          <Text style={styles.fabPlus}>+</Text>
+        </Pressable>
+      )}
     </View>
   )
 }
@@ -345,5 +375,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 8,
+  },
+  fab: {
+    // Bottom-right floating action button. Sits above the tab bar height
+    // (we keep it 24px from the bottom of the screen — the tab bar lives
+    // outside this view's coordinate space because FeedScreen renders
+    // inside Tab.Screen, so safe-area insets are already accounted for).
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabPlus: {
+    color: '#FFFFFF',
+    fontSize: 30,
+    fontWeight: '300',
+    lineHeight: 32,
+    marginTop: -2,
   },
 })

@@ -29,9 +29,11 @@ For architecture decisions, use this order:
    - code organization, ownership, layering
 3. `docs/FIREBASE_GUIDE.md`
    - backend access rules
-4. `docs/DEVELOPMENT_GUIDE.md`
+4. `docs/COUNTERS.md`
+   - source-of-truth + reconcile rules for likes / follows / shares
+5. `docs/DEVELOPMENT_GUIDE.md`
    - implementation workflow
-5. `docs/ANTI_PATTERNS.md`
+6. `docs/ANTI_PATTERNS.md`
    - what must not be introduced
 
 If product behavior and folder organization seem to conflict, `APP_MAP.md` decides the product truth and this document decides how that truth must be implemented.

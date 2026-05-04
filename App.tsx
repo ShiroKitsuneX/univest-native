@@ -40,6 +40,10 @@ import { EditCoursesModal } from '@/features/onboarding/modals/EditCoursesModal'
 import { LocationSettingsModal } from '@/features/profile/modals/LocationSettingsModal'
 import { GoalsModal } from '@/features/planning/modals/GoalsModal'
 import { SettingsModal } from '@/modals/SettingsModal'
+import { CreatePostModal } from '@/features/institution/modals/CreatePostModal'
+import { CreateStoryModal } from '@/features/institution/modals/CreateStoryModal'
+import { CreatorActionSheet } from '@/features/institution/modals/CreatorActionSheet'
+import { useStoriesStore } from '@/stores/storiesStore'
 import { logger } from '@/core/logging/logger'
 
 function MainApp() {
@@ -68,6 +72,14 @@ function MainApp() {
   const [mUni, setMUni] = useState(false)
   const [mLoc, setMloc] = useState(false)
   const [mSaved, setMSaved] = useState(false)
+
+  // Institution authoring — chooser sheet + the two composers it routes to.
+  // Mounted at the app shell so any tab (currently the FAB on Feed) can
+  // trigger it through `onOpenCreator`.
+  const [creatorSheet, setCreatorSheet] = useState(false)
+  const [createPost, setCreatePost] = useState(false)
+  const [createStory, setCreateStory] = useState(false)
+  const linkedUniId = useAuthStore(s => s.getLinkedUniId)()
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true)
@@ -137,6 +149,7 @@ function MainApp() {
       onOpenExam: (exam: unknown) => setMexam(exam),
       onSelectUni: (u: University) => setSU(u),
       onToggleFollow,
+      onOpenCreator: () => setCreatorSheet(true),
     }),
     [refreshing, onRefresh, onToggleFollow, setSU]
   )
@@ -203,6 +216,45 @@ function MainApp() {
 
       {/* Saved posts */}
       <SavedPostsModal visible={mSaved} onClose={() => setMSaved(false)} />
+
+      {/* Institution authoring (FAB → chooser → post|story composer) */}
+      <CreatorActionSheet
+        visible={creatorSheet}
+        onClose={() => setCreatorSheet(false)}
+        onPickPost={() => {
+          setCreatorSheet(false)
+          setCreatePost(true)
+        }}
+        onPickStory={() => {
+          setCreatorSheet(false)
+          setCreateStory(true)
+        }}
+      />
+      {linkedUniId && (
+        <>
+          <CreatePostModal
+            visible={createPost}
+            onClose={() => setCreatePost(false)}
+            uniId={linkedUniId}
+            onPublished={() => {
+              // Refresh feed so the just-published post shows up. The
+              // service already optimistically inserts into postsStore,
+              // but pulling from Firestore reconciles ids and ordering.
+              refreshPosts()
+                .then(p => usePostsStore.getState().setPosts(p))
+                .catch(() => {})
+            }}
+          />
+          <CreateStoryModal
+            visible={createStory}
+            onClose={() => setCreateStory(false)}
+            uniId={linkedUniId}
+            onPublished={() => {
+              useStoriesStore.getState().load()
+            }}
+          />
+        </>
+      )}
     </View>
   )
 }

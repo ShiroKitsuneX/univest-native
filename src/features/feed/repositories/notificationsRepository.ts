@@ -21,6 +21,7 @@ import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 // broke every write.
 
 export type NotificationType =
+  // Common-user inbound (things students get notified about)
   | 'like'
   | 'comment'
   | 'follow'
@@ -30,6 +31,10 @@ export type NotificationType =
   | 'system'
   | 'welcome'
   | 'exam'
+  // Institution-inbound (things institutions get notified about)
+  | 'follower_milestone' // hit a round number of followers (10, 100, 1k…)
+  | 'post_engagement' // a published post crossed a likes/shares threshold
+  | 'story_view_milestone' // a story crossed a view threshold
 
 export type AppNotification = {
   id: string

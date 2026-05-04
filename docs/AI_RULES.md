@@ -11,8 +11,9 @@ Always follow these documents in this order:
 1. `/docs/APP_MAP.md`
 2. `/docs/ARCHITECTURE.md`
 3. `/docs/FIREBASE_GUIDE.md`
-4. `/docs/DEVELOPMENT_GUIDE.md`
-5. `/docs/ANTI_PATTERNS.md`
+4. `/docs/COUNTERS.md`
+5. `/docs/DEVELOPMENT_GUIDE.md`
+6. `/docs/ANTI_PATTERNS.md`
 
 `APP_MAP.md` defines product truth.
 The other documents define how that product truth must be implemented.

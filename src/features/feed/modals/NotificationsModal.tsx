@@ -40,6 +40,9 @@ const TYPE_VISUALS: Record<
   exam: { glyph: '🎯', tone: 'goal' },
   system: { glyph: '🔔', tone: 'progress' },
   welcome: { glyph: '👋', tone: 'progress' },
+  follower_milestone: { glyph: '🏆', tone: 'goal' },
+  post_engagement: { glyph: '📈', tone: 'news' },
+  story_view_milestone: { glyph: '👀', tone: 'simulado' },
 }
 
 type Filter = 'all' | 'unread'

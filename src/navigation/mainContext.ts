@@ -33,6 +33,9 @@ export type MainHandlers = {
   // Notifications
   onOpenNotifications?: () => void
 
+  // Institution authoring (chooser sheet → CreatePost / CreateStory)
+  onOpenCreator?: () => void
+
   // Location / discovery
   onOpenLocation?: () => void
   onOpenDiscover?: () => void

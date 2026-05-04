@@ -1,7 +1,12 @@
-import { listPostsByInstitution } from '@/features/institution/repositories/institutionPostsRepository'
+import {
+  listPostsByInstitution,
+  type InstitutionPost,
+} from '@/features/institution/repositories/institutionPostsRepository'
 import { listStoriesForUni } from '@/features/feed/repositories/storiesRepository'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { logger } from '@/core/logging/logger'
+
+export type RankedPost = InstitutionPost & { engagement: number }
 
 export type InstitutionAnalytics = {
   followersCount: number
@@ -14,8 +19,13 @@ export type InstitutionAnalytics = {
   // last 30 days. Useful for "are people engaging with what we're posting
   // *now*" without needing time-series storage.
   last30DaysEngagement: number
+  // Compatibility with existing callers (admin profile summary card).
   topPostTitle: string | null
   topPostEngagement: number
+  // Top-N posts ranked by engagement (likes + shares). Drives the
+  // dedicated Análises tab.
+  topPosts: RankedPost[]
+  averageEngagementPerPost: number
 }
 
 const ZERO: InstitutionAnalytics = {
@@ -28,7 +38,11 @@ const ZERO: InstitutionAnalytics = {
   last30DaysEngagement: 0,
   topPostTitle: null,
   topPostEngagement: 0,
+  topPosts: [],
+  averageEngagementPerPost: 0,
 }
+
+const TOP_POSTS_LIMIT = 5
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -60,16 +74,20 @@ export async function loadInstitutionAnalytics(
         0
       )
 
-    let topPost = posts[0] ?? null
-    let topEngagement =
-      (topPost?.likesCount || 0) + (topPost?.sharesCount || 0)
-    for (const p of posts) {
-      const e = (p.likesCount || 0) + (p.sharesCount || 0)
-      if (e > topEngagement) {
-        topEngagement = e
-        topPost = p
-      }
-    }
+    const ranked: RankedPost[] = posts
+      .map(p => ({
+        ...p,
+        engagement: (p.likesCount || 0) + (p.sharesCount || 0),
+      }))
+      .sort((a, b) => b.engagement - a.engagement)
+
+    const topPosts = ranked.slice(0, TOP_POSTS_LIMIT)
+    const topPost = ranked[0] ?? null
+    const topEngagement = topPost?.engagement ?? 0
+    const averageEngagementPerPost =
+      posts.length > 0
+        ? Math.round((totalLikes + totalShares) / posts.length)
+        : 0
 
     const now = Date.now()
     const activeStoriesCount = stories.filter(s => {
@@ -96,6 +114,8 @@ export async function loadInstitutionAnalytics(
       last30DaysEngagement,
       topPostTitle: topPost?.title ?? null,
       topPostEngagement: topEngagement,
+      topPosts,
+      averageEngagementPerPost,
     }
   } catch (err) {
     logger.warn('loadInstitutionAnalytics:', (err as Error)?.message)

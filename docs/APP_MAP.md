@@ -42,14 +42,16 @@ Sinônimo de Screen no contexto deste app.
 | 2   | WelcomeScreen.tsx          | src/screens/auth/       | Auth - Landing       |
 | 3   | LoginScreen.tsx            | src/screens/auth/       | Auth - Login/Signup  |
 | 4   | TermsScreen.tsx            | src/screens/auth/       | Auth - Termos        |
-| 5   | OnboardingScreen.tsx       | src/screens/onboarding/ | Onboarding           |
+| 5   | OnboardingScreen.tsx       | src/screens/onboarding/ | Onboarding (aluno)   |
+| 5b  | InstitutionOnboardingScreen.tsx | src/screens/onboarding/ | Onboarding (instituição — 4 slides explicando FAB-criador, stories 24h, analytics, edição) |
 | 6   | FeedScreen.tsx             | src/screens/feed/       | Feed Tab             |
 | 7   | ExplorarScreen.tsx         | src/screens/explorar/   | Explorar Tab         |
 | 8   | FollowingScreen.tsx        | src/screens/explorar/   | Explorar             |
 | 9   | UniversityDetailScreen.tsx | src/screens/explorar/   | Explorar             |
 | 10  | ExamsListScreen.tsx        | src/screens/explorar/   | Explorar             |
 | 11  | BooksListScreen.tsx        | src/screens/explorar/   | Explorar             |
-| 12  | NotasScreen.tsx            | src/screens/notas/      | Notas Tab            |
+| 12  | NotasScreen.tsx            | src/screens/notas/      | Notas Tab (aluno)    |
+| 12b | InstitutionAnalyticsScreen.tsx | src/features/institution/screens/ | Análises Tab (instituição — substitui Notas no mesmo slot) |
 | 13  | PerfilScreen.tsx           | src/screens/perfil/     | Perfil Tab           |
 | 14  | InstitutionAdminScreen.tsx | src/screens/perfil/     | Perfil (Instituição) |
 
@@ -74,9 +76,10 @@ Modais com domínio claro vivem dentro do owner em `src/features/<domain>/modals
 | 13  | LocationSettingsModal.tsx | src/features/profile/modals/               | Localização                     |
 | 14  | EditCoursesModal.tsx      | src/features/onboarding/modals/            | Editar cursos                   |
 | 15  | DiscoverCoursesModal.tsx  | src/features/onboarding/modals/            | Descobrir cursos                |
-| 16  | CreatePostModal.tsx       | src/features/institution/modals/           | Composer de posts (instituição) |
-| 17  | CreateStoryModal.tsx      | src/features/institution/modals/           | Composer de stories (instituição) |
-| 18  | TermsReacceptModal.tsx    | src/features/auth/modals/                  | Reaceite de termos              |
+| 16  | CreatorActionSheet.tsx    | src/features/institution/modals/           | Chooser FAB → post / story (instituição) |
+| 17  | CreatePostModal.tsx       | src/features/institution/modals/           | Composer de posts (instituição) |
+| 18  | CreateStoryModal.tsx      | src/features/institution/modals/           | Composer de stories (instituição) |
+| 19  | TermsReacceptModal.tsx    | src/features/auth/modals/                  | Reaceite de termos              |
 
 ### NAVIGATION (Apenas rotas - não são telas)
 
@@ -206,6 +209,50 @@ Isso significa que parte importante da experiência já funciona com fallback lo
 
 ---
 
+## Matriz de funcionalidades por tipo de conta
+
+Esta tabela é a fonte canônica de quais surfaces ficam disponíveis para cada tipo de conta. Toda mudança de UX que dependa de tipo de conta deve atualizar esta tabela.
+
+| Surface / funcionalidade                | Comum (`tipo: 'usuario'`) | Instituição (`tipo: 'instituicao'`) |
+| --------------------------------------- | :-----------------------: | :---------------------------------: |
+| Onboarding (perfil, cursos, seguidas)   | ✅ `OnboardingScreen`     | ❌ — segue por `InstitutionOnboardingScreen` |
+| Aba Feed                                | ✅                        | ✅                                  |
+| └─ Saudação `Olá, {nome} 👋`            | ✅                        | ❌                                  |
+| └─ Próximas provas (countdown)          | ✅ (`goalsUnis`)          | ❌                                  |
+| └─ Stories strip                        | ✅                        | ✅                                  |
+| └─ Posts                                | ✅                        | ✅                                  |
+| └─ FAB criador (`+ Publicação / Story`) | ❌                        | ✅                                  |
+| Aba Explorar (universidades, livros, provas) | ✅                   | ✅ (mesma view por enquanto)        |
+| Terceiro slot da tab bar                | ✅ aba `Notas`            | ✅ aba `Análises` (mesmo slot)      |
+| └─ (aluno) Notas de corte               | ✅                        | —                                   |
+| └─ (aluno) Histórico de provas e simulados | ✅                     | —                                   |
+| └─ (aluno) Calculadora de admissão      | ✅                        | —                                   |
+| └─ (instituição) KPIs (seguidores / posts / curtidas / shares / story views / engajamento 30d / média por post) | — | ✅ |
+| └─ (instituição) Top 5 posts por engajamento | —                   | ✅                                  |
+| └─ (instituição) Resumo de stories ativas + visualizações | —      | ✅                                  |
+| Aba Perfil                              | `PerfilScreen`            | `InstitutionAdminScreen`            |
+| └─ Estatísticas                         | seguindo / provas / simulados / salvos | seguidores / posts / curtidas / shares / views / engajamento 30d |
+| └─ Metas e tarefas                      | ✅                        | —                                   |
+| └─ Próximos eventos                     | ✅                        | —                                   |
+| └─ Edição de identidade da universidade | —                        | ✅                                  |
+| └─ Lista de posts publicados            | —                        | ✅ (com excluir)                    |
+| └─ Grid de stories ativas               | —                        | ✅ (long-press para excluir)        |
+| Modais de avatar / nome / cursos        | ✅                        | parcial (avatar reaproveitado para logo) |
+| Modal de localização                    | ✅                        | ❌                                  |
+| Modal de metas (`GoalsModal`)           | ✅                        | ❌                                  |
+| Modal de adicionar nota                 | ✅                        | ❌                                  |
+| Notificações                            | like / comment / follow / story / exam reminder | (planejado: engajamento, milestones de seguidor) |
+
+### Princípios
+
+1. **Notas, metas, livros, eventos, calculadora** são conceitos de aluno. Nunca devem aparecer para instituição.
+2. **Publicação de conteúdo** (post / story) é exclusivamente da instituição. O FAB do Feed é o ponto de entrada principal; a `InstitutionAdminScreen` mostra o histórico e métricas.
+3. **Estatísticas** seguem o domínio da conta:
+   - aluno → progresso pessoal (provas, simulados, salvos, livros lidos)
+   - instituição → alcance e engajamento do conteúdo (`institutionAnalyticsService`)
+4. **Quando uma feature for ambígua**, prefira esconder na conta que não é o owner em vez de tentar reusar com pequenas adaptações — o objetivo é evitar mistura de conceitos.
+5. **Onboarding é específico por tipo de conta**: aluno → `OnboardingScreen` (perfil acadêmico → cursos → universidades para seguir); instituição → `InstitutionOnboardingScreen` (FAB-criador → stories 24h → analytics → edição). O navegador roteia pelo par `(tipo, done)`.
+
 ## Tipos de conta
 
 ## 1. Conta de usuário comum
@@ -229,7 +276,7 @@ Essa conta:
 
 ## 2. Conta institucional
 
-**Implementado / Parcial**
+**Implementado**
 
 Uma conta institucional é identificada por:
 
@@ -238,12 +285,10 @@ Uma conta institucional é identificada por:
 
 Essa conta:
 
-- não passa pelo onboarding comum
-- cai direto no app principal
-- troca a aba `Perfil` por uma tela administrativa da instituição
-- pode editar campos da universidade vinculada
-
-Ainda faltam vários recursos institucionais planejados, mas a base já existe.
+- na primeira sessão (`done !== true`), passa pelo `InstitutionOnboardingScreen` — 4 slides explicando o FAB-criador, stories 24h, analytics e edição de identidade. Concluir define `done = true` em `usuarios/{uid}` e cai no app principal.
+- contas institucionais existentes com `done === true` pulam o onboarding direto para `Main`.
+- troca a aba `Perfil` por uma tela administrativa da instituição (`InstitutionAdminScreen`).
+- a `InstitutionAdminScreen` mostra um perfil read-only por padrão (hero centralizado, badge de seguidores, analytics, stories e posts publicados). O modo de edição é aberto por uma única pílula "✏️ Editar perfil" no topo, que revela inline as seções editáveis (Aparência, Vestibular, Site, Cursos, Livros, Descrição). Tocar em "✓ Concluir edição" volta para o modo read-only.
 
 ---
 
@@ -1329,7 +1374,8 @@ A aba `Perfil` deixa de renderizar o perfil comum e passa a renderizar `Institut
 ### Identidade visual
 
 - alterar foto/logo via mesmo fluxo de avatar disparado externamente
-- alterar cor principal da universidade
+- alterar cor principal da universidade — bloco `🎨 Aparência` mostra paleta inline na `InstitutionAdminScreen`; toque numa cor já salva imediatamente em `universidades/{uniId}.color` (com rollback otimista em caso de erro)
+- planejado: enviar imagem de fundo da câmera/galeria — placeholder visível com selo "Em breve"
 
 ### Informações institucionais editáveis
 
@@ -1361,9 +1407,10 @@ A aba `Perfil` deixa de renderizar o perfil comum e passa a renderizar `Institut
 
 **Implementado**
 
-- a tela `InstitutionAdminScreen` mostra um bloco `Publicações` com CTA `+ Nova publicação` e a lista de posts já publicados pela instituição
+- contas institucionais veem um botão flutuante `+` (FAB) na aba Feed; o toque abre `CreatorActionSheet` com duas opções: `Publicação` ou `Story`
 - o composer (`CreatePostModal`) permite escolher categoria (Notícia, Lista de Obras, Inscrições, Notas de Corte, Simulado), título e conteúdo
 - o serviço `publishInstitutionPost` valida tamanho mínimo/máximo, confere `linkedUniId` e faz insert otimista em `postsStore` antes de gravar em `posts/{id}`
+- a `InstitutionAdminScreen` mantém a lista de posts publicados (com excluir e métricas) — a criação saiu do bloco e virou um hint apontando para o FAB do Feed
 - excluir um post tira ele do feed remoto e do store local imediatamente
 - as regras do Firestore (`firestore.rules`) só permitem escrita em `posts/{id}` quando `tipo === 'instituicao'` e `linkedUniId == post.uniId`
 
@@ -1371,24 +1418,24 @@ A aba `Perfil` deixa de renderizar o perfil comum e passa a renderizar `Institut
 
 **Implementado**
 
-- bloco `Stories (24h)` na `InstitutionAdminScreen` com CTA `+ Nova story`, grid de stories ativas e tap-and-hold para excluir
-- composer (`CreateStoryModal`) recebe URL pública de imagem (`https://…`), mostra preview vertical 9:16 e publica via `publishInstitutionStory`
-- o serviço valida `linkedUniId`, formato da URL, e dispara `useStoriesStore.load()` para o feed strip atualizar imediatamente
+- ponto de entrada principal é o FAB `+` do Feed (mesma `CreatorActionSheet` dos posts) — o composer (`CreateStoryModal`) recebe URL pública de imagem (`https://…`) e mostra preview vertical 9:16
+- a `InstitutionAdminScreen` mantém o grid `Stories (24h)` com tap-and-hold para excluir; a criação saiu do bloco e virou um hint apontando para o FAB
+- o serviço `publishInstitutionStory` valida `linkedUniId`, formato da URL, e dispara `useStoriesStore.load()` para o feed strip atualizar imediatamente
 - regras do Firestore restringem create/update/delete em `universidades/{uniId}/stories/{storyId}` à instituição dona; bumps de `viewsCount` ainda são livres para usuários autenticados
 
 ### Analytics da instituição
 
 **Implementado / Parcial**
 
-- bloco `📊 Analytics` na `InstitutionAdminScreen` mostra grid 2-colunas com:
-  - seguidores
-  - publicações
-  - curtidas totais e compartilhamentos totais
-  - visualizações de stories
-  - engajamento dos últimos 30 dias (curtidas + shares de posts publicados nos 30 dias anteriores)
-  - card destacado com o post de maior engajamento
-- o serviço `loadInstitutionAnalytics` agrega os números a partir das repositories existentes (`institutionPostsRepository.listPostsByInstitution`, `storiesRepository.listStoriesForUni`) e do `useUniversitiesStore` — sem novas coleções no Firestore
-- as métricas se atualizam automaticamente após publicar/excluir um post ou story
+- aba dedicada `📊 Análises` (`InstitutionAnalyticsScreen`) ocupa o mesmo slot que `Notas` ocupa para alunos. É a casa principal das métricas da instituição.
+- a aba mostra:
+  - grid de KPIs (seguidores, publicações, curtidas totais, compartilhamentos, views em stories, engajamento dos últimos 30 dias)
+  - card de "média por post" (curtidas + shares ÷ total de publicações)
+  - lista `Top posts por engajamento` (até 5, ordenados decrescente, cada item com tag, título, contadores e total de interações)
+  - bloco `Stories` com ativas (24h) e visualizações totais
+- a `InstitutionAdminScreen` mantém um cartão `📊 Resumo` compacto (3 KPIs) que linka para a aba completa via `Ver Análises →`
+- o serviço `loadInstitutionAnalytics` agrega tudo a partir das repositories existentes (`institutionPostsRepository.listPostsByInstitution`, `storiesRepository.listStoriesForUni`) e do `useUniversitiesStore` — sem novas coleções no Firestore
+- as métricas se atualizam automaticamente após publicar/excluir um post ou story, e podem ser sincronizadas via pull-to-refresh
 - ainda planejado: gráfico temporal de seguidores/engajamento, segmentação por tipo de post, exportação CSV
 
 ## Estado atual do modo institucional

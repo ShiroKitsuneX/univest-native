@@ -4,12 +4,14 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  RefreshControl,
   TextInput,
   Alert,
   Image,
   Linking,
 } from 'react-native'
 import type { TextStyle } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
 import { useTheme } from '@/theme/useTheme'
 import type { ThemeColors } from '@/theme/palette'
 import { TAG_D, TAG_L } from '@/theme/palette'
@@ -33,10 +35,6 @@ import {
   loadInstitutionAnalytics,
   type InstitutionAnalytics,
 } from '@/features/institution/services/institutionAnalyticsService'
-import { CreatePostModal } from '@/features/institution/modals/CreatePostModal'
-import { CreateStoryModal } from '@/features/institution/modals/CreateStoryModal'
-import { StatCard } from '@/shared/components'
-import { Button } from '@/shared/components'
 import { timeAgo } from '@/utils/format'
 import { logger } from '@/core/logging/logger'
 
@@ -59,7 +57,11 @@ type EditMode =
   | 'color'
 
 export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
-  const { T, isDark } = useTheme()
+  const { T, isDark, brand } = useTheme()
+  const navigation = useNavigation<{
+    navigate: (name: string) => void
+  }>()
+  const [refreshing, setRefreshing] = useState(false)
 
   const unis = useUniversitiesStore(s => s.unis)
   const selUni = useUniversitiesStore(s => s.selUni)
@@ -75,13 +77,15 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
   // surface for delete + audit).
   const [posts, setPosts] = useState<InstitutionPost[]>([])
   const [postsLoading, setPostsLoading] = useState(false)
-  const [createPostVisible, setCreatePostVisible] = useState(false)
 
   const [stories, setStories] = useState<StoryDoc[]>([])
   const [storiesLoading, setStoriesLoading] = useState(false)
-  const [createStoryVisible, setCreateStoryVisible] = useState(false)
 
   const [analytics, setAnalytics] = useState<InstitutionAnalytics | null>(null)
+  // Edit mode flips the screen from a read-only profile (which is what
+  // students see when they open this university) into a form. Default
+  // closed so the profile reads as a profile, not as an admin form.
+  const [editing, setEditing] = useState(false)
   const tagPalette = isDark ? TAG_D : TAG_L
 
   const [description, setDescription] = useState('')
@@ -135,6 +139,15 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
     refreshPosts()
     refreshStories()
     refreshAnalytics()
+  }, [refreshPosts, refreshStories, refreshAnalytics])
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      await Promise.all([refreshPosts(), refreshStories(), refreshAnalytics()])
+    } finally {
+      setRefreshing(false)
+    }
   }, [refreshPosts, refreshStories, refreshAnalytics])
 
   const handleDeleteStory = (story: StoryDoc) => {
@@ -293,37 +306,62 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={brand.primary}
+          />
+        }
+      >
+        {/* Hero — big avatar centred over the brand colour, name in title
+            type, fullName as caption, follower badge as a stat pill, and a
+            single "Editar perfil" toggle that flips the screen into form
+            mode. Mirrors the way the public UniversityDetail page reads. */}
         <View
           style={{
             borderRadius: 22,
-            padding: 22,
-            backgroundColor: color,
+            paddingTop: 26,
+            paddingBottom: 22,
+            paddingHorizontal: 20,
+            backgroundColor: color || brand.primary,
+            marginHorizontal: 16,
             marginTop: 16,
+            alignItems: 'center',
           }}
         >
           <TouchableOpacity
             onPress={onChangePhoto}
+            activeOpacity={0.85}
             style={{
-              width: 70,
-              height: 70,
-              borderRadius: 35,
-              backgroundColor: 'rgba(255,255,255,0.25)',
+              width: 92,
+              height: 92,
+              borderRadius: 46,
+              backgroundColor: 'rgba(255,255,255,0.18)',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: 12,
-              borderWidth: 2,
-              borderColor: 'rgba(255,255,255,0.5)',
+              marginBottom: 14,
+              borderWidth: 3,
+              borderColor: 'rgba(255,255,255,0.55)',
             }}
           >
-            <Text style={{ fontSize: 28 }}>
-              {selUni?.name?.slice(0, 2) || '??'}
+            <Text
+              style={{
+                fontSize: 30,
+                color: '#FFFFFF',
+                fontWeight: '900',
+                letterSpacing: -0.5,
+              }}
+            >
+              {(selUni?.name || '??').slice(0, 2).toUpperCase()}
             </Text>
             <View
               style={{
                 position: 'absolute',
-                bottom: 0,
-                right: 0,
+                bottom: -2,
+                right: -2,
                 backgroundColor: T.accent,
                 borderRadius: 10,
                 width: 20,
@@ -335,44 +373,48 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
               <Text style={{ fontSize: 10 }}>✏️</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setEditField('color')
-              setEditValue(color)
+          <Text
+            style={{
+              color: '#FFFFFF',
+              fontSize: 24,
+              fontWeight: '900',
+              textAlign: 'center',
+              letterSpacing: -0.4,
             }}
           >
-            <Text
-              style={{
-                color: 'rgba(255,255,255,0.6)',
-                fontSize: 10,
-                marginBottom: 4,
-              }}
-            >
-              Toque no ícone para alterar logo • Toque aqui para alterar cor
-            </Text>
-          </TouchableOpacity>
-
-          <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800' }}>
             {selUni?.name || ''}
           </Text>
-          <Text
-            style={{
-              color: 'rgba(255,255,255,.65)',
-              fontSize: 12,
-              marginBottom: 8,
-            }}
-          >
-            {fullName}
-          </Text>
-          <Text
-            style={{
-              color: 'rgba(255,255,255,.8)',
-              fontSize: 12,
-              lineHeight: 20,
-            }}
-          >
-            {description || 'Sem descrição'}
-          </Text>
+          {!!fullName && (
+            <Text
+              style={{
+                color: 'rgba(255,255,255,.78)',
+                fontSize: 12,
+                fontWeight: '600',
+                textAlign: 'center',
+                marginTop: 2,
+                paddingHorizontal: 8,
+              }}
+              numberOfLines={2}
+            >
+              {fullName}
+            </Text>
+          )}
+
+          {!!description && (
+            <Text
+              style={{
+                color: 'rgba(255,255,255,.85)',
+                fontSize: 12,
+                lineHeight: 18,
+                textAlign: 'center',
+                marginTop: 10,
+                paddingHorizontal: 4,
+              }}
+              numberOfLines={3}
+            >
+              {description}
+            </Text>
+          )}
 
           <View
             style={{
@@ -380,19 +422,152 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
               gap: 10,
               marginTop: 14,
               alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <Text style={{ color: 'rgba(255,255,255,.65)', fontSize: 11 }}>
-              👥{' '}
-              <Text style={{ color: '#fff', fontWeight: '800' }}>
+            <View
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 999,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>
                 {followers}
-              </Text>{' '}
-              seguidores
-            </Text>
+              </Text>
+              <Text style={{ color: 'rgba(255,255,255,.85)', fontSize: 11 }}>
+                seguidores
+              </Text>
+            </View>
           </View>
+
+          <TouchableOpacity
+            onPress={() => setEditing(e => !e)}
+            style={{
+              marginTop: 16,
+              paddingHorizontal: 18,
+              paddingVertical: 9,
+              borderRadius: 999,
+              backgroundColor: editing ? '#FFFFFF' : 'rgba(255,255,255,0.18)',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.45)',
+            }}
+          >
+            <Text
+              style={{
+                color: editing ? color || brand.primary : '#FFFFFF',
+                fontSize: 13,
+                fontWeight: '800',
+              }}
+            >
+              {editing ? '✓ Concluir edição' : '✏️ Editar perfil'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={{ padding: 16, gap: 10 }}>
+          {editing && (
+          <>
+          <View style={cd({ padding: 16 })}>
+            <Text style={[lbl, { marginBottom: 10 }]}>🎨 Aparência</Text>
+            <Text
+              style={{
+                color: T.sub,
+                fontSize: 12,
+                lineHeight: 18,
+                marginBottom: 12,
+              }}
+            >
+              A cor da sua universidade aparece atrás do nome no topo do
+              perfil e como cor de marca em cada post no feed.
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                gap: 10,
+                marginBottom: 8,
+              }}
+            >
+              {COLOR_OPTIONS.map(c => {
+                const active = c === color
+                return (
+                  <TouchableOpacity
+                    key={c}
+                    onPress={async () => {
+                      if (!selUni || c === color) return
+                      const prev = color
+                      setColor(c)
+                      try {
+                        await saveUniversityUpdates(String(selUni.id), {
+                          color: c,
+                        })
+                        setSelUni({ ...selUni, color: c } as never)
+                      } catch (err) {
+                        setColor(prev)
+                        logger.warn(
+                          'color save failed:',
+                          (err as Error)?.message
+                        )
+                        Alert.alert(
+                          'Erro',
+                          'Não foi possível salvar a cor agora.'
+                        )
+                      }
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Cor ${c}`}
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 19,
+                      backgroundColor: c,
+                      borderWidth: active ? 3 : 1,
+                      borderColor: active ? T.text : T.border,
+                    }}
+                  />
+                )
+              })}
+            </View>
+            <View
+              style={{
+                marginTop: 12,
+                padding: 12,
+                backgroundColor: T.card2,
+                borderColor: T.border,
+                borderWidth: 1,
+                borderRadius: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>🖼️</Text>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{ color: T.text, fontSize: 13, fontWeight: '700' }}
+                >
+                  Imagem de fundo
+                </Text>
+                <Text
+                  style={{
+                    color: T.muted,
+                    fontSize: 11,
+                    marginTop: 2,
+                    lineHeight: 16,
+                  }}
+                >
+                  Em breve: enviar uma foto da câmera ou galeria como
+                  background.
+                </Text>
+              </View>
+            </View>
+          </View>
+
           <View style={cd({ padding: 16 })}>
             <Text style={[lbl, { marginBottom: 10 }]}>📅 Vestibular</Text>
             <EditableField
@@ -535,121 +710,76 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
               </Text>
             </TouchableOpacity>
           </View>
+          </>
+          )}
 
-          <View style={cd({ padding: 16 })}>
-            <Text style={[lbl, { marginBottom: 12 }]}>📊 Analytics</Text>
+          {/* Compact analytics summary — three KPIs + a CTA. The full
+              dashboard lives on the Análises tab; this card exists only as
+              a glance + entry point so the profile stays profile-shaped. */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('AnalisesTab')}
+            style={cd({ padding: 16 })}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <Text style={lbl}>📊 Resumo</Text>
+              <Text
+                style={{
+                  color: brand.primary,
+                  fontSize: 12,
+                  fontWeight: '800',
+                }}
+              >
+                Ver Análises →
+              </Text>
+            </View>
             {analytics ? (
-              <>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    flexWrap: 'wrap',
-                    gap: 10,
-                  }}
-                >
-                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
-                    <StatCard
-                      tone="progress"
-                      icon={<Text style={{ fontSize: 18 }}>👥</Text>}
-                      value={analytics.followersCount}
-                      label="Seguidores"
-                    />
-                  </View>
-                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
-                    <StatCard
-                      tone="news"
-                      icon={<Text style={{ fontSize: 18 }}>📣</Text>}
-                      value={analytics.postsCount}
-                      label="Publicações"
-                    />
-                  </View>
-                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
-                    <StatCard
-                      tone="simulado"
-                      icon={<Text style={{ fontSize: 18 }}>❤️</Text>}
-                      value={analytics.totalLikes}
-                      label="Curtidas totais"
-                    />
-                  </View>
-                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
-                    <StatCard
-                      tone="notas"
-                      icon={<Text style={{ fontSize: 18 }}>🔁</Text>}
-                      value={analytics.totalShares}
-                      label="Compartilhamentos"
-                    />
-                  </View>
-                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
-                    <StatCard
-                      tone="goal"
-                      icon={<Text style={{ fontSize: 18 }}>👁</Text>}
-                      value={analytics.totalStoryViews}
-                      label="Visualizações stories"
-                    />
-                  </View>
-                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
-                    <StatCard
-                      tone="progress"
-                      icon={<Text style={{ fontSize: 18 }}>⚡</Text>}
-                      value={analytics.last30DaysEngagement}
-                      label="Engajamento 30d"
-                    />
-                  </View>
-                </View>
-
-                {analytics.topPostTitle && (
-                  <View
-                    style={{
-                      marginTop: 14,
-                      backgroundColor: T.acBg,
-                      borderRadius: 14,
-                      borderWidth: 1,
-                      borderColor: T.accent + '40',
-                      padding: 12,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: T.muted,
-                        fontSize: 10,
-                        fontWeight: '700',
-                        letterSpacing: 0.6,
-                        textTransform: 'uppercase',
-                        marginBottom: 4,
-                      }}
-                    >
-                      Post de maior engajamento
-                    </Text>
+              <View style={{ flexDirection: 'row', gap: 14 }}>
+                {[
+                  { label: 'Seguidores', value: analytics.followersCount },
+                  { label: 'Publicações', value: analytics.postsCount },
+                  {
+                    label: 'Engajamento 30d',
+                    value: analytics.last30DaysEngagement,
+                  },
+                ].map(stat => (
+                  <View key={stat.label} style={{ flex: 1 }}>
                     <Text
                       style={{
                         color: T.text,
-                        fontSize: 13,
-                        fontWeight: '700',
+                        fontSize: 22,
+                        fontWeight: '900',
+                        letterSpacing: -0.4,
                       }}
-                      numberOfLines={2}
                     >
-                      {analytics.topPostTitle}
+                      {stat.value}
                     </Text>
                     <Text
                       style={{
-                        color: T.accent,
+                        color: T.sub,
                         fontSize: 11,
-                        fontWeight: '700',
-                        marginTop: 4,
+                        fontWeight: '600',
+                        marginTop: 2,
                       }}
                     >
-                      {analytics.topPostEngagement} interações (curtidas +
-                      compartilhamentos)
+                      {stat.label}
                     </Text>
                   </View>
-                )}
-              </>
+                ))}
+              </View>
             ) : (
               <Text style={{ color: T.muted, fontSize: 12 }}>
                 Carregando métricas…
               </Text>
             )}
-          </View>
+          </TouchableOpacity>
 
           <View style={cd({ padding: 16 })}>
             <View
@@ -665,14 +795,18 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
                 {stories.length} ativas
               </Text>
             </View>
-            <Button
-              onPress={() => setCreateStoryVisible(true)}
-              variant="primary"
-              size="md"
-              fullWidth
+            <Text
+              style={{
+                color: T.muted,
+                fontSize: 11,
+                lineHeight: 16,
+                marginBottom: 8,
+              }}
             >
-              + Nova story
-            </Button>
+              Para publicar uma story, use o botão{' '}
+              <Text style={{ color: T.accent, fontWeight: '700' }}>+</Text>{' '}
+              flutuante na aba Feed.
+            </Text>
 
             {storiesLoading && stories.length === 0 ? (
               <Text style={{ color: T.muted, marginTop: 12, fontSize: 12 }}>
@@ -773,14 +907,18 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
                 {posts.length} no feed
               </Text>
             </View>
-            <Button
-              onPress={() => setCreatePostVisible(true)}
-              variant="primary"
-              size="md"
-              fullWidth
+            <Text
+              style={{
+                color: T.muted,
+                fontSize: 11,
+                lineHeight: 16,
+                marginBottom: 8,
+              }}
             >
-              + Nova publicação
-            </Button>
+              Para criar um post, use o botão{' '}
+              <Text style={{ color: T.accent, fontWeight: '700' }}>+</Text>{' '}
+              flutuante na aba Feed.
+            </Text>
 
             {postsLoading && posts.length === 0 ? (
               <Text
@@ -915,26 +1053,6 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-
-      <CreatePostModal
-        visible={createPostVisible}
-        onClose={() => setCreatePostVisible(false)}
-        uniId={universityId}
-        onPublished={() => {
-          refreshPosts()
-          refreshAnalytics()
-        }}
-      />
-
-      <CreateStoryModal
-        visible={createStoryVisible}
-        onClose={() => setCreateStoryVisible(false)}
-        uniId={universityId}
-        onPublished={() => {
-          refreshStories()
-          refreshAnalytics()
-        }}
-      />
 
       <EditModal
         editField={editField}
