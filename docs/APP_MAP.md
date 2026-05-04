@@ -222,7 +222,7 @@ Esta tabela é a fonte canônica de quais surfaces ficam disponíveis para cada 
 | └─ Stories strip                        | ✅                        | ✅                                  |
 | └─ Posts                                | ✅                        | ✅                                  |
 | └─ FAB criador (`+ Publicação / Story`) | ❌                        | ✅                                  |
-| Aba Explorar (universidades, livros, provas) | ✅                   | ✅ (mesma view por enquanto)        |
+| Aba Explorar (universidades, livros, provas) | ✅                   | ✅ + card pinado "Sua universidade" no topo (preview pública) |
 | Terceiro slot da tab bar                | ✅ aba `Notas`            | ✅ aba `Análises` (mesmo slot)      |
 | └─ (aluno) Notas de corte               | ✅                        | —                                   |
 | └─ (aluno) Histórico de provas e simulados | ✅                     | —                                   |
@@ -241,7 +241,7 @@ Esta tabela é a fonte canônica de quais surfaces ficam disponíveis para cada 
 | Modal de localização                    | ✅                        | ❌                                  |
 | Modal de metas (`GoalsModal`)           | ✅                        | ❌                                  |
 | Modal de adicionar nota                 | ✅                        | ❌                                  |
-| Notificações                            | like / comment / follow / story / exam reminder | (planejado: engajamento, milestones de seguidor) |
+| Notificações                            | like / comment / follow / story / exam reminder | follower_milestone / post_engagement / story_view_milestone (idempotentes via `dedupeKey`) |
 
 ### Princípios
 
@@ -1422,6 +1422,17 @@ A aba `Perfil` deixa de renderizar o perfil comum e passa a renderizar `Institut
 - a `InstitutionAdminScreen` mantém o grid `Stories (24h)` com tap-and-hold para excluir; a criação saiu do bloco e virou um hint apontando para o FAB
 - o serviço `publishInstitutionStory` valida `linkedUniId`, formato da URL, e dispara `useStoriesStore.load()` para o feed strip atualizar imediatamente
 - regras do Firestore restringem create/update/delete em `universidades/{uniId}/stories/{storyId}` à instituição dona; bumps de `viewsCount` ainda são livres para usuários autenticados
+
+### Notificações para instituições
+
+**Implementado / Parcial**
+
+- três novos tipos em `notificationsRepository.NotificationType`: `follower_milestone`, `post_engagement`, `story_view_milestone`
+- helpers em `features/institution/services/institutionNotificationsService` (`notifyFollowerMilestone`, `notifyPostEngagementMilestone`, `notifyStoryViewMilestone`) detectam quando um contador acabou de cruzar uma soleira (10, 50, 100, 500, 1k…) e gravam uma notificação idempotente via `dedupeKey`
+- visuais (glyph + tom domain) registrados em `NotificationsModal.TYPE_VISUALS` para os 3 tipos novos
+- gatilho ao vivo: o serviço `followUniversity` dispara `notifyFollowerMilestone` em best-effort ao seguir uma universidade — só dispara em cresce-conta (não em unfollow) e só se a uni tiver `ownerUid` populado
+- `ownerUid` é gravado no doc `universidades/{uniId}` automaticamente no primeiro login da conta institucional, via `claimUniversityOwnership` chamado em `useBootstrap`
+- o gatilho de `post_engagement` e `story_view_milestone` está pronto para uso mas não está conectado a triggers ao vivo — cabe à etapa server-side (Cloud Function) quando os contadores migrarem para o backend (ver `docs/COUNTERS.md`)
 
 ### Analytics da instituição
 

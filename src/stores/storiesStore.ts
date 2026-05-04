@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useUniversitiesStore } from './universitiesStore'
+import { useAuthStore } from './authStore'
 import {
   loadStoriesForUser,
   trackStoryView,
@@ -79,8 +80,19 @@ export const useStoriesStore = create<StoriesState>((set, get) => ({
     try {
       const getFollowedUnis = useUniversitiesStore.getState().getFollowedUnis
       const followedUnis = getFollowedUnis()
-      const followedUniIds = followedUnis.map(u => String(u.id))
-      const fbStories = await loadStoriesForUser(followedUniIds)
+      const uniIds = followedUnis.map(u => String(u.id))
+      // Institutions don't follow their own university — they administer
+      // it. Include their linkedUniId in the strip so they see their own
+      // just-published stories at the top, the same way students see the
+      // unis they follow.
+      const auth = useAuthStore.getState()
+      if (auth.isInstitution()) {
+        const linkedUniId = auth.getLinkedUniId()
+        if (linkedUniId && !uniIds.includes(String(linkedUniId))) {
+          uniIds.push(String(linkedUniId))
+        }
+      }
+      const fbStories = await loadStoriesForUser(uniIds)
       set({ stories: fbStories })
     } catch {
       set({ stories: [] })

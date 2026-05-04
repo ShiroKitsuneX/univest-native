@@ -298,18 +298,38 @@ export function FeedScreen({
 
         {showSkeleton && <FeedSkeleton count={3} />}
 
-        {!showSkeleton && feedItems.length === 0 && fol.length === 0 && (
-          <EmptyState
-            icon="🎓"
-            title="Seu feed está vazio"
-            description="Siga universidades para ver novidades, datas e notas de corte."
-            action={
-              <Button onPress={goExplorar} variant="primary" size="md">
-                Explorar universidades
-              </Button>
-            }
-          />
-        )}
+        {!showSkeleton &&
+          feedItems.length === 0 &&
+          fol.length === 0 &&
+          (isInstitution ? (
+            <EmptyState
+              icon="📣"
+              title="Faça sua primeira publicação"
+              description="Use o botão + abaixo para anunciar inscrições, listas de obras, simulados ou notícias para quem segue sua universidade."
+              action={
+                onOpenCreator ? (
+                  <Button
+                    onPress={onOpenCreator}
+                    variant="primary"
+                    size="md"
+                  >
+                    + Criar publicação
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <EmptyState
+              icon="🎓"
+              title="Seu feed está vazio"
+              description="Siga universidades para ver novidades, datas e notas de corte."
+              action={
+                <Button onPress={goExplorar} variant="primary" size="md">
+                  Explorar universidades
+                </Button>
+              }
+            />
+          ))}
 
         {!showSkeleton && feedItems.length > 0 && (
           <View style={{ paddingHorizontal: 16, gap: 12 }}>

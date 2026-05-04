@@ -80,6 +80,26 @@ export async function updateUniversityField<T>(
   return value
 }
 
+// Idempotent — used on first institution login to claim ownership of the
+// linked university. The `ownerUid` field powers the institution-side
+// notifications (follower milestones, post engagement) by giving the
+// student-side follow flow a recipient to write notifications to.
+export async function claimUniversityOwnership(
+  universityId: string,
+  ownerUid: string
+): Promise<void> {
+  if (!universityId || !ownerUid) return
+  const universityRef = doc(
+    db,
+    getPath(...firestorePaths.university(universityId))
+  )
+  await setDoc(
+    universityRef,
+    { ownerUid, updatedAt: serverTimestamp() },
+    { merge: true }
+  )
+}
+
 export async function updateFollowerCount(
   universityId: string,
   delta: number

@@ -307,10 +307,10 @@ Owns:
 - read books
 - completed tasks
 - goals and planning views
+- exam reminder generation (`features/planning/services/examRemindersService.ensureExamReminders`)
 - settings and edit flows
 
-Current code still mixes profile and planning.
-That is acceptable for now, but new planning-heavy logic should not keep inflating a generic profile layer forever.
+Current code still mixes profile and planning. That is acceptable for now, but new planning-heavy logic should not keep inflating a generic profile layer forever — `features/planning/services/` is the correct home for new orchestration in this domain (the notifications repository it writes through stays in `features/feed/repositories/`, since that's the collection owner).
 
 ### 7. Institution Mode
 

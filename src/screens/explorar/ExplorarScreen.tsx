@@ -12,6 +12,7 @@ import { useCardStyle } from '@/theme/styles'
 import { SBox } from '@/components/SBox'
 import { fmtCount } from '@/utils/format'
 import { removeAccents } from '@/utils/string'
+import { useAuthStore } from '@/stores/authStore'
 import { useProfileStore } from '@/stores/profileStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useGeo } from '@/stores/hooks/useGeo'
@@ -29,6 +30,11 @@ export function ExplorarScreen({
 
   const studyStateId = useProfileStore(s => s.studyStateId)
   const unis = useUniversitiesStore(s => s.unis)
+  const isInstitution = useAuthStore(s => s.isInstitution)()
+  const linkedUniId = useAuthStore(s => s.getLinkedUniId)()
+  const ownUni = isInstitution
+    ? unis.find(u => String(u.id) === String(linkedUniId))
+    : null
   const { getStateName: getStateDisplayName } = useGeo()
 
   const [query, setQuery] = useState('')
@@ -99,11 +105,82 @@ export function ExplorarScreen({
           Explorar
         </Text>
         <Text style={{ color: T.sub, fontSize: 13, marginTop: 4 }}>
-          Encontre sua universidade
+          {isInstitution
+            ? 'Veja como sua universidade aparece para os alunos'
+            : 'Encontre sua universidade'}
         </Text>
       </View>
 
-      {!studyStateId && (
+      {/* Self-preview card for institution accounts. One-tap path to the
+          public-facing UniversityDetail so the admin can QA exactly what
+          students see. */}
+      {isInstitution && ownUni && (
+        <PressScale
+          onPress={() => onSelectUni?.(ownUni)}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            backgroundColor: ownUni.color || brand.primary,
+            borderRadius: radius.lg,
+            padding: 14,
+            marginBottom: 14,
+          }}
+        >
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: 'rgba(255,255,255,0.22)',
+              borderWidth: 2,
+              borderColor: 'rgba(255,255,255,0.5)',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text
+              style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '900' }}
+            >
+              {(ownUni.name || '??').slice(0, 2).toUpperCase()}
+            </Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 10,
+                fontWeight: '700',
+                letterSpacing: 0.6,
+                textTransform: 'uppercase',
+              }}
+            >
+              Sua universidade
+            </Text>
+            <Text
+              style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800' }}
+              numberOfLines={1}
+            >
+              {ownUni.name}
+            </Text>
+            <Text
+              style={{
+                color: 'rgba(255,255,255,0.85)',
+                fontSize: 11,
+                marginTop: 2,
+              }}
+              numberOfLines={1}
+            >
+              Toque para ver como os alunos veem
+            </Text>
+          </View>
+          <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '800' }}>
+            ›
+          </Text>
+        </PressScale>
+      )}
+
+      {!isInstitution && !studyStateId && (
         <TouchableOpacity
           onPress={onOpenLocation}
           style={[
@@ -231,7 +308,7 @@ export function ExplorarScreen({
               }}
             >
               <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
-                {u.name.slice(0, 2)}
+                {(u.name || '??').slice(0, 2).toUpperCase()}
               </Text>
             </View>
             <View style={{ flex: 1 }}>

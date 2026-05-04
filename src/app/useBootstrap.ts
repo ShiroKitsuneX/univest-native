@@ -3,6 +3,7 @@ import { loadLocalUserData, saveLocalUserData } from '@/core/storage/localUserSt
 import { onAuthChange } from '@/services/auth'
 import { fetchUserProfile } from '@/features/auth/repositories/authRepository'
 import { useAuthStore } from '@/stores/authStore'
+import { claimUniversityOwnership } from '@/features/explorar/repositories/universitiesRepository'
 import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useProgressStore } from '@/stores/progressStore'
@@ -51,6 +52,18 @@ export function useBootstrap() {
               setDone(fbData.done === true)
               setStep(0)
               setUType(null)
+              // Backfill ownerUid on the linked university so milestone
+              // notifications can find a recipient. Idempotent — the merge
+              // write only updates the field, no-op if already set.
+              if (fbData.linkedUniId) {
+                claimUniversityOwnership(fbData.linkedUniId, user.uid).catch(
+                  e =>
+                    logger.warn(
+                      'claimUniversityOwnership:',
+                      (e as Error)?.message
+                    )
+                )
+              }
             } else if (fbData.done === true) {
               useOnboardingStore.getState().hydrateFromFb(fbData)
             } else {

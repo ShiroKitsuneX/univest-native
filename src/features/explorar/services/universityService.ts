@@ -10,6 +10,7 @@ import {
   type University,
 } from '@/stores/universitiesStore'
 import { useAuthStore, type UserData } from '@/stores/authStore'
+import { notifyFollowerMilestone } from '@/features/institution/services/institutionNotificationsService'
 import { logger } from '@/core/logging/logger'
 
 export async function saveUniversityUpdates(
@@ -113,6 +114,8 @@ export async function followUniversity(
   const { currentUser } = useAuthStore.getState()
   if (!currentUser) throw new NotAuthenticatedError()
 
+  const previousFollowers = Number(uni.followersCount) || 0
+
   applyFollowOptimistic(uni, isFollowing)
 
   try {
@@ -126,5 +129,19 @@ export async function followUniversity(
     applyFollowOptimistic(uni, !isFollowing)
     logger.warn('followUniversity error:', error)
     throw error
+  }
+
+  // Best-effort milestone notification to the institution. Idempotent via
+  // dedupeKey — same milestone never produces two notifications. Skip on
+  // unfollow (we only celebrate growth) and when ownerUid isn't set yet
+  // (legacy unis without a claimed institution account).
+  if (isFollowing && uni.ownerUid && uni.id) {
+    notifyFollowerMilestone({
+      recipientUid: uni.ownerUid,
+      uniId: String(uni.id),
+      uniName: uni.name,
+      previousFollowers,
+      newFollowers: previousFollowers + 1,
+    }).catch(() => {})
   }
 }

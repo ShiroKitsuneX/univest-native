@@ -7,7 +7,7 @@ import {
 } from 'react-native'
 import { useEffect, useState } from 'react'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
-import { ensureExamReminders } from '@/features/feed/services/notificationsService'
+import { ensureExamReminders } from '@/features/planning/services/examRemindersService'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   createBottomTabNavigator,
@@ -67,7 +67,7 @@ function TabHeader({
 }) {
   const insets = useSafeAreaInsets()
   const navigation = useNavigation<Nav>()
-  const { T } = useTheme()
+  const { T, brand } = useTheme()
   const { onOpenSettings, onSelectUni } = useMain()
   const currentUser = useAuthStore(s => s.currentUser)
   const unreadCount = useNotificationsStore(s => s.unreadCount)
@@ -90,9 +90,9 @@ function TabHeader({
     })
   }, [currentUser?.uid, goalsUnis])
 
-  // Every screen owns its own hero ("Olá, Anna 👋", "Explorar", "Notas",
-  // etc.) — so the global TabHeader stays minimal: bell on the right, cog on
-  // Perfil. No competing brand title at the top of every screen.
+  // Every screen owns its own hero ("Olá, Anna 👋", "Explorar", etc.) —
+  // the global TabHeader stays minimal: small UniVest wordmark on the left
+  // for brand presence, bell or cog on the right.
   const showBell = route.name !== 'PerfilTab'
   const showCog = route.name === 'PerfilTab'
 
@@ -105,9 +105,19 @@ function TabHeader({
           paddingBottom: 4,
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
         }}
       >
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: '800',
+            color: T.text,
+            letterSpacing: -0.3,
+          }}
+        >
+          Uni<Text style={{ color: brand.primary }}>Vest</Text>
+        </Text>
         {showCog ? (
           <TouchableOpacity
             onPress={onOpenSettings}

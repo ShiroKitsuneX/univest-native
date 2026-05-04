@@ -31,14 +31,16 @@ export function GoalsModal({ visible, onClose }: Props) {
   }, [visible])
 
   const filtered = useMemo(() => {
-    const allUnis = fbUnis.filter(u => u.type !== 'Técnico')
+    // Defensive against unis without `name`/`fullName` (the field is
+    // optional on the type and remote docs may be missing it).
+    const allUnis = fbUnis.filter(u => u && u.name && u.type !== 'Técnico')
     if (!goalsSearch) return allUnis
     const needle = removeAccents(goalsSearch.toLowerCase())
-    return allUnis.filter(
-      u =>
-        removeAccents(u.name.toLowerCase()).includes(needle) ||
-        removeAccents(u.fullName.toLowerCase()).includes(needle)
-    )
+    return allUnis.filter(u => {
+      const name = removeAccents((u.name || '').toLowerCase())
+      const full = removeAccents((u.fullName || '').toLowerCase())
+      return name.includes(needle) || full.includes(needle)
+    })
   }, [fbUnis, goalsSearch])
 
   const toggleGoal = (uni: (typeof fbUnis)[number]) => {
@@ -163,7 +165,7 @@ export function GoalsModal({ visible, onClose }: Props) {
                     <Text
                       style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}
                     >
-                      {uni.name.slice(0, 2)}
+                      {(uni.name || '??').slice(0, 2).toUpperCase()}
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>

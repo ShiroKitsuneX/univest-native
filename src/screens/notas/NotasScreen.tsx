@@ -10,10 +10,23 @@ import {
 import { useTheme } from '@/theme/useTheme'
 import { TAG_D, TAG_L } from '@/theme/palette'
 import { NOTAS_CORTE } from '@/data/notasCorte'
-import { ENEM_SUBJECTS, subjectScore } from '@/data/subjects'
+import { ENEM_SUBJECTS } from '@/data/subjects'
 import { SBox } from '@/components/SBox'
 import { useProfileStore } from '@/stores/profileStore'
 import { useOnboardingStore } from '@/stores/onboardingStore'
+import {
+  countsByType,
+  filterByPeriod,
+  filterByType,
+  gradeAverage,
+  lastGradeSubjectScores,
+  latestDelta,
+  subjectScoreValue,
+  weakestSubject,
+  type PeriodFilter,
+  type SubjectKey,
+  type TypeFilter,
+} from '@/features/notes/selectors/gradeSelectors'
 import {
   Button,
   Card,
@@ -27,25 +40,6 @@ import {
 } from '@/shared/components'
 import { AdmissionCalcModal } from '@/features/notes/modals/AdmissionCalcModal'
 import type { Grade } from '@/stores/profileStore'
-
-type TypeFilter = 'all' | 'prova' | 'simulado'
-type PeriodFilter = 'month' | 'year' | 'all'
-type SubjectKey = 'all' | 'l' | 'h' | 'n' | 'm' | 'r'
-
-// Parse `Grade.dt` strings — they come in either `DD/MM/YYYY` or
-// `YYYY-MM-DD` shape depending on input source. Returns 0 if unparseable
-// so out-of-range entries are filtered out by the period guards.
-function gradeTimestamp(dt: string | undefined): number {
-  if (!dt) return 0
-  if (/^\d{4}-\d{2}-\d{2}/.test(dt)) {
-    const t = Date.parse(dt)
-    return Number.isNaN(t) ? 0 : t
-  }
-  const m = dt.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-  if (!m) return 0
-  const [, dd, mm, yyyy] = m
-  return Date.UTC(Number(yyyy), Number(mm) - 1, Number(dd))
-}
 
 export function NotasScreen({ onEditCourses, onAddGrade }) {
   const { T, isDark, brand, domain, radius, typography, shadow } = useTheme()
@@ -77,26 +71,22 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
     cutoff: number
   } | null>(null)
 
-  const avg = (g: { s: { l: number; h: number; n: number; m: number } }) =>
-    Math.round((g.s.l + g.s.h + g.s.n + g.s.m) / 4)
+  const avg = gradeAverage
 
   // Counts per type — driven by the unfiltered store so the tab labels
   // always show the truthful totals regardless of which dashboard filter
   // is active.
-  const totalProvas = gs.filter(g => g.type === 'prova').length
-  const totalSimulados = gs.filter(g => g.type === 'simulado').length
+  const { provas: totalProvas, simulados: totalSimulados } = countsByType(gs)
 
   // Grades after the dashboard type filter — drives stats + weak + chart.
-  const dashGrades = useMemo(() => {
-    if (dashType === 'all') return gs
-    return gs.filter(g => g.type === dashType)
-  }, [gs, dashType])
+  const dashGrades = useMemo(
+    () => filterByType(gs, dashType),
+    [gs, dashType]
+  )
 
   const last = dashGrades[dashGrades.length - 1]
-  const prev = dashGrades[dashGrades.length - 2]
   const lastAvg = last ? avg(last) : null
-  const prevAvg = prev ? avg(prev) : null
-  const delta = lastAvg !== null && prevAvg !== null ? lastAvg - prevAvg : null
+  const delta = latestDelta(dashGrades)
 
   const tgt = useMemo(
     () =>
@@ -108,25 +98,16 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
   )
 
   const radar = useMemo(
-    () =>
-      last
-        ? ENEM_SUBJECTS.map(sub => ({
-            subject: sub.short,
-            v: subjectScore(last.s, sub.k),
-          }))
-        : [],
-    [last]
+    () => lastGradeSubjectScores(dashGrades, ENEM_SUBJECTS),
+    [dashGrades]
   )
-  const weak = radar.length ? radar.reduce((a, b) => (a.v < b.v ? a : b)) : null
+  const weak = weakestSubject(radar)
 
-  // Period-sliced grades for the chart. "month" = last 30 days, "year" =
-  // last 365 days, "all" = everything.
-  const chartGrades = useMemo(() => {
-    if (chartPeriod === 'all') return dashGrades
-    const cutoff =
-      Date.now() - (chartPeriod === 'month' ? 30 : 365) * 86_400_000
-    return dashGrades.filter(g => gradeTimestamp(g.dt) >= cutoff)
-  }, [dashGrades, chartPeriod])
+  // Period-sliced grades for the chart.
+  const chartGrades = useMemo(
+    () => filterByPeriod(dashGrades, chartPeriod),
+    [dashGrades, chartPeriod]
+  )
 
   // Last 7 entries within the period window. If chartSubject is set to a
   // specific key, plot that subject's score; otherwise plot the average.
@@ -134,8 +115,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
     const slice = chartGrades.slice(-7)
     const lastIdx = slice.length - 1
     return slice.map((g, i) => {
-      const v =
-        chartSubject === 'all' ? avg(g) : subjectScore(g.s, chartSubject)
+      const v = subjectScoreValue(g.s, chartSubject)
       return {
         label:
           g.ex.length > 4
@@ -164,7 +144,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
   }, [c1, c2, nSrch])
 
   const filteredGrades = useMemo(
-    () => gs.filter(g => gradeFilter === 'all' || g.type === gradeFilter),
+    () => filterByType(gs, gradeFilter),
     [gs, gradeFilter]
   )
 
@@ -491,7 +471,10 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
           </Text>
           <View style={{ gap: 14 }}>
             {ENEM_SUBJECTS.map(sub => {
-              const v = subjectScore(last.s, sub.k)
+              const v = subjectScoreValue(
+                last.s,
+                sub.k as SubjectKey
+              )
               const pct = Math.min(100, Math.round((v / tgt) * 100))
               const isAbove = v >= tgt
               return (

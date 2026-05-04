@@ -13,6 +13,7 @@ import { usePostsStore } from '@/stores/postsStore'
 import { useGeo } from '@/stores/hooks/useGeo'
 import { StatCard } from '@/shared/components/StatCard'
 import { SvgIcon } from '@/shared/components/SvgIcon'
+import { summariseGoal } from '@/features/planning/selectors/goalTasks'
 
 export function PerfilScreen({
   onChangePhoto,
@@ -716,39 +717,11 @@ function GoalsList({
   return (
     <View>
       {goalsUnis.map(goal => {
-        const nextExam = goal.exams?.find(e => e.status === 'upcoming')
-        const daysUntil = nextExam?.date
-          ? Math.max(
-              0,
-              Math.ceil(
-                (new Date(nextExam.date).getTime() - Date.now()) /
-                  (1000 * 60 * 60 * 24)
-              )
-            )
-          : null
-        const goalTodos = [
-          ...(goal.books?.map(book => ({
-            id: `${goal.id}-${book}`,
-            bookKey: `${goal.id}-${book}`,
-            text: `Ler "${book.split(' - ')[0]}"`,
-            type: 'book',
-          })) || []),
-          {
-            id: `${goal.id}-inscricao`,
-            text: 'Fazer inscrição',
-            type: 'inscricao',
-          },
-          {
-            id: `${goal.id}-taxa`,
-            text: 'Pagar taxa de inscrição',
-            type: 'taxa',
-          },
-        ]
-        const completedCount = goalTodos.filter(t =>
-          t.type === 'book'
-            ? readBooks[t.bookKey] === 'read'
-            : completedTodos[t.id]
-        ).length
+        const {
+          tasks: goalTodos,
+          completed: completedCount,
+          daysUntil,
+        } = summariseGoal(goal, readBooks, completedTodos)
 
         return (
           <View key={goal.id} style={{ marginBottom: 10 }}>
@@ -780,7 +753,7 @@ function GoalsList({
                 <Text
                   style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}
                 >
-                  {goal.name.slice(0, 2)}
+                  {(goal.name || '??').slice(0, 2).toUpperCase()}
                 </Text>
               </View>
               <View style={{ flex: 1, marginLeft: 10 }}>

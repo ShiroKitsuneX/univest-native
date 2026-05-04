@@ -30,6 +30,12 @@ export type University = {
   // are ENEM subject codes (l/h/n/m/r); values are percentages summing to
   // 100. When omitted, the calculator falls back to equal weight (20%).
   examWeights?: { l: number; h: number; n: number; m: number; r: number }
+  // uid of the institution-account that administers this university.
+  // Populated on first institution login (see authRepository.claimUniversity)
+  // and read by `institutionNotificationsService` when firing milestone
+  // notifications from a student's follow flow. Missing on legacy unis —
+  // the notification helpers no-op when absent.
+  ownerUid?: string
 }
 
 export type Exam = {

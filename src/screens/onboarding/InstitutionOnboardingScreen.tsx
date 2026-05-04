@@ -114,19 +114,6 @@ export function InstitutionOnboardingScreen() {
           paddingBottom: 8,
         }}
       >
-        {/* UniVest wordmark — same brand affordance the student onboarding
-            and Welcome/Login screens carry. Without it the screen feels
-            unbranded for the first impression. */}
-        <Text
-          style={{
-            fontSize: 20,
-            fontWeight: '800',
-            color: T.text,
-            marginBottom: 14,
-          }}
-        >
-          Uni<Text style={{ color: brand.primary }}>Vest</Text>
-        </Text>
         <Text style={[typography.eyebrow, { color: T.muted }]}>
           BOAS-VINDAS · CONTA INSTITUCIONAL
         </Text>
