@@ -8,7 +8,7 @@ import {
 } from '@react-navigation/native'
 
 import { useTheme } from '@/theme/useTheme'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ErrorBoundary } from '@/core/errors/ErrorBoundary'
 import { logout } from '@/services/auth'
 import {
   followUniversity,
@@ -23,21 +23,24 @@ import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useAuthStore } from '@/stores/authStore'
 import { RootNavigator } from '@/navigation/RootNavigator'
 import { MainTabs } from '@/navigation/MainTabs'
-import { refreshPosts } from '@/features/feed/services/feedService'
+import {
+  refreshPosts,
+  incrementShareCount,
+} from '@/features/feed/services/feedService'
 import { ShareModal } from '@/modals/ShareModal'
-import { UniSortModal } from '@/modals/UniSortModal'
-import { AddGradeModal } from '@/modals/AddGradeModal'
-import { SavedPostsModal } from '@/modals/SavedPostsModal'
-import { EventDetailModal } from '@/modals/EventDetailModal'
-import { ExamDetailModal } from '@/modals/ExamDetailModal'
-import { DiscoverCoursesModal } from '@/modals/DiscoverCoursesModal'
-import { AvatarPickerModal } from '@/modals/AvatarPickerModal'
-import { EditNameModal } from '@/modals/EditNameModal'
-import { EditCoursesModal } from '@/modals/EditCoursesModal'
-import { LocationSettingsModal } from '@/modals/LocationSettingsModal'
-import { GoalsModal } from '@/modals/GoalsModal'
+import { UniSortModal } from '@/features/explorar/modals/UniSortModal'
+import { AddGradeModal } from '@/features/notes/modals/AddGradeModal'
+import { SavedPostsModal } from '@/features/feed/modals/SavedPostsModal'
+import { EventDetailModal } from '@/features/planning/modals/EventDetailModal'
+import { ExamDetailModal } from '@/features/explorar/modals/ExamDetailModal'
+import { DiscoverCoursesModal } from '@/features/onboarding/modals/DiscoverCoursesModal'
+import { AvatarPickerModal } from '@/features/profile/modals/AvatarPickerModal'
+import { EditNameModal } from '@/features/profile/modals/EditNameModal'
+import { EditCoursesModal } from '@/features/onboarding/modals/EditCoursesModal'
+import { LocationSettingsModal } from '@/features/profile/modals/LocationSettingsModal'
+import { GoalsModal } from '@/features/planning/modals/GoalsModal'
 import { SettingsModal } from '@/modals/SettingsModal'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 function MainApp() {
   const { T, isDark } = useTheme()
@@ -172,7 +175,17 @@ function MainApp() {
 
       <AddGradeModal visible={mGr} onClose={() => setMgr(false)} />
 
-      <ShareModal item={mShr} onClose={() => setMshr(null)} />
+      <ShareModal
+        item={mShr}
+        onClose={() => setMshr(null)}
+        onShared={() => {
+          const post = mShr as { id?: string } | null
+          if (post?.id) {
+            usePostsStore.getState().setShareDelta(post.id, 1)
+            incrementShareCount(post.id).catch(() => {})
+          }
+        }}
+      />
 
       <DiscoverCoursesModal
         visible={mDisc}

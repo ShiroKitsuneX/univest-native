@@ -20,7 +20,6 @@ import { StoryViewer } from '@/components/StoryViewer'
 import {
   togglePostLike,
   reportPost,
-  incrementShareCount,
 } from '@/features/feed/services/feedService'
 import {
   Button,
@@ -44,7 +43,6 @@ export function FeedScreen({
   const TG = isDark ? TAG_D : TAG_L
   const urgencyTone = TG.alert
 
-  const stories = useStoriesStore(s => s.stories)
   const loadStories = useStoriesStore(s => s.load)
 
   const [viewerVisible, setViewerVisible] = useState(false)
@@ -96,7 +94,15 @@ export function FeedScreen({
         }),
     [unis, uniSort, uniPrefs]
   )
-  const feedItems = posts.length ? posts : FEED
+  // Use remote posts when present. Fall back to seed FEED only for users
+  // who already follow universities — the seed posts reference USP/UNICAMP
+  // and are useful preview content there. New users with zero follows see
+  // the empty state CTA instead of fake demo posts.
+  const feedItems = posts.length
+    ? posts
+    : fol.length > 0
+      ? FEED
+      : []
 
   const upcoming = useMemo(
     () =>
@@ -135,10 +141,10 @@ export function FeedScreen({
     })()
   }
 
+  // Just opens the share sheet. Counter increment happens once the user
+  // actually picks a share target inside the modal — see App.tsx onShared.
   const shareItem = item => {
     onShare(item)
-    usePostsStore.getState().setShareDelta(item.id, 1)
-    incrementShareCount(item.id).catch(() => {})
   }
 
   const reportItem = item => {

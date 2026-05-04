@@ -1,5 +1,4 @@
 // Design tokens — theme-independent constants shared by every screen.
-// Source of truth lives in docs/REDESIGN_PLAN.md ("Design language").
 // Never mutate these at runtime; never branch on theme here.
 
 import { Platform, type TextStyle } from 'react-native'

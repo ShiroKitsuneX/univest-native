@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   View,
   Text,
@@ -6,18 +6,39 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  Image,
   Linking,
 } from 'react-native'
 import type { TextStyle } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import type { ThemeColors } from '@/theme/palette'
+import { TAG_D, TAG_L } from '@/theme/palette'
 import { useCardStyle, useLabelStyle, type CardStyle } from '@/theme/styles'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import {
   saveUniversityUpdates,
   updateUniversityInfo,
 } from '@/features/explorar/services/universityService'
-import { logger } from '@/services/logger'
+import {
+  deleteInstitutionPostById,
+  loadInstitutionPosts,
+  type InstitutionPost,
+} from '@/features/institution/services/institutionPostsService'
+import {
+  deleteInstitutionStory,
+  loadInstitutionStories,
+  type StoryDoc,
+} from '@/features/institution/services/institutionStoriesService'
+import {
+  loadInstitutionAnalytics,
+  type InstitutionAnalytics,
+} from '@/features/institution/services/institutionAnalyticsService'
+import { CreatePostModal } from '@/features/institution/modals/CreatePostModal'
+import { CreateStoryModal } from '@/features/institution/modals/CreateStoryModal'
+import { StatCard } from '@/shared/components'
+import { Button } from '@/shared/components'
+import { timeAgo } from '@/utils/format'
+import { logger } from '@/core/logging/logger'
 
 type Props = {
   universityId: string
@@ -38,7 +59,7 @@ type EditMode =
   | 'color'
 
 export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
-  const { T, isDark, AT } = useTheme()
+  const { T, isDark } = useTheme()
 
   const unis = useUniversitiesStore(s => s.unis)
   const selUni = useUniversitiesStore(s => s.selUni)
@@ -47,6 +68,21 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
   const [loading, setLoading] = useState(false)
   const [editField, setEditField] = useState<EditMode>(null)
   const [editValue, setEditValue] = useState('')
+
+  // Institution-owned posts state. We load on mount + after each publish so
+  // the admin sees their published posts immediately (the feed picks them up
+  // via the regular postsStore.load too — this list is just the management
+  // surface for delete + audit).
+  const [posts, setPosts] = useState<InstitutionPost[]>([])
+  const [postsLoading, setPostsLoading] = useState(false)
+  const [createPostVisible, setCreatePostVisible] = useState(false)
+
+  const [stories, setStories] = useState<StoryDoc[]>([])
+  const [storiesLoading, setStoriesLoading] = useState(false)
+  const [createStoryVisible, setCreateStoryVisible] = useState(false)
+
+  const [analytics, setAnalytics] = useState<InstitutionAnalytics | null>(null)
+  const tagPalette = isDark ? TAG_D : TAG_L
 
   const [description, setDescription] = useState('')
   const [vestibular, setVestibular] = useState('')
@@ -58,6 +94,92 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
   const [followers, setFollowers] = useState('')
   const [color, setColor] = useState('')
   const [fullName, setFullName] = useState('')
+
+  const refreshPosts = useCallback(async () => {
+    if (!universityId) return
+    setPostsLoading(true)
+    try {
+      const list = await loadInstitutionPosts(universityId)
+      setPosts(list)
+    } catch (e) {
+      logger.warn('loadInstitutionPosts:', (e as Error)?.message)
+    } finally {
+      setPostsLoading(false)
+    }
+  }, [universityId])
+
+  const refreshStories = useCallback(async () => {
+    if (!universityId) return
+    setStoriesLoading(true)
+    try {
+      const list = await loadInstitutionStories(universityId)
+      setStories(list)
+    } catch (e) {
+      logger.warn('loadInstitutionStories:', (e as Error)?.message)
+    } finally {
+      setStoriesLoading(false)
+    }
+  }, [universityId])
+
+  const refreshAnalytics = useCallback(async () => {
+    if (!universityId) return
+    try {
+      const data = await loadInstitutionAnalytics(universityId)
+      setAnalytics(data)
+    } catch (e) {
+      logger.warn('loadInstitutionAnalytics:', (e as Error)?.message)
+    }
+  }, [universityId])
+
+  useEffect(() => {
+    refreshPosts()
+    refreshStories()
+    refreshAnalytics()
+  }, [refreshPosts, refreshStories, refreshAnalytics])
+
+  const handleDeleteStory = (story: StoryDoc) => {
+    Alert.alert('Excluir story', 'Remover esta story do feed?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteInstitutionStory(universityId, story.id)
+            setStories(prev => prev.filter(s => s.id !== story.id))
+            refreshAnalytics()
+          } catch (err) {
+            logger.warn('deleteStory:', (err as Error)?.message)
+            Alert.alert('Erro', 'Não foi possível excluir a story.')
+          }
+        },
+      },
+    ])
+  }
+
+  const handleDeletePost = (post: InstitutionPost) => {
+    Alert.alert(
+      'Excluir publicação',
+      `Remover "${post.title}" do feed?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteInstitutionPostById(post.id)
+              setPosts(prev => prev.filter(p => p.id !== post.id))
+              refreshAnalytics()
+            } catch (err) {
+              logger.warn('deletePost:', (err as Error)?.message)
+              Alert.alert('Erro', 'Não foi possível excluir a publicação.')
+            }
+          },
+        },
+      ]
+    )
+  }
 
   useEffect(() => {
     const uni = unis.find(
@@ -155,17 +277,6 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
   const handleEditBooks = () => {
     setEditField('books')
     setEditValue(books.join(', '))
-  }
-
-  const handleChangeColor = (newColor: string) => {
-    setLoading(true)
-    saveUniversityUpdates(String(selUni?.id), { color: newColor })
-      .then(() => {
-        setColor(newColor)
-        setSelUni({ ...selUni, color: newColor } as never)
-      })
-      .catch(err => logger.warn('color change error:', err))
-      .finally(() => setLoading(false))
   }
 
   const lbl = useLabelStyle()
@@ -424,10 +535,406 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
               </Text>
             </TouchableOpacity>
           </View>
+
+          <View style={cd({ padding: 16 })}>
+            <Text style={[lbl, { marginBottom: 12 }]}>📊 Analytics</Text>
+            {analytics ? (
+              <>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    gap: 10,
+                  }}
+                >
+                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
+                    <StatCard
+                      tone="progress"
+                      icon={<Text style={{ fontSize: 18 }}>👥</Text>}
+                      value={analytics.followersCount}
+                      label="Seguidores"
+                    />
+                  </View>
+                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
+                    <StatCard
+                      tone="news"
+                      icon={<Text style={{ fontSize: 18 }}>📣</Text>}
+                      value={analytics.postsCount}
+                      label="Publicações"
+                    />
+                  </View>
+                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
+                    <StatCard
+                      tone="simulado"
+                      icon={<Text style={{ fontSize: 18 }}>❤️</Text>}
+                      value={analytics.totalLikes}
+                      label="Curtidas totais"
+                    />
+                  </View>
+                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
+                    <StatCard
+                      tone="notas"
+                      icon={<Text style={{ fontSize: 18 }}>🔁</Text>}
+                      value={analytics.totalShares}
+                      label="Compartilhamentos"
+                    />
+                  </View>
+                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
+                    <StatCard
+                      tone="goal"
+                      icon={<Text style={{ fontSize: 18 }}>👁</Text>}
+                      value={analytics.totalStoryViews}
+                      label="Visualizações stories"
+                    />
+                  </View>
+                  <View style={{ flexBasis: '47%', flexGrow: 1 }}>
+                    <StatCard
+                      tone="progress"
+                      icon={<Text style={{ fontSize: 18 }}>⚡</Text>}
+                      value={analytics.last30DaysEngagement}
+                      label="Engajamento 30d"
+                    />
+                  </View>
+                </View>
+
+                {analytics.topPostTitle && (
+                  <View
+                    style={{
+                      marginTop: 14,
+                      backgroundColor: T.acBg,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: T.accent + '40',
+                      padding: 12,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: T.muted,
+                        fontSize: 10,
+                        fontWeight: '700',
+                        letterSpacing: 0.6,
+                        textTransform: 'uppercase',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Post de maior engajamento
+                    </Text>
+                    <Text
+                      style={{
+                        color: T.text,
+                        fontSize: 13,
+                        fontWeight: '700',
+                      }}
+                      numberOfLines={2}
+                    >
+                      {analytics.topPostTitle}
+                    </Text>
+                    <Text
+                      style={{
+                        color: T.accent,
+                        fontSize: 11,
+                        fontWeight: '700',
+                        marginTop: 4,
+                      }}
+                    >
+                      {analytics.topPostEngagement} interações (curtidas +
+                      compartilhamentos)
+                    </Text>
+                  </View>
+                )}
+              </>
+            ) : (
+              <Text style={{ color: T.muted, fontSize: 12 }}>
+                Carregando métricas…
+              </Text>
+            )}
+          </View>
+
+          <View style={cd({ padding: 16 })}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <Text style={lbl}>📸 Stories (24h)</Text>
+              <Text style={{ color: T.muted, fontSize: 11 }}>
+                {stories.length} ativas
+              </Text>
+            </View>
+            <Button
+              onPress={() => setCreateStoryVisible(true)}
+              variant="primary"
+              size="md"
+              fullWidth
+            >
+              + Nova story
+            </Button>
+
+            {storiesLoading && stories.length === 0 ? (
+              <Text style={{ color: T.muted, marginTop: 12, fontSize: 12 }}>
+                Carregando stories…
+              </Text>
+            ) : stories.length === 0 ? (
+              <Text
+                style={{
+                  color: T.muted,
+                  marginTop: 12,
+                  fontSize: 12,
+                  lineHeight: 18,
+                }}
+              >
+                Sem stories ativas. Compartilhe um momento da sua universidade
+                — expira em 24h.
+              </Text>
+            ) : (
+              <View
+                style={{
+                  marginTop: 12,
+                  flexDirection: 'row',
+                  flexWrap: 'wrap',
+                  gap: 8,
+                }}
+              >
+                {stories.map(s => (
+                  <TouchableOpacity
+                    key={s.id}
+                    onLongPress={() => handleDeleteStory(s)}
+                    delayLongPress={350}
+                    style={{
+                      width: 78,
+                      aspectRatio: 9 / 16,
+                      borderRadius: 12,
+                      overflow: 'hidden',
+                      borderWidth: 1,
+                      borderColor: T.border,
+                      backgroundColor: T.card2,
+                    }}
+                  >
+                    {s.imageUrl ? (
+                      <Image
+                        source={{ uri: s.imageUrl }}
+                        style={{ width: '100%', height: '100%' }}
+                        resizeMode="cover"
+                      />
+                    ) : null}
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: 4,
+                        left: 4,
+                        right: 4,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: '#fff',
+                          fontSize: 10,
+                          fontWeight: '700',
+                          textShadowColor: 'rgba(0,0,0,0.6)',
+                          textShadowRadius: 2,
+                        }}
+                      >
+                        👁 {s.viewsCount}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+                <Text
+                  style={{
+                    color: T.muted,
+                    fontSize: 10,
+                    width: '100%',
+                    marginTop: 4,
+                  }}
+                >
+                  Toque e segure uma story para excluir.
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={cd({ padding: 16 })}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <Text style={lbl}>📣 Publicações</Text>
+              <Text style={{ color: T.muted, fontSize: 11 }}>
+                {posts.length} no feed
+              </Text>
+            </View>
+            <Button
+              onPress={() => setCreatePostVisible(true)}
+              variant="primary"
+              size="md"
+              fullWidth
+            >
+              + Nova publicação
+            </Button>
+
+            {postsLoading && posts.length === 0 ? (
+              <Text
+                style={{ color: T.muted, marginTop: 12, fontSize: 12 }}
+              >
+                Carregando publicações…
+              </Text>
+            ) : posts.length === 0 ? (
+              <Text
+                style={{
+                  color: T.muted,
+                  marginTop: 12,
+                  fontSize: 12,
+                  lineHeight: 18,
+                }}
+              >
+                Você ainda não publicou nada. Use o botão acima para
+                anunciar inscrições, listas de obras, simulados ou notícias
+                para quem segue sua universidade.
+              </Text>
+            ) : (
+              <View style={{ marginTop: 12, gap: 8 }}>
+                {posts.map(p => {
+                  const tag = tagPalette[p.type] || tagPalette.news
+                  return (
+                    <View
+                      key={p.id}
+                      style={{
+                        backgroundColor: T.card2,
+                        borderColor: T.border,
+                        borderWidth: 1,
+                        borderRadius: 14,
+                        padding: 12,
+                      }}
+                    >
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 8,
+                          marginBottom: 6,
+                        }}
+                      >
+                        <View
+                          style={{
+                            backgroundColor: tag.bg,
+                            borderColor: tag.b,
+                            borderWidth: 1,
+                            paddingHorizontal: 8,
+                            paddingVertical: 3,
+                            borderRadius: 999,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <Text style={{ fontSize: 11 }}>{p.icon}</Text>
+                          <Text
+                            style={{
+                              color: tag.tx,
+                              fontSize: 10,
+                              fontWeight: '700',
+                            }}
+                          >
+                            {p.tag}
+                          </Text>
+                        </View>
+                        <Text
+                          style={{
+                            color: T.muted,
+                            fontSize: 10,
+                            fontWeight: '600',
+                          }}
+                        >
+                          {p.createdAt ? timeAgo(p.createdAt) : 'agora'}
+                        </Text>
+                      </View>
+                      <Text
+                        style={{
+                          color: T.text,
+                          fontSize: 13,
+                          fontWeight: '700',
+                        }}
+                        numberOfLines={2}
+                      >
+                        {p.title}
+                      </Text>
+                      <Text
+                        style={{
+                          color: T.sub,
+                          fontSize: 12,
+                          marginTop: 2,
+                          lineHeight: 18,
+                        }}
+                        numberOfLines={2}
+                      >
+                        {p.body}
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginTop: 8,
+                        }}
+                      >
+                        <Text style={{ color: T.muted, fontSize: 11 }}>
+                          ❤️ {p.likesCount} · 🔁 {p.sharesCount}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => handleDeletePost(p)}
+                          hitSlop={6}
+                        >
+                          <Text
+                            style={{
+                              color: '#f87171',
+                              fontSize: 11,
+                              fontWeight: '700',
+                            }}
+                          >
+                            Excluir
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )
+                })}
+              </View>
+            )}
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <CreatePostModal
+        visible={createPostVisible}
+        onClose={() => setCreatePostVisible(false)}
+        uniId={universityId}
+        onPublished={() => {
+          refreshPosts()
+          refreshAnalytics()
+        }}
+      />
+
+      <CreateStoryModal
+        visible={createStoryVisible}
+        onClose={() => setCreateStoryVisible(false)}
+        uniId={universityId}
+        onPublished={() => {
+          refreshStories()
+          refreshAnalytics()
+        }}
+      />
 
       <EditModal
         editField={editField}
@@ -437,7 +944,6 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
         onSave={handleSaveField}
         loading={loading}
         T={T}
-        isDark={isDark}
         cd={cd}
       />
     </View>
@@ -524,7 +1030,6 @@ type EditModalProps = {
   onSave: () => void
   loading: boolean
   T: ThemeColors
-  isDark: boolean
   cd: CardStyle
 }
 
@@ -536,7 +1041,6 @@ function EditModal({
   onSave,
   loading,
   T,
-  isDark,
   cd,
 }: EditModalProps) {
   if (!editField) return null

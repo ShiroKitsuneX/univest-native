@@ -8,7 +8,7 @@ import {
   deleteAllRead as repoDeleteAllRead,
   type AppNotification,
 } from '@/features/feed/repositories/notificationsRepository'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 type NotificationsState = {
   notifications: AppNotification[]

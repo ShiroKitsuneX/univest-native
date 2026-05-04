@@ -15,7 +15,7 @@ import { removeAccents } from '@/utils/string'
 import { useProfileStore } from '@/stores/profileStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useGeo } from '@/stores/hooks/useGeo'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 import { Pill, PressScale, VerifiedBadge } from '@/shared/components'
 
 export function ExplorarScreen({

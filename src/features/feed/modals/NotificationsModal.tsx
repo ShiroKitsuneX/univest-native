@@ -19,7 +19,6 @@ import {
   EmptyState,
   Pill,
   Skeleton,
-  SvgIcon,
 } from '@/shared/components'
 import type { AppNotification, NotificationType } from '@/features/feed/repositories/notificationsRepository'
 import type { DomainTone } from '@/theme/palette'
@@ -45,12 +44,15 @@ const TYPE_VISUALS: Record<
 
 type Filter = 'all' | 'unread'
 
+type NavTarget = { uniId?: string; postId?: string }
+
 type Props = {
   visible: boolean
   onClose: () => void
+  onSelect?: (target: NavTarget) => void
 }
 
-export function NotificationsModal({ visible, onClose }: Props) {
+export function NotificationsModal({ visible, onClose, onSelect }: Props) {
   const insets = useSafeAreaInsets()
   const { T, isDark, brand, domain, radius, typography } = useTheme()
   const currentUser = useAuthStore(s => s.currentUser)
@@ -90,9 +92,10 @@ export function NotificationsModal({ visible, onClose }: Props) {
 
   const handlePress = (n: AppNotification) => {
     if (!n.read) markAsRead(n.id)
-    // TODO: when a notification carries `postId` or `uniId`, navigate to the
-    // related surface here. Today we only mark-as-read because the
-    // navigation graph isn't available inside this modal.
+    if (onSelect && (n.uniId || n.postId)) {
+      onClose()
+      onSelect({ uniId: n.uniId, postId: n.postId })
+    }
   }
 
   const handleLongPress = (n: AppNotification) => {

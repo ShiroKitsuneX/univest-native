@@ -1,14 +1,11 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Platform,
   StatusBar,
-  KeyboardAvoidingView,
-  Animated,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/theme/useTheme'

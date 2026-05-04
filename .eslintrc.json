@@ -1,11 +1,17 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
-  "extends": ["prettier"],
+  "plugins": ["@typescript-eslint", "react"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "prettier"
+  ],
   "parserOptions": {
     "ecmaVersion": 2022,
-    "sourceType": "module"
+    "sourceType": "module",
+    "ecmaFeatures": { "jsx": true }
   },
   "env": {
     "browser": true,
@@ -13,9 +19,38 @@
     "node": true,
     "jest": true
   },
+  "settings": {
+    "react": { "version": "detect" }
+  },
   "rules": {
     "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-empty-object-type": "off",
+    "@typescript-eslint/no-unused-expressions": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
     "no-console": "off",
-    "no-empty": "off"
-  }
+    "no-empty": "off",
+    "no-prototype-builtins": "off",
+    "no-useless-escape": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "react/no-unescaped-entities": "off",
+    "react/display-name": "off"
+  },
+  "overrides": [
+    {
+      "files": ["src/data/**/*.js"],
+      "rules": {
+        "@typescript-eslint/no-require-imports": "off"
+      }
+    }
+  ]
 }

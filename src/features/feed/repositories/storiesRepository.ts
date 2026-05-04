@@ -1,14 +1,15 @@
 import {
   collection,
+  deleteDoc,
   doc,
   addDoc,
   getDocs,
   updateDoc,
   increment,
+  orderBy,
   serverTimestamp,
   where,
   query,
-  orderBy,
 } from 'firebase/firestore'
 import { db } from '@/core/firebase/client'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
@@ -111,6 +112,44 @@ export async function createStory(input: CreateStoryInput): Promise<StoryDoc> {
     expiresAt,
     viewsCount: 0,
   }
+}
+
+export async function listStoriesForUni(uniId: string): Promise<StoryDoc[]> {
+  const storiesRef = collection(
+    db,
+    getPath(...firestorePaths.universityStories(uniId))
+  )
+  const q = query(storiesRef, orderBy('createdAt', 'desc'))
+  const snapshot = await getDocs(q)
+  return snapshot.docs.map(d => {
+    const data = d.data()
+    return {
+      id: d.id,
+      uniId: data.uniId,
+      uniName: data.uniName,
+      uniColor: data.uniColor,
+      imageUrl: data.imageUrl,
+      videoUrl: data.videoUrl,
+      createdAt:
+        data.createdAt?.toDate?.()?.toISOString?.() ??
+        new Date().toISOString(),
+      expiresAt:
+        data.expiresAt?.toDate?.()?.toISOString?.() ??
+        new Date().toISOString(),
+      viewsCount: data.viewsCount ?? 0,
+    }
+  })
+}
+
+export async function deleteUniStory(
+  uniId: string,
+  storyId: string
+): Promise<void> {
+  const storyRef = doc(
+    db,
+    getPath(...firestorePaths.universityStory(uniId, storyId))
+  )
+  await deleteDoc(storyRef)
 }
 
 export async function markStoryViewed(

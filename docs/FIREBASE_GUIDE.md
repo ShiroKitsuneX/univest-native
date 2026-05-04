@@ -19,7 +19,7 @@ The codebase is in a hybrid state.
 
 - `src/core/firebase/firestorePaths.ts` exists and is used by every repository (now also covers `countries/states/cities`)
 - `src/core/firebase/client.ts` owns Firebase initialisation and reads `EXPO_PUBLIC_*` env vars
-- feature repositories exist for: auth (`fetchUserProfile`, `createInitialUserProfile`), feed (posts + stories), explorar (universities), onboarding, reference (courses, icons, geo)
+- feature repositories exist for: auth (`fetchUserProfile`, `createInitialUserProfile`), feed (posts + stories + notifications), explorar (universities), institution (post authoring), onboarding, reference (courses, icons, geo)
 - story loading goes through `features/feed/services/storiesService` → `storiesRepository`
 - institution updates use `explorarService.saveUniversityUpdates` → `universitiesRepository`
 - `src/services/firestore.ts` and `src/services/geo.ts` were deleted; no more generic backend buckets
@@ -148,13 +148,17 @@ Purpose:
 
 Primary domains:
 
-- feed
-- institution
+- feed (reads, view-count bumps)
+- institution (create / delete via
+  `features/institution/services/institutionStoriesService`)
 
 Rules:
 
-- loading belongs to feed repositories
-- creation and moderation should belong to institution repositories/services when added
+- loading belongs to `features/feed/repositories/storiesRepository`
+- create/delete is enforced by `firestore.rules` to institutions whose
+  `linkedUniId` matches the parent `uniId`
+- `viewsCount` bumps are still allowed for any authed user
+- moderation/approval-before-publish remains future work
 
 ### `posts`
 
@@ -164,9 +168,20 @@ Purpose:
 - share count
 - like count
 
-Primary domain:
+Primary domains:
 
-- feed
+- feed (reads, like/share counter mutations)
+- institution (authoring — see
+  `features/institution/repositories/institutionPostsRepository`)
+
+Rules:
+
+- creation/edit/delete is restricted by `firestore.rules` to authenticated
+  institution accounts whose `linkedUniId` matches the post's `uniId`
+- like/share counter bumps are still allowed for any authenticated user
+  (the feed mutates them as students react); a future move to server-side
+  counters is the right next step
+- post `authorId` must match the writer's `request.auth.uid`
 
 ### `posts/{postId}/likes`
 

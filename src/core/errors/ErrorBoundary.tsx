@@ -1,6 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react'
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 type Props = { children: ReactNode }
 type State = { err: Error | null }

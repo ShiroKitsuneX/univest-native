@@ -59,12 +59,11 @@ The codebase is already in a meaningful transition toward a better structure.
 - architecture is hybrid: root-level `services/` and `stores/` still coexist with feature repositories and services
 - `persistToUser` still performs remote writes from store infrastructure (kept by policy — see FIREBASE_GUIDE)
 - `src/services/auth.ts` retains only the Firebase Auth wrappers; the signUp profile write now lives in `features/auth/repositories/authRepository.createInitialUserProfile`
-- feature-owned modals still live in a global `src/modals/` folder
-- `ErrorBoundary` is at `src/components/ErrorBoundary.tsx`; long-term home is `src/core/errors/`
+- feature-owned modals now live under their feature folder (`src/features/<domain>/modals/`); only `SettingsModal` (app-shell composition) and `ShareModal` (cross-feature) remain in the global `src/modals/`
+- `ErrorBoundary` now lives at `src/core/errors/ErrorBoundary.tsx`; `logger` at `src/core/logging/logger.ts`; user-storage helpers at `src/core/storage/localUserStorage.ts`
 - the repo still mixes `.js`, `.ts`, and `.tsx` — only `src/data/*` remain `.js`
 - folder name drift: `features/explorar` (PT) vs target `features/explore` (EN); `screens/notas` exists with no matching `features/notes`. Pick one convention and migrate the rest at touch time
-- `src/navigation/linking.ts` is a stub (`config: { screens: {} }`); either populate or remove until deep-link work begins
-- ESLint is on v9 but the config is still legacy `.eslintrc.json`; `npm run lint` errors out until the project migrates to `eslint.config.js` flat config and adds `typescript-eslint` for TS support
+- ESLint is on v8.57 with `.eslintrc.json` and `npm run lint` runs clean (0 errors). A future bump to v9 will require migrating to flat config (`eslint.config.js`)
 - some naming remains highly abbreviated and easy for AI tools to misread
 
 ### Recently Fixed
@@ -317,7 +316,15 @@ Owns:
 
 - institution-specific profile/admin view
 - university self-edit actions
-- future institution posts, stories, analytics, and admin settings
+- institution post authoring (`features/institution/repositories/institutionPostsRepository`,
+  `features/institution/services/institutionPostsService`,
+  `features/institution/modals/CreatePostModal`)
+- institution story publishing (`features/institution/services/institutionStoriesService`,
+  `features/institution/modals/CreateStoryModal`; reuses
+  `features/feed/repositories/storiesRepository` for `universidades/{uniId}/stories`)
+- institution analytics aggregation (`features/institution/services/institutionAnalyticsService`)
+  composes existing repositories — no new Firestore collections
+- future institution admin settings, image uploads, and time-series analytics
 
 Institution mode must be treated as its own domain, not a special case hidden inside student profile code.
 
@@ -611,12 +618,10 @@ Minimum expectations:
 
 The next architectural improvements should happen in this order:
 
-1. migrate the ESLint config to flat `eslint.config.js` and add `typescript-eslint` so `npm run lint` works on the TS codebase
-2. move `ErrorBoundary`, `logger`, and `storage` under `src/core/{errors,logging,storage}/` (their long-term home per the target structure)
-3. move feature-owned modals out of the global `src/modals/` bucket as they are touched
-4. decide whether to align `features/explorar` → `features/explore` and add a `features/notes/` owner for the notas screen, or update the target structure to keep the Portuguese names
-5. continue standardising active app layers on TypeScript (only `src/data/*.js` remain JS)
-6. expand `tsconfig` to `strict: true` once the remaining ad-hoc `any` casts in store hydrate functions are typed
+1. decide whether to align `features/explorar` → `features/explore` (the rest of the codebase is English) and finish populating the new `features/notes/` and `features/planning/` owners (services + repositories beyond the modals already moved)
+2. continue standardising active app layers on TypeScript (only `src/data/*.js` remain JS)
+3. expand `tsconfig` to `strict: true` once the remaining ad-hoc `any` casts in store hydrate functions are typed
+4. plan the ESLint v9 + flat-config migration when the next major bump happens
 
 ## Final Rule
 

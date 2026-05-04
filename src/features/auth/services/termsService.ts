@@ -6,7 +6,7 @@ import {
   type TermsAcceptance,
 } from '@/features/auth/repositories/authRepository'
 import { DEFAULT_TERMS_CONTENT } from '@/data/TERMS_AND_CONDITIONS'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 export { DEFAULT_TERMS_CONTENT }
 

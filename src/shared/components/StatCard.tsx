@@ -11,8 +11,7 @@ import { useTheme } from '@/theme/useTheme'
 import type { DomainTone } from '@/theme/palette'
 
 type Props = {
-  // Soft pastel accent family — picks the icon-tile colour. See
-  // REDESIGN_PLAN.md > "Stat / domain accent palette".
+  // Soft pastel accent family — picks the icon-tile colour.
   tone: DomainTone
   icon?: ReactNode
   value: string | number

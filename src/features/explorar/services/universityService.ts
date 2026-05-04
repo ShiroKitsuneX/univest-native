@@ -10,7 +10,7 @@ import {
   type University,
 } from '@/stores/universitiesStore'
 import { useAuthStore, type UserData } from '@/stores/authStore'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 export async function saveUniversityUpdates(
   universityId: string,

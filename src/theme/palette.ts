@@ -1,5 +1,4 @@
 // Theme palettes (dark + light) and tag colour families.
-// The locked design language lives in docs/REDESIGN_PLAN.md > "Design language".
 // `ThemeColors` shape is fixed — adding properties is fine, removing/renaming
 // requires migrating every call-site (currently ~150+ usages of `T.accent`,
 // `T.acBg`, etc.).
@@ -93,7 +92,7 @@ export const BRAND = {
 
 // Domain accent palette — soft pastel backgrounds for stat-card icon tiles
 // so dashboards scan by colour. Text/icon colour atop these pastels lives
-// alongside as `*Fg`. See REDESIGN_PLAN.md > "Stat / domain accent palette".
+// alongside as `*Fg`.
 export type DomainTone =
   | 'progress'
   | 'simulado'

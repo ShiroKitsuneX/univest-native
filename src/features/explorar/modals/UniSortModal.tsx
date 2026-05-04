@@ -5,7 +5,7 @@ import { getMonthFromExamLabel } from '@/utils/dates'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 
 export function UniSortModal({ visible, onClose }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, AT } = useTheme()
 
   const unis = useUniversitiesStore(s => s.unis)
   const uniSort = useUniversitiesStore(s => s.uniSort)

@@ -8,11 +8,10 @@ import {
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { PageHeader } from '@/shared/components/PageHeader'
 
 export function ExamsListScreen({ selUni, onBack, onSelectExam }) {
   const insets = useSafeAreaInsets()
-  const { T, isDark, AT } = useTheme()
+  const { T, AT } = useTheme()
 
   const [examSearch, setExamSearch] = useState('')
   const [examSort, setExamSort] = useState('newest')

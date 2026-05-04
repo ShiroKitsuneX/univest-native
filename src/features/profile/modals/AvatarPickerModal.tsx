@@ -6,7 +6,7 @@ import { AVATAR_PRESETS, AVATAR_COLORS } from '@/theme/avatar'
 import { useProfileStore } from '@/stores/profileStore'
 
 export function AvatarPickerModal({ visible, onClose }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, AT } = useTheme()
 
   const av = useProfileStore(s => s.av)
   const setAv = useProfileStore(s => s.setAv)

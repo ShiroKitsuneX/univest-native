@@ -6,7 +6,7 @@ import { useProfileStore } from '@/stores/profileStore'
 import { useGeo } from '@/stores/hooks/useGeo'
 
 export function LocationSettingsModal({ visible, onClose }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, AT } = useTheme()
 
   const countryId = useProfileStore(s => s.countryId)
   const setCountryId = useProfileStore(s => s.setCountryId)

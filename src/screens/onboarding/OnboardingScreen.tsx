@@ -14,16 +14,16 @@ import { USER_TYPES } from '@/data/userTypes'
 import { ALL_COURSES } from '@/data/areas'
 import { SBox } from '@/components/SBox'
 import { SvgIcon } from '@/shared/components/SvgIcon'
+import { Button, EmptyState, Pill, PressScale } from '@/shared/components'
 import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useCoursesStore } from '@/stores/coursesStore'
-import { useIcons } from '@/stores/hooks/useIcons'
 import { useAuthStore } from '@/stores/authStore'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 export function OnboardingScreen() {
   const insets = useSafeAreaInsets()
-  const { T, isDark, AT } = useTheme()
+  const { T, isDark, brand, radius } = useTheme()
 
   const step = useOnboardingStore(s => s.step)
   const uType = useOnboardingStore(s => s.uType)
@@ -39,7 +39,6 @@ export function OnboardingScreen() {
   const setUnis = useUniversitiesStore(s => s.setUnis)
 
   const fbCourses = useCoursesStore(s => s.fbCourses)
-  const getIcon = useIcons()
 
   const currentUser = useAuthStore(s => s.currentUser)
 
@@ -136,45 +135,52 @@ export function OnboardingScreen() {
             style={{ flex: 1 }}
             contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
           >
-            {USER_TYPES.map(ut => (
-              <TouchableOpacity
-                key={ut.id}
-                onPress={() => hUType(uType?.id === ut.id ? null : ut)}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  padding: 14,
-                  borderRadius: 16,
-                  backgroundColor: uType?.id === ut.id ? T.acBg : T.card2,
-                  borderWidth: 1.5,
-                  borderColor: uType?.id === ut.id ? T.accent : T.border,
-                  marginBottom: 8,
-                }}
-              >
-                {uType?.id === ut.id ? (
-                  <SvgIcon name="rocket" size={24} color={T.accent} />
-                ) : (
-                  <Text style={{ fontSize: 24, marginRight: 14 }}>
-                    {ut.emoji || (ut.id === 'prevestu' ? '🎯' : '')}
-                  </Text>
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{ fontSize: 14, fontWeight: '700', color: T.text }}
-                  >
-                    {ut.label}
-                  </Text>
-                  <Text style={{ fontSize: 11, color: T.sub }}>{ut.sub}</Text>
-                </View>
-                {uType?.id === ut.id && (
-                  <Text
-                    style={{ color: T.accent, fontSize: 16, fontWeight: '800' }}
-                  >
-                    ✓
-                  </Text>
-                )}
-              </TouchableOpacity>
-            ))}
+            {USER_TYPES.map(ut => {
+              const selected = uType?.id === ut.id
+              return (
+                <PressScale
+                  key={ut.id}
+                  onPress={() => hUType(selected ? null : ut)}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 14,
+                    borderRadius: radius.lg,
+                    backgroundColor: selected ? T.acBg : T.card2,
+                    borderWidth: 1.5,
+                    borderColor: selected ? brand.primary : T.border,
+                    marginBottom: 8,
+                  }}
+                >
+                  {selected ? (
+                    <SvgIcon name="rocket" size={24} color={brand.primary} />
+                  ) : (
+                    <Text style={{ fontSize: 24, marginRight: 14 }}>
+                      {ut.emoji || (ut.id === 'prevestu' ? '🎯' : '')}
+                    </Text>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{ fontSize: 14, fontWeight: '700', color: T.text }}
+                    >
+                      {ut.label}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: T.sub }}>{ut.sub}</Text>
+                  </View>
+                  {selected && (
+                    <Text
+                      style={{
+                        color: brand.primary,
+                        fontSize: 16,
+                        fontWeight: '800',
+                      }}
+                    >
+                      ✓
+                    </Text>
+                  )}
+                </PressScale>
+              )
+            })}
           </ScrollView>
         </>
       )}
@@ -214,28 +220,14 @@ export function OnboardingScreen() {
               }}
             >
               {[1, 2].map(n => (
-                <TouchableOpacity
+                <Pill
                   key={n}
+                  size="sm"
+                  active={picking === n}
                   onPress={() => setPick(n)}
-                  style={{
-                    paddingHorizontal: 13,
-                    paddingVertical: 6,
-                    borderRadius: 20,
-                    backgroundColor: picking === n ? T.accent : T.card2,
-                    borderWidth: 1,
-                    borderColor: picking === n ? T.accent : T.border,
-                  }}
                 >
-                  <Text
-                    style={{
-                      color: picking === n ? '#FFFFFF' : T.sub,
-                      fontSize: 11,
-                      fontWeight: '700',
-                    }}
-                  >
-                    {n}ª: {n === 1 ? c1 || 'Escolher' : c2 || 'Opcional'}
-                  </Text>
-                </TouchableOpacity>
+                  {`${n}ª: ${n === 1 ? c1 || 'Escolher' : c2 || 'Opcional'}`}
+                </Pill>
               ))}
               {(!!c1 || !!c2) && (
                 <TouchableOpacity
@@ -276,7 +268,7 @@ export function OnboardingScreen() {
               const s1 = c1 === cc,
                 s2 = c2 === cc
               return (
-                <TouchableOpacity
+                <PressScale
                   key={cc}
                   onPress={() => {
                     if (s1) {
@@ -297,14 +289,14 @@ export function OnboardingScreen() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: 12,
-                    borderRadius: 14,
+                    borderRadius: radius.md,
                     backgroundColor: s1 || s2 ? T.acBg : T.card2,
                     marginBottom: 6,
                   }}
                 >
                   <Text
                     style={{
-                      color: s1 || s2 ? T.accent : T.text,
+                      color: s1 || s2 ? brand.primary : T.text,
                       fontSize: 13,
                       fontWeight: s1 || s2 ? '700' : '500',
                     }}
@@ -312,12 +304,16 @@ export function OnboardingScreen() {
                     {cc}
                   </Text>
                   <Text
-                    style={{ fontSize: 11, fontWeight: '800', color: T.accent }}
+                    style={{
+                      fontSize: 11,
+                      fontWeight: '800',
+                      color: brand.primary,
+                    }}
                   >
                     {s1 && '1ª ✓'}
                     {s2 && '2ª ✓'}
                   </Text>
-                </TouchableOpacity>
+                </PressScale>
               )
             })}
           </ScrollView>
@@ -425,16 +421,11 @@ export function OnboardingScreen() {
               </View>
             ))}
             {filteredUnis.length === 0 && (
-              <Text
-                style={{
-                  color: T.muted,
-                  textAlign: 'center',
-                  padding: 30,
-                  fontSize: 13,
-                }}
-              >
-                Nenhuma universidade encontrada.
-              </Text>
+              <EmptyState
+                icon="🔍"
+                title="Nenhuma universidade encontrada"
+                description="Tente outro termo ou pule esta etapa — você pode seguir universidades depois."
+              />
             )}
           </ScrollView>
         </>
@@ -460,54 +451,34 @@ export function OnboardingScreen() {
             style={{
               width: `${(step / 3) * 100}%` as const,
               height: '100%',
-              backgroundColor: T.accent,
+              backgroundColor: brand.primary,
               borderRadius: 2,
             }}
           />
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           {step > 1 && (
-            <TouchableOpacity
+            <Button
               onPress={() => hStep(s => s - 1)}
-              style={{
-                flex: 1,
-                padding: 14,
-                borderRadius: 16,
-                backgroundColor: T.card2,
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: T.border,
-              }}
+              variant="secondary"
+              size="md"
+              style={{ flex: 1 }}
             >
-              <Text style={{ color: T.sub, fontSize: 14, fontWeight: '700' }}>
-                ← Voltar
-              </Text>
-            </TouchableOpacity>
+              ← Voltar
+            </Button>
           )}
-          <TouchableOpacity
-            disabled={!canNext}
+          <Button
             onPress={() => {
               if (step < 3) hStep(step + 1)
               else finishOnboarding()
             }}
-            style={{
-              flex: 2,
-              padding: 14,
-              borderRadius: 16,
-              backgroundColor: canNext ? T.accent : T.border,
-              alignItems: 'center',
-            }}
+            variant="primary"
+            size="md"
+            disabled={!canNext}
+            style={{ flex: 2 }}
           >
-            <Text
-              style={{
-                color: canNext ? '#FFFFFF' : T.muted,
-                fontSize: 15,
-                fontWeight: '800',
-              }}
-            >
-              {step === 3 ? 'Entrar no app 🚀' : 'Continuar →'}
-            </Text>
-          </TouchableOpacity>
+            {step === 3 ? 'Entrar no app 🚀' : 'Continuar →'}
+          </Button>
         </View>
       </View>
     </View>

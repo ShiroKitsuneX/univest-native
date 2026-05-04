@@ -14,11 +14,38 @@ service cloud.firestore {
     }
     
     // Posts
+    // - Anyone can read.
+    // - Like/share counters can be bumped by any authenticated user (the
+    //   feed mutates them as users react). We accept this scope until we
+    //   move counters server-side.
+    // - Authoring (create/update of post body) requires an institution
+    //   account whose `linkedUniId` matches the post's `uniId`.
+    // - Deletes require institution ownership of the linked uni.
+    function isInstitutionForUni(uid, uniId) {
+      return exists(/databases/$(database)/documents/usuarios/$(uid))
+        && get(/databases/$(database)/documents/usuarios/$(uid)).data.tipo == 'instituicao'
+        && get(/databases/$(database)/documents/usuarios/$(uid)).data.linkedUniId == uniId;
+    }
+
     match /posts/{postId} {
       allow read: if true;
-      allow write: if request.auth != null;
+
+      allow create: if request.auth != null
+        && isInstitutionForUni(request.auth.uid, request.resource.data.uniId)
+        && request.resource.data.authorId == request.auth.uid;
+
+      // Counter-only updates (likes/shares) are allowed for any
+      // authenticated user; full edits are gated to the owning institution.
+      allow update: if request.auth != null && (
+        isInstitutionForUni(request.auth.uid, resource.data.uniId)
+        || (request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['likesCount', 'sharesCount']))
+      );
+
+      allow delete: if request.auth != null
+        && isInstitutionForUni(request.auth.uid, resource.data.uniId);
     }
-    
+
     // Post likes subcollection
     match /posts/{postId}/likes/{likeId} {
       allow read: if request.auth != null;
@@ -41,9 +68,24 @@ service cloud.firestore {
     match /icones/{iconId} { allow read: if true; }
     
     // Stories
+    // - Anyone can read.
+    // - Create/update/delete restricted to the owning institution.
+    // - viewsCount counter bumps allowed for any authenticated user (the
+    //   feed bumps it on view) — same compromise we use for post counters.
     match /universidades/{uniId}/stories/{storyId} {
       allow read: if true;
-      allow write: if request.auth != null;
+
+      allow create: if request.auth != null
+        && isInstitutionForUni(request.auth.uid, uniId);
+
+      allow update: if request.auth != null && (
+        isInstitutionForUni(request.auth.uid, uniId)
+        || (request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['viewsCount']))
+      );
+
+      allow delete: if request.auth != null
+        && isInstitutionForUni(request.auth.uid, uniId);
     }
     
     // Notifications - FIXED: proper top-level path

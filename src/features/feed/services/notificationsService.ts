@@ -3,7 +3,7 @@ import {
   fetchNotifications,
 } from '@/features/feed/repositories/notificationsRepository'
 import type { University } from '@/stores/universitiesStore'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 // Days-out thresholds at which we want a reminder notification to exist.
 // Hits at "30 days", "7 days", and "1 day" before each goal-uni exam.

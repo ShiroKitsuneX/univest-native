@@ -8,7 +8,7 @@ import {
 import { db } from '@/core/firebase/client'
 import { firestorePaths, getPath } from '@/core/firebase/firestorePaths'
 import { GEO_DATA } from '@/data/geo'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 type GeoDoc = { id: string } & DocumentData
 

@@ -2,8 +2,8 @@ import { doc, setDoc } from 'firebase/firestore'
 import type { StateCreator } from 'zustand'
 import { db } from '@/core/firebase/client'
 import { useAuthStore } from '@/stores/authStore'
-import { loadLocalUserData, saveLocalUserData } from '@/services/storage'
-import { logger } from '@/services/logger'
+import { loadLocalUserData, saveLocalUserData } from '@/core/storage/localUserStorage'
+import { logger } from '@/core/logging/logger'
 
 // Zustand middleware that mirrors a whitelist of store keys to AsyncStorage
 // and to /usuarios/{uid}. Debounced to coalesce bursty updates into one write.

@@ -1,6 +1,5 @@
-// Phase 2 primitives. See docs/REDESIGN_PLAN.md > "Phase 2 — primitives spec".
-// All components are stateless, theme-aware via useTheme, and free of store/
-// Firebase dependencies.
+// Shared UI primitives. All components are stateless, theme-aware via
+// useTheme, and free of store / Firebase dependencies.
 
 export { AnimatedHeart } from './AnimatedHeart'
 export { Avatar } from './Avatar'

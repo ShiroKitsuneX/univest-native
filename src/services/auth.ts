@@ -10,7 +10,7 @@ import {
 } from 'firebase/auth'
 import { auth } from '@/core/firebase/client'
 import { createInitialUserProfile } from '@/features/auth/repositories/authRepository'
-import { clearLocalUserData } from './storage'
+import { clearLocalUserData } from '@/core/storage/localUserStorage'
 
 export const onAuthChange = (cb: (user: User | null) => void): (() => void) =>
   onAuthStateChanged(auth, cb)

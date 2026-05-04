@@ -8,7 +8,6 @@ import {
   View,
 } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
-import { useCardStyle, useLabelStyle } from '@/theme/styles'
 import { TAG_D, TAG_L } from '@/theme/palette'
 import { NOTAS_CORTE } from '@/data/notasCorte'
 import { ENEM_SUBJECTS, subjectScore } from '@/data/subjects'
@@ -26,7 +25,7 @@ import {
   StreakBadge,
   type BarPoint,
 } from '@/shared/components'
-import { AdmissionCalcModal } from '@/screens/notas/AdmissionCalcModal'
+import { AdmissionCalcModal } from '@/features/notes/modals/AdmissionCalcModal'
 import type { Grade } from '@/stores/profileStore'
 
 type TypeFilter = 'all' | 'prova' | 'simulado'
@@ -169,8 +168,6 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
     [gs, gradeFilter]
   )
 
-  const cd = useCardStyle()
-  const lbl = useLabelStyle()
 
   // Pre-fill the calculator with the user's last grade (any type) so the
   // modal opens to a useful starting point. The modal handles the no-grade
@@ -178,6 +175,7 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
   const lastAnyGrade: Grade | undefined = gs[gs.length - 1]
 
   return (
+    <>
     <ScrollView
       style={{ flex: 1 }}
       contentContainerStyle={styles.container}
@@ -857,13 +855,14 @@ export function NotasScreen({ onEditCourses, onAddGrade }) {
         </Card>
       )}
 
-      {/* <AdmissionCalcModal
-        visible={!!calcTarget}
-        onClose={() => setCalcTarget(null)}
-        target={calcTarget}
-        startGrade={lastAnyGrade}
-      /> */}
     </ScrollView>
+    <AdmissionCalcModal
+      visible={!!calcTarget}
+      onClose={() => setCalcTarget(null)}
+      target={calcTarget}
+      startGrade={lastAnyGrade}
+    />
+    </>
   )
 }
 

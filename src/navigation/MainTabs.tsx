@@ -20,8 +20,6 @@ import {
 } from '@react-navigation/native'
 import { useTheme } from '@/theme/useTheme'
 import type { University } from '@/stores/universitiesStore'
-import { useProfileStore } from '@/stores/profileStore'
-import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import { SvgIcon } from '@/shared/components/SvgIcon'
@@ -31,7 +29,7 @@ import { PerfilScreen } from '@/screens/perfil/PerfilScreen'
 import { InstitutionAdminScreen } from '@/screens/perfil/InstitutionAdminScreen'
 import { MainCtx, useMain, type MainHandlers } from '@/navigation/mainContext'
 import { ExplorarStack } from '@/navigation/ExplorarStack'
-import { NotificationsModal } from '@/modals/NotificationsModal'
+import { NotificationsModal } from '@/features/feed/modals/NotificationsModal'
 
 const Tab = createBottomTabNavigator()
 
@@ -63,12 +61,14 @@ function TabHeader({
   route: RouteProp<Record<string, object | undefined>, string>
 }) {
   const insets = useSafeAreaInsets()
-  const { T, brand, typography } = useTheme()
-  const { onOpenSettings } = useMain()
+  const navigation = useNavigation<Nav>()
+  const { T } = useTheme()
+  const { onOpenSettings, onSelectUni } = useMain()
   const currentUser = useAuthStore(s => s.currentUser)
   const unreadCount = useNotificationsStore(s => s.unreadCount)
   const loadUnreadCount = useNotificationsStore(s => s.loadUnreadCount)
   const goalsUnis = useUniversitiesStore(s => s.goalsUnis)
+  const unis = useUniversitiesStore(s => s.unis)
   const [notificationsVisible, setNotificationsVisible] = useState(false)
 
   // On sign-in (or whenever the user/goal-list changes) refresh the unread
@@ -137,6 +137,14 @@ function TabHeader({
       <NotificationsModal
         visible={notificationsVisible}
         onClose={() => setNotificationsVisible(false)}
+        onSelect={({ uniId }) => {
+          if (!uniId) return
+          const uni = unis.find(u => String(u.id) === String(uniId))
+          if (uni) {
+            onSelectUni?.(uni)
+            navigation.navigate('ExplorarTab', { screen: 'UniversityDetail' })
+          }
+        }}
       />
     </View>
   )

@@ -4,7 +4,7 @@ import {
   seedGeoData,
   fetchGeoCollections,
 } from '@/features/reference/repositories/geoRepository'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 export type Country = { id: string; name: string }
 export type GeoState_State = { id: string; name: string; countryId: string }

@@ -7,7 +7,7 @@ import { usePostsStore } from '@/stores/postsStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 
 export function SavedPostsModal({ visible, onClose, onSelectPost }) {
-  const { T, isDark } = useTheme()
+  const { T } = useTheme()
 
   const posts = usePostsStore(s => s.posts)
   const saved = usePostsStore(s => s.saved)

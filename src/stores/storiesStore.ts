@@ -3,7 +3,6 @@ import { useUniversitiesStore } from './universitiesStore'
 import {
   loadStoriesForUser,
   trackStoryView,
-  type StoryDoc,
 } from '@/features/feed/services/storiesService'
 
 export type Story = {

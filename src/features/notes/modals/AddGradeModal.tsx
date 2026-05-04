@@ -11,7 +11,7 @@ import { BottomSheet } from '@/components/BottomSheet'
 import { useProfileStore } from '@/stores/profileStore'
 
 export function AddGradeModal({ visible, onClose }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, AT } = useTheme()
 
   const gs = useProfileStore(s => s.gs)
   const setGs = useProfileStore(s => s.setGs)

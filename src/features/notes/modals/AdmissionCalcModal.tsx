@@ -10,7 +10,7 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/theme/useTheme'
-import { ENEM_SUBJECTS, subjectScore } from '@/data/subjects'
+import { ENEM_SUBJECTS } from '@/data/subjects'
 import { useUniversitiesStore, type University } from '@/stores/universitiesStore'
 import type { Grade } from '@/stores/profileStore'
 import { Button, Card } from '@/shared/components'
@@ -71,7 +71,7 @@ export function AdmissionCalcModal({
   startGrade,
 }: Props) {
   const insets = useSafeAreaInsets()
-  const { T, brand, domain, radius, typography, shadow } = useTheme()
+  const { T, brand, domain, typography, shadow } = useTheme()
   const unis = useUniversitiesStore(s => s.unis)
 
   // Seed scores from the user's most recent grade. If they have no grades,

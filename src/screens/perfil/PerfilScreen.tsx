@@ -26,7 +26,7 @@ export function PerfilScreen({
   onSelectUni,
   goNotas,
 }) {
-  const { T, isDark, AT, brand, domain, typography } = useTheme()
+  const { T, AT, brand, domain, typography } = useTheme()
   // Reading-progress amber → goal-domain accent (warm pastel).
   const reading = domain.goal
 

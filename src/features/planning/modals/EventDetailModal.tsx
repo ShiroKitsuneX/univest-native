@@ -3,7 +3,7 @@ import { useTheme } from '@/theme/useTheme'
 import { BottomSheet } from '@/components/BottomSheet'
 
 export function EventDetailModal({ event, onClose }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, AT } = useTheme()
 
   const lbl: {
     color: string

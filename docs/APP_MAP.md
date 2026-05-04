@@ -55,21 +55,28 @@ Sinônimo de Screen no contexto deste app.
 
 ### MODALS (Popups/Overlays)
 
-| #   | Arquivo                   | Propósito             |
-| --- | ------------------------- | --------------------- |
-| 1   | SettingsModal.tsx         | Configurações gerais  |
-| 2   | ShareModal.tsx            | Compartilhar conteúdo |
-| 3   | UniSortModal.tsx          | Ordenar universidades |
-| 4   | SavedPostsModal.tsx       | Posts salvos          |
-| 5   | GoalsModal.tsx            | Metas/propostas       |
-| 6   | AddGradeModal.tsx         | Adicionar nota        |
-| 7   | EventDetailModal.tsx      | Detalhes do evento    |
-| 8   | DiscoverCoursesModal.tsx  | Descobrir cursos      |
-| 9   | ExamDetailModal.tsx       | Detalhes da prova     |
-| 10  | LocationSettingsModal.tsx | Localização           |
-| 11  | AvatarPickerModal.tsx     | Escolher avatar       |
-| 12  | EditNameModal.tsx         | Editar nome           |
-| 13  | EditCoursesModal.tsx      | Editar cursos         |
+Modais com domínio claro vivem dentro do owner em `src/features/<domain>/modals/`. Apenas `SettingsModal` (composição app-shell) e `ShareModal` (cross-feature) permanecem em `src/modals/`.
+
+| #   | Arquivo                   | Localização atual                          | Propósito                       |
+| --- | ------------------------- | ------------------------------------------ | ------------------------------- |
+| 1   | SettingsModal.tsx         | src/modals/                                | Configurações gerais            |
+| 2   | ShareModal.tsx            | src/modals/                                | Compartilhar conteúdo           |
+| 3   | UniSortModal.tsx          | src/features/explorar/modals/              | Ordenar universidades           |
+| 4   | ExamDetailModal.tsx       | src/features/explorar/modals/              | Detalhes da prova               |
+| 5   | SavedPostsModal.tsx       | src/features/feed/modals/                  | Posts salvos                    |
+| 6   | NotificationsModal.tsx    | src/features/feed/modals/                  | Central de notificações         |
+| 7   | AddGradeModal.tsx         | src/features/notes/modals/                 | Adicionar nota                  |
+| 8   | AdmissionCalcModal.tsx    | src/features/notes/modals/                 | Calculadora de admissão         |
+| 9   | GoalsModal.tsx            | src/features/planning/modals/              | Metas de vestibular             |
+| 10  | EventDetailModal.tsx      | src/features/planning/modals/              | Detalhes do evento              |
+| 11  | AvatarPickerModal.tsx     | src/features/profile/modals/               | Escolher avatar                 |
+| 12  | EditNameModal.tsx         | src/features/profile/modals/               | Editar nome                     |
+| 13  | LocationSettingsModal.tsx | src/features/profile/modals/               | Localização                     |
+| 14  | EditCoursesModal.tsx      | src/features/onboarding/modals/            | Editar cursos                   |
+| 15  | DiscoverCoursesModal.tsx  | src/features/onboarding/modals/            | Descobrir cursos                |
+| 16  | CreatePostModal.tsx       | src/features/institution/modals/           | Composer de posts (instituição) |
+| 17  | CreateStoryModal.tsx      | src/features/institution/modals/           | Composer de stories (instituição) |
+| 18  | TermsReacceptModal.tsx    | src/features/auth/modals/                  | Reaceite de termos              |
 
 ### NAVIGATION (Apenas rotas - não são telas)
 
@@ -654,10 +661,10 @@ O feed carrega posts do Firebase, com fallback para dados locais.
 
 **Implementado**
 
-Quando não há posts e nem universidades seguidas:
+Quando não há posts remotos:
 
-- o app mostra empty state
-- incentiva o usuário a explorar universidades
+- se o usuário não segue nenhuma universidade, o feed mostra `EmptyState` com CTA "Explorar universidades"
+- se o usuário já segue universidades, o feed cai em fallback para `FEED` seedado para preencher a aba enquanto o backend não retorna conteúdo
 
 ---
 
@@ -1271,17 +1278,15 @@ Cada item exibe:
 
 ## ShareModal
 
-**Implementado / Parcial**
+**Implementado**
 
 Hoje oferece:
 
 - WhatsApp
 - Twitter/X
-- copiar texto
+- Telegram
 
-Observação:
-
-- o modo `Copiar` hoje só mostra alerta de sucesso; não há integração completa com clipboard real dentro deste fluxo
+Cada opção abre o app/compose do destino com o título do item pré-preenchido via `Linking.openURL`. Não há mais entrada falsa de "copiar" — quando integrarmos clipboard real (ex.: `expo-clipboard`), o botão volta com comportamento concreto.
 
 ## UniSortModal
 
@@ -1351,6 +1356,40 @@ A aba `Perfil` deixa de renderizar o perfil comum e passa a renderizar `Institut
 - editar cursos
 - editar livros
 - editar descrição
+
+### Publicações no feed
+
+**Implementado**
+
+- a tela `InstitutionAdminScreen` mostra um bloco `Publicações` com CTA `+ Nova publicação` e a lista de posts já publicados pela instituição
+- o composer (`CreatePostModal`) permite escolher categoria (Notícia, Lista de Obras, Inscrições, Notas de Corte, Simulado), título e conteúdo
+- o serviço `publishInstitutionPost` valida tamanho mínimo/máximo, confere `linkedUniId` e faz insert otimista em `postsStore` antes de gravar em `posts/{id}`
+- excluir um post tira ele do feed remoto e do store local imediatamente
+- as regras do Firestore (`firestore.rules`) só permitem escrita em `posts/{id}` quando `tipo === 'instituicao'` e `linkedUniId == post.uniId`
+
+### Stories institucionais
+
+**Implementado**
+
+- bloco `Stories (24h)` na `InstitutionAdminScreen` com CTA `+ Nova story`, grid de stories ativas e tap-and-hold para excluir
+- composer (`CreateStoryModal`) recebe URL pública de imagem (`https://…`), mostra preview vertical 9:16 e publica via `publishInstitutionStory`
+- o serviço valida `linkedUniId`, formato da URL, e dispara `useStoriesStore.load()` para o feed strip atualizar imediatamente
+- regras do Firestore restringem create/update/delete em `universidades/{uniId}/stories/{storyId}` à instituição dona; bumps de `viewsCount` ainda são livres para usuários autenticados
+
+### Analytics da instituição
+
+**Implementado / Parcial**
+
+- bloco `📊 Analytics` na `InstitutionAdminScreen` mostra grid 2-colunas com:
+  - seguidores
+  - publicações
+  - curtidas totais e compartilhamentos totais
+  - visualizações de stories
+  - engajamento dos últimos 30 dias (curtidas + shares de posts publicados nos 30 dias anteriores)
+  - card destacado com o post de maior engajamento
+- o serviço `loadInstitutionAnalytics` agrega os números a partir das repositories existentes (`institutionPostsRepository.listPostsByInstitution`, `storiesRepository.listStoriesForUni`) e do `useUniversitiesStore` — sem novas coleções no Firestore
+- as métricas se atualizam automaticamente após publicar/excluir um post ou story
+- ainda planejado: gráfico temporal de seguidores/engajamento, segmentação por tipo de post, exportação CSV
 
 ## Estado atual do modo institucional
 
@@ -1678,6 +1717,7 @@ Abaixo estão as funcionalidades e frentes de produto que já aparecem como dire
 - notificações para seguidores
 - multi-admin
 - distinção clara entre conta estudante e conta institucional em settings e UX
+- moderação/aprovação de posts antes de aparecerem no feed (hoje vão direto)
 
 ## Dados e arquitetura
 

@@ -10,11 +10,10 @@ import { useTheme } from '@/theme/useTheme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useProgressStore } from '@/stores/progressStore'
-import { PageHeader } from '@/shared/components/PageHeader'
 
 export function BooksListScreen({ onBack }) {
   const insets = useSafeAreaInsets()
-  const { T, isDark, domain } = useTheme()
+  const { T, domain } = useTheme()
   // Goal-domain pastel keys the "Reading in progress" affordance app-wide.
   const reading = domain.goal
 

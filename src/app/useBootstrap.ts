@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { loadLocalUserData, saveLocalUserData } from '@/services/storage'
+import { loadLocalUserData, saveLocalUserData } from '@/core/storage/localUserStorage'
 import { onAuthChange } from '@/services/auth'
 import { fetchUserProfile } from '@/features/auth/repositories/authRepository'
 import { useAuthStore } from '@/stores/authStore'
@@ -10,7 +10,7 @@ import { usePostsStore } from '@/stores/postsStore'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
 import { useCoursesStore } from '@/stores/coursesStore'
 import { useGeoStore } from '@/stores/geoStore'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 export function useBootstrap() {
   const initialized = useRef(false)

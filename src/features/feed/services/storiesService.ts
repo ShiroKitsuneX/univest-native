@@ -5,7 +5,7 @@ import {
   type StoryDoc,
   type CreateStoryInput,
 } from '../repositories/storiesRepository'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 export type { StoryDoc, CreateStoryInput }
 

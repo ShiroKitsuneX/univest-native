@@ -8,7 +8,7 @@ import { useOnboardingStore } from '@/stores/onboardingStore'
 import { useCoursesStore } from '@/stores/coursesStore'
 
 export function EditCoursesModal({ visible, onClose, onSave }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, AT } = useTheme()
 
   const c1 = useOnboardingStore(s => s.c1)
   const c2 = useOnboardingStore(s => s.c2)

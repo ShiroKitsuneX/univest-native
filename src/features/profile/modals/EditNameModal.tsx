@@ -5,7 +5,7 @@ import { BottomSheet } from '@/components/BottomSheet'
 import { useProfileStore } from '@/stores/profileStore'
 
 export function EditNameModal({ visible, onClose }) {
-  const { T, isDark, AT } = useTheme()
+  const { T, AT } = useTheme()
 
   const nome = useProfileStore(s => s.nome)
   const setNome = useProfileStore(s => s.setNome)

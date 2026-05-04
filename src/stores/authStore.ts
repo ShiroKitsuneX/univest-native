@@ -3,8 +3,8 @@ import type { User } from 'firebase/auth'
 import { onAuthChange } from '@/services/auth'
 import { fetchUserProfile } from '@/features/auth/repositories/authRepository'
 import { checkTermsStatus } from '@/features/auth/services/termsService'
-import { saveLocalUserData } from '@/services/storage'
-import { logger } from '@/services/logger'
+import { saveLocalUserData } from '@/core/storage/localUserStorage'
+import { logger } from '@/core/logging/logger'
 
 export type UserData = {
   followedUnis?: string[]

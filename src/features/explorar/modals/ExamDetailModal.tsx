@@ -3,7 +3,7 @@ import { useTheme } from '@/theme/useTheme'
 import { BottomSheet } from '@/components/BottomSheet'
 
 export function ExamDetailModal({ exam, onClose }) {
-  const { T, isDark, AT, brand, domain } = useTheme()
+  const { T, AT, domain } = useTheme()
   const goal = domain.goal
   const notas = domain.notas
 

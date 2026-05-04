@@ -99,10 +99,7 @@ export const usePostsStore = create<PostsState>(
           saved: typeof v === 'function' ? v(state.saved) : v,
         })),
 
-      setPosts: posts =>
-        set(state => ({
-          posts,
-        })),
+      setPosts: posts => set({ posts }),
 
       setLikeDelta: (id, delta) =>
         set(state => ({

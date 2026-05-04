@@ -3,7 +3,7 @@ import {
   type OnboardingData,
 } from '../repositories/onboardingRepository'
 import { createNotification } from '@/features/feed/repositories/notificationsRepository'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 export type { OnboardingData }
 

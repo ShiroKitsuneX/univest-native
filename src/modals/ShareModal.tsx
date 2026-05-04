@@ -1,13 +1,47 @@
-import { View, Text, TouchableOpacity, Alert, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, Linking, Share } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { BottomSheet } from '@/components/BottomSheet'
+import { Button } from '@/shared/components'
+import { logger } from '@/core/logging/logger'
 
-export function ShareModal({ item, onClose }) {
-  const { T, isDark } = useTheme()
+type Item = { title: string }
+
+type Props = {
+  item: Item | null | undefined | unknown
+  onClose: () => void
+  // Fires when the user picks a real share target (an external app or the
+  // system share sheet). Lets callers bump share counters only when the
+  // user actually intends to share, not just when the sheet opens.
+  onShared?: () => void
+}
+
+export function ShareModal({ item, onClose, onShared }: Props) {
+  const { T } = useTheme()
+  const post = (item as Item) ?? null
+  const title = post?.title ?? ''
+
+  const text = title ? `${title}\n\nVia UniVest 🎓` : 'Via UniVest 🎓'
+
+  const openSystemShare = async () => {
+    try {
+      const result = await Share.share({ message: text })
+      if (result.action !== Share.dismissedAction) onShared?.()
+    } catch (e) {
+      logger.warn('Share.share:', (e as Error)?.message)
+    } finally {
+      onClose()
+    }
+  }
+
+  const openExternal = (href: string) => {
+    Linking.openURL(href).catch(() => {})
+    onShared?.()
+    onClose()
+  }
 
   return (
-    <BottomSheet visible={!!item} onClose={onClose} T={T}>
-      {item && (
+    <BottomSheet visible={!!post} onClose={onClose} T={T}>
+      {post && (
         <View style={{ padding: 20, paddingBottom: 24 }}>
           <View
             style={{
@@ -50,34 +84,33 @@ export function ShareModal({ item, onClose }) {
               lineHeight: 20,
             }}
           >
-            {item.title}
+            {title}
           </Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
             {[
               {
                 l: 'WhatsApp',
                 i: '💬',
                 c: '#25D366',
-                href: `https://api.whatsapp.com/send?text=${encodeURIComponent(item.title + '\n\nVia UniVest 🎓')}`,
+                href: `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
               },
               {
                 l: 'Twitter',
                 i: '🐦',
                 c: '#1DA1F2',
-                href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(item.title)}`,
+                href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}`,
               },
-              { l: 'Copiar', i: '🔗', c: T.accent, href: 'copy' },
+              {
+                l: 'Telegram',
+                i: '✈️',
+                c: '#0088cc',
+                href: `https://t.me/share/url?url=${encodeURIComponent('https://univest.app')}&text=${encodeURIComponent(title)}`,
+              },
             ].map(o => (
               <TouchableOpacity
                 key={o.l}
-                onPress={() => {
-                  if (o.href === 'copy') {
-                    Alert.alert('Copiado!', 'Texto copiado.')
-                  } else {
-                    Linking.openURL(o.href)
-                  }
-                  onClose()
-                }}
+                onPress={() => openExternal(o.href)}
                 style={{
                   flex: 1,
                   alignItems: 'center',
@@ -95,6 +128,10 @@ export function ShareModal({ item, onClose }) {
               </TouchableOpacity>
             ))}
           </View>
+
+          <Button onPress={openSystemShare} variant="primary" fullWidth>
+            Mais opções…
+          </Button>
         </View>
       )}
     </BottomSheet>

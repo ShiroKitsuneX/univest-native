@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   View,
   Text,
@@ -10,9 +10,15 @@ import { useTheme } from '@/theme/useTheme'
 import { BottomSheet } from '@/components/BottomSheet'
 import { removeAccents } from '@/utils/string'
 import { useUniversitiesStore } from '@/stores/universitiesStore'
+import { Button, EmptyState, PressScale } from '@/shared/components'
 
-export function GoalsModal({ visible, onClose }) {
-  const { T, isDark, AT } = useTheme()
+type Props = {
+  visible: boolean
+  onClose: () => void
+}
+
+export function GoalsModal({ visible, onClose }: Props) {
+  const { T, brand, radius, typography } = useTheme()
 
   const fbUnis = useUniversitiesStore(s => s.fbUnis)
   const goalsUnis = useUniversitiesStore(s => s.goalsUnis)
@@ -23,6 +29,26 @@ export function GoalsModal({ visible, onClose }) {
   useEffect(() => {
     if (!visible) setGoalsSearch('')
   }, [visible])
+
+  const filtered = useMemo(() => {
+    const allUnis = fbUnis.filter(u => u.type !== 'Técnico')
+    if (!goalsSearch) return allUnis
+    const needle = removeAccents(goalsSearch.toLowerCase())
+    return allUnis.filter(
+      u =>
+        removeAccents(u.name.toLowerCase()).includes(needle) ||
+        removeAccents(u.fullName.toLowerCase()).includes(needle)
+    )
+  }, [fbUnis, goalsSearch])
+
+  const toggleGoal = (uni: (typeof fbUnis)[number]) => {
+    const isSelected = goalsUnis.some(g => g.id === uni.id)
+    if (isSelected) {
+      setGoalsUnis(goalsUnis.filter(g => g.id !== uni.id))
+    } else {
+      setGoalsUnis([...goalsUnis, uni])
+    }
+  }
 
   return (
     <BottomSheet visible={visible} onClose={onClose} T={T}>
@@ -48,16 +74,24 @@ export function GoalsModal({ visible, onClose }) {
           >
             <Text style={{ color: T.sub, fontSize: 16 }}>←</Text>
           </TouchableOpacity>
-          <Text style={{ color: T.text, fontSize: 17, fontWeight: '800' }}>
-            📋 Tarefas
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.eyebrow, { color: T.muted }]}>
+              METAS DE VESTIBULAR
+            </Text>
+            <Text
+              style={[typography.headline, { color: T.text, marginTop: 2 }]}
+            >
+              Onde você quer prestar
+            </Text>
+          </View>
         </View>
+
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
             backgroundColor: T.inp,
-            borderRadius: 12,
+            borderRadius: radius.md,
             paddingHorizontal: 12,
             paddingVertical: 10,
             marginBottom: 16,
@@ -79,58 +113,40 @@ export function GoalsModal({ visible, onClose }) {
             </TouchableOpacity>
           )}
         </View>
+
         <Text style={{ color: T.sub, fontSize: 12, marginBottom: 12 }}>
-          Selecione as universidades que você pretende fazer vestibular
+          Estas universidades alimentam tarefas, contagem regressiva e
+          comparações com nota de corte.
         </Text>
+
         <ScrollView
           style={{ maxHeight: 400 }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {(() => {
-            const allUnis = fbUnis.filter(u => u.type !== 'Técnico')
-            const filtered =
-              goalsSearch.length > 0
-                ? allUnis.filter(
-                    u =>
-                      removeAccents(u.name.toLowerCase()).includes(
-                        removeAccents(goalsSearch.toLowerCase())
-                      ) ||
-                      removeAccents(u.fullName.toLowerCase()).includes(
-                        removeAccents(goalsSearch.toLowerCase())
-                      )
-                  )
-                : allUnis
-            if (filtered.length === 0) {
-              return (
-                <Text
-                  style={{ color: T.muted, textAlign: 'center', padding: 20 }}
-                >
-                  Nenhuma universidade encontrada
-                </Text>
-              )
-            }
-            return filtered.map(uni => {
+          {filtered.length === 0 ? (
+            <EmptyState
+              icon="🔍"
+              title="Nenhuma universidade encontrada"
+              description="Tente outro termo ou limpe a busca."
+            />
+          ) : (
+            filtered.map(uni => {
               const isSelected = goalsUnis.some(g => g.id === uni.id)
               const nextExam = uni.exams?.find(e => e.status === 'upcoming')
               return (
-                <TouchableOpacity
+                <PressScale
                   key={uni.id}
-                  onPress={() => {
-                    if (isSelected) {
-                      setGoalsUnis(goalsUnis.filter(g => g.id !== uni.id))
-                    } else {
-                      setGoalsUnis([...goalsUnis, uni])
-                    }
-                  }}
+                  onPress={() => toggleGoal(uni)}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     backgroundColor: isSelected ? T.acBg : T.card2,
-                    borderRadius: 14,
+                    borderRadius: radius.lg,
                     padding: 14,
                     marginBottom: 10,
                     borderWidth: 1,
-                    borderColor: isSelected ? T.accent : T.border,
+                    borderColor: isSelected ? brand.primary : T.border,
                   }}
                 >
                   <View
@@ -170,7 +186,7 @@ export function GoalsModal({ visible, onClose }) {
                       {nextExam && (
                         <Text
                           style={{
-                            color: T.accent,
+                            color: brand.primary,
                             fontSize: 10,
                             fontWeight: '600',
                           }}
@@ -185,41 +201,37 @@ export function GoalsModal({ visible, onClose }) {
                       width: 24,
                       height: 24,
                       borderRadius: 12,
-                      backgroundColor: isSelected ? T.accent : T.card,
+                      backgroundColor: isSelected ? brand.primary : T.card,
                       borderWidth: 2,
-                      borderColor: isSelected ? T.accent : T.border,
+                      borderColor: isSelected ? brand.primary : T.border,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
                     {isSelected && (
                       <Text
-                        style={{ color: AT, fontSize: 12, fontWeight: '800' }}
+                        style={{
+                          color: '#FFFFFF',
+                          fontSize: 12,
+                          fontWeight: '800',
+                        }}
                       >
                         ✓
                       </Text>
                     )}
                   </View>
-                </TouchableOpacity>
+                </PressScale>
               )
             })
-          })()}
+          )}
         </ScrollView>
+
         {goalsUnis.length > 0 && (
-          <TouchableOpacity
-            onPress={onClose}
-            style={{
-              marginTop: 16,
-              padding: 16,
-              borderRadius: 16,
-              backgroundColor: T.accent,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: AT, fontSize: 15, fontWeight: '800' }}>
-              Salvar Metas ({goalsUnis.length})
-            </Text>
-          </TouchableOpacity>
+          <View style={{ marginTop: 16 }}>
+            <Button onPress={onClose} variant="primary" size="lg" fullWidth>
+              {`Salvar metas (${goalsUnis.length})`}
+            </Button>
+          </View>
         )}
       </View>
     </BottomSheet>

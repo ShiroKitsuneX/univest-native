@@ -4,7 +4,7 @@ import {
   incrementPostShares,
   fetchPosts,
 } from '../repositories/postsRepository'
-import { logger } from '@/services/logger'
+import { logger } from '@/core/logging/logger'
 
 export async function refreshPosts() {
   try {
