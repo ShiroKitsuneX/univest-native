@@ -1,10 +1,11 @@
-import { Text, View } from 'react-native'
+import { Image, Text, View } from 'react-native'
 import { useTheme } from '@/theme/useTheme'
 import { PressScale } from '@/shared/components/PressScale'
 
 type Props = {
   uniName: string
   uniColor: string
+  uniLogoUrl?: string
   isViewed: boolean
   onPress: () => void
   size?: number
@@ -13,6 +14,7 @@ type Props = {
 export function StoryCircle({
   uniName,
   uniColor,
+  uniLogoUrl,
   isViewed,
   onPress,
   size = 56,
@@ -38,13 +40,22 @@ export function StoryCircle({
             justifyContent: 'center',
             borderWidth: ringWidth,
             borderColor: ringColor,
+            overflow: 'hidden',
           },
           isViewed ? null : shadow.primary,
         ]}
       >
-        <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800' }}>
-          {uniName.slice(0, 2).toUpperCase()}
-        </Text>
+        {uniLogoUrl ? (
+          <Image
+            source={{ uri: uniLogoUrl }}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '800' }}>
+            {(uniName || '??').slice(0, 2).toUpperCase()}
+          </Text>
+        )}
       </View>
       <Text
         style={{

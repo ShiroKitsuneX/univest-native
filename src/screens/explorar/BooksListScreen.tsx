@@ -41,7 +41,7 @@ export function BooksListScreen({ onBack }) {
       b =>
         !booksSearch ||
         b.book.toLowerCase().includes(booksSearch.toLowerCase()) ||
-        b.uni.name.toLowerCase().includes(booksSearch.toLowerCase())
+        (b.uni.name || '').toLowerCase().includes(booksSearch.toLowerCase())
     )
   }, [unis, booksSearch])
 
@@ -276,7 +276,7 @@ export function BooksListScreen({ onBack }) {
                                 fontWeight: '800',
                               }}
                             >
-                              {item.uni.name.slice(0, 2)}
+                              {(item.uni.name || '??').slice(0, 2).toUpperCase()}
                             </Text>
                           </View>
                           <View style={{ flex: 1 }}>

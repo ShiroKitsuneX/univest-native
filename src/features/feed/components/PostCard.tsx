@@ -131,7 +131,9 @@ export function PostCard({
                 borderRadius: 22,
                 // Always render a coloured tile when we have a uni record —
                 // fall back to the brand violet rather than the muted
-                // card2 so an institution post never looks "empty".
+                // card2 so an institution post never looks "empty". When
+                // the institution has uploaded a `logoUrl`, the image
+                // replaces the initials inside the same coloured tile.
                 backgroundColor: uni
                   ? uni.color || brand.primary
                   : T.card2,
@@ -139,15 +141,28 @@ export function PostCard({
                 justifyContent: 'center',
                 borderWidth: 2,
                 borderColor: T.border,
+                overflow: 'hidden',
               }}
             >
-              <Text
-                style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800' }}
-              >
-                {(uni?.name || post.uni || '')
-                  .slice(0, 2)
-                  .toUpperCase()}
-              </Text>
+              {uni?.logoUrl ? (
+                <Image
+                  source={{ uri: uni.logoUrl }}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text
+                  style={{
+                    color: '#FFFFFF',
+                    fontSize: 13,
+                    fontWeight: '800',
+                  }}
+                >
+                  {(uni?.name || post.uni || '')
+                    .slice(0, 2)
+                    .toUpperCase()}
+                </Text>
+              )}
             </View>
           </PressScale>
           <View style={{ flex: 1 }}>

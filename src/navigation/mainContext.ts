@@ -39,6 +39,9 @@ export type MainHandlers = {
   // Location / discovery
   onOpenLocation?: () => void
   onOpenDiscover?: () => void
+
+  // Institution photo
+  onOpenInstitutionPhoto?: () => void
 }
 
 export const MainCtx = createContext<MainHandlers | null>(null)

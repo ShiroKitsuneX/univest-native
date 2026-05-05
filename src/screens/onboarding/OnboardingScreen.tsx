@@ -80,12 +80,15 @@ export function OnboardingScreen() {
     }
   }
 
-  const filteredUnis = unis.filter(
-    u =>
-      !uSrch ||
-      u.name.toLowerCase().includes(uSrch.toLowerCase()) ||
-      u.fullName.toLowerCase().includes(uSrch.toLowerCase())
-  )
+  const filteredUnis = unis.filter(u => {
+    if (!u || !u.name) return false
+    if (!uSrch) return true
+    const needle = uSrch.toLowerCase()
+    return (
+      u.name.toLowerCase().includes(needle) ||
+      (u.fullName || '').toLowerCase().includes(needle)
+    )
+  })
 
   return (
     <View style={{ flex: 1, backgroundColor: T.bg }}>
@@ -378,7 +381,7 @@ export function OnboardingScreen() {
                   <Text
                     style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}
                   >
-                    {u.name.slice(0, 2)}
+                    {(u.name || '??').slice(0, 2).toUpperCase()}
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>

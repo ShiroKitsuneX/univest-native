@@ -101,7 +101,7 @@ export function UniSortModal({ visible, onClose }) {
                 <Text
                   style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}
                 >
-                  {u.name.slice(0, 2)}
+                  {(u.name || '??').slice(0, 2).toUpperCase()}
                 </Text>
               </View>
               <Text

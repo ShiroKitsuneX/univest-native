@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  Image,
   Linking,
   ScrollView,
   StyleSheet,
@@ -70,9 +71,24 @@ export function UniversityDetailScreen({
           },
         ]}
       >
-        <Text style={{ fontSize: 30, marginBottom: 8 }}>
-          {selUni.name.slice(0, 2)}
-        </Text>
+        {selUni.logoUrl ? (
+          <Image
+            source={{ uri: selUni.logoUrl }}
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+              marginBottom: 8,
+              borderWidth: 2,
+              borderColor: 'rgba(255,255,255,0.5)',
+            }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text style={{ fontSize: 30, marginBottom: 8 }}>
+            {(selUni.name || '??').slice(0, 2).toUpperCase()}
+          </Text>
+        )}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Text style={[typography.title, { color: '#FFFFFF' }]}>
             {selUni.name}
@@ -208,7 +224,7 @@ export function UniversityDetailScreen({
         <View style={cd({ padding: 16 })}>
           <Text style={[lbl, { marginBottom: 10 }]}>📖 Cursos</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7 }}>
-            {selUni.courses.map(c => (
+            {(selUni.courses || []).map(c => (
               <View
                 key={c}
                 style={{
@@ -304,10 +320,13 @@ export function UniversityDetailScreen({
                                 persistReadBooks(newRead)
                                 setBookMenu(null)
                               }}
-                              style={[styles.menuBtn, {
-                                backgroundColor: T.card,
-                                borderColor: T.border,
-                              }]}
+                              style={[
+                                styles.menuBtn,
+                                {
+                                  backgroundColor: T.card,
+                                  borderColor: T.border,
+                                },
+                              ]}
                             >
                               <Text
                                 style={[styles.menuBtnText, { color: T.muted }]}
@@ -325,13 +344,19 @@ export function UniversityDetailScreen({
                                 persistReadBooks(newRead)
                                 setBookMenu(null)
                               }}
-                              style={[styles.menuBtn, {
-                                backgroundColor: readingBg,
-                                borderColor: readingFg,
-                              }]}
+                              style={[
+                                styles.menuBtn,
+                                {
+                                  backgroundColor: readingBg,
+                                  borderColor: readingFg,
+                                },
+                              ]}
                             >
                               <Text
-                                style={[styles.menuBtnText, { color: readingFg }]}
+                                style={[
+                                  styles.menuBtnText,
+                                  { color: readingFg },
+                                ]}
                               >
                                 📖
                               </Text>
@@ -346,10 +371,13 @@ export function UniversityDetailScreen({
                                 persistReadBooks(newRead)
                                 setBookMenu(null)
                               }}
-                              style={[styles.menuBtn, {
-                                backgroundColor: doneBg,
-                                borderColor: doneFg,
-                              }]}
+                              style={[
+                                styles.menuBtn,
+                                {
+                                  backgroundColor: doneBg,
+                                  borderColor: doneFg,
+                                },
+                              ]}
                             >
                               <Text
                                 style={[styles.menuBtnText, { color: doneFg }]}
@@ -398,7 +426,9 @@ export function UniversityDetailScreen({
                                 </Text>
                               )}
                               {isReading && (
-                                <Text style={{ color: '#FFFFFF', fontSize: 10 }}>
+                                <Text
+                                  style={{ color: '#FFFFFF', fontSize: 10 }}
+                                >
                                   📖
                                 </Text>
                               )}
@@ -443,7 +473,9 @@ export function UniversityDetailScreen({
           <Text style={{ fontSize: 18 }}>🌐</Text>
           <View style={{ flex: 1 }}>
             <Text style={{ color: T.sub, fontSize: 10 }}>Site oficial</Text>
-            <Text style={{ color: brand.primary, fontSize: 13, fontWeight: '700' }}>
+            <Text
+              style={{ color: brand.primary, fontSize: 13, fontWeight: '700' }}
+            >
               {selUni.site}
             </Text>
           </View>

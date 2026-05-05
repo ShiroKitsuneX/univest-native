@@ -257,7 +257,7 @@ export function FeedScreen({
                               fontWeight: '800',
                             }}
                           >
-                            {e.uni.name.slice(0, 2)}
+                            {(e.uni.name || '??').slice(0, 2).toUpperCase()}
                           </Text>
                         </View>
                         <Text

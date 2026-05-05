@@ -43,6 +43,7 @@ import { SettingsModal } from '@/modals/SettingsModal'
 import { CreatePostModal } from '@/features/institution/modals/CreatePostModal'
 import { CreateStoryModal } from '@/features/institution/modals/CreateStoryModal'
 import { CreatorActionSheet } from '@/features/institution/modals/CreatorActionSheet'
+import { InstitutionPhotoModal } from '@/features/institution/modals/InstitutionPhotoModal'
 import { useStoriesStore } from '@/stores/storiesStore'
 import { logger } from '@/core/logging/logger'
 
@@ -57,6 +58,7 @@ function MainApp() {
   const setC2 = useOnboardingStore(s => s.setC2)
 
   const setSU = useUniversitiesStore(s => s.setSelUni)
+  const selUni = useUniversitiesStore(s => s.selUni)
   const [goalsModal, setGoalsModal] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -79,6 +81,9 @@ function MainApp() {
   const [creatorSheet, setCreatorSheet] = useState(false)
   const [createPost, setCreatePost] = useState(false)
   const [createStory, setCreateStory] = useState(false)
+
+  // Institution photo modal
+  const [mInstPhoto, setMInstPhoto] = useState(false)
   const linkedUniId = useAuthStore(s => s.getLinkedUniId)()
 
   const onRefresh = useCallback(async () => {
@@ -139,6 +144,7 @@ function MainApp() {
       onEditCourses: () => setMedit(true),
       onAddGrade: () => setMgr(true),
       onChangePhoto: () => setMpho(true),
+      onOpenInstitutionPhoto: () => setMInstPhoto(true),
       onChangeName: () => {
         setMcfg(false)
         setMnome(true)
@@ -171,6 +177,19 @@ function MainApp() {
       />
 
       <AvatarPickerModal visible={mPho} onClose={() => setMpho(false)} />
+
+      <InstitutionPhotoModal
+        visible={mInstPhoto}
+        universityId={linkedUniId || ''}
+        currentLogoUrl={selUni?.logoUrl}
+        universityName={selUni?.name || ''}
+        onClose={() => setMInstPhoto(false)}
+        onSuccess={newLogoUrl => {
+          if (selUni) {
+            setSU({ ...selUni, logoUrl: newLogoUrl } as any)
+          }
+        }}
+      />
 
       <EditNameModal visible={mNome} onClose={() => setMnome(false)} />
 

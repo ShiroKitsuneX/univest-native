@@ -21,8 +21,17 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
   const stories = useStoriesStore(s => s.stories)
   const viewedIds = useStoriesStore(s => s.viewedIds)
   const getFollowedUnis = useUniversitiesStore(s => s.getFollowedUnis)
+  const unis = useUniversitiesStore(s => s.unis)
   const fol = getFollowedUnis()
   const { T, brand } = useTheme()
+
+  // Resolve the institution's `logoUrl` per uniId so the strip ring shows
+  // the uploaded logo. Read from the cached unis list — same source the
+  // PostCard avatar uses, so the two surfaces stay consistent.
+  const logoFor = (uniId: string): string | undefined => {
+    const u = unis.find(x => String(x.id) === String(uniId))
+    return u?.logoUrl
+  }
 
   const groupedStories = stories.reduce<Group[]>((acc, story) => {
     const existing = acc.find(g => g.uniId === story.uniId)
@@ -70,6 +79,7 @@ export function StoriesStrip({ onStoryPress, goExplorar }: Props) {
             key={group.uniId}
             uniName={group.uniName}
             uniColor={group.uniColor}
+            uniLogoUrl={logoFor(group.uniId)}
             isViewed={!hasUnviewed(group.uniId)}
             onPress={() => onStoryPress(group)}
           />

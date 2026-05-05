@@ -112,7 +112,7 @@ export function FollowingScreen({
                     <Text
                       style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}
                     >
-                      {u.name.slice(0, 2)}
+                      {(u.name || '??').slice(0, 2).toUpperCase()}
                     </Text>
                   </View>
                   <View style={{ flex: 1, marginLeft: 12 }}>

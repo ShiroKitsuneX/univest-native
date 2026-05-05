@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -305,11 +306,22 @@ export function ExplorarScreen({
                 backgroundColor: u.color,
                 alignItems: 'center',
                 justifyContent: 'center',
+                overflow: 'hidden',
               }}
             >
-              <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}>
-                {(u.name || '??').slice(0, 2).toUpperCase()}
-              </Text>
+              {u.logoUrl ? (
+                <Image
+                  source={{ uri: u.logoUrl }}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text
+                  style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '800' }}
+                >
+                  {(u.name || '??').slice(0, 2).toUpperCase()}
+                </Text>
+              )}
             </View>
             <View style={{ flex: 1 }}>
               <View

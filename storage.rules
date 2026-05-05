@@ -1,0 +1,28 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Institution images - allow authenticated users (institution type)
+    match /institution-images/{uniId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // User avatars
+    match /avatars/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Stories
+    match /stories/{uniId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Default - allow authenticated users
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

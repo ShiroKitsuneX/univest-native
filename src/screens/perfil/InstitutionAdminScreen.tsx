@@ -41,6 +41,7 @@ import { logger } from '@/core/logging/logger'
 type Props = {
   universityId: string
   onChangePhoto: () => void
+  onOpenInstitutionPhoto?: () => void
 }
 
 type EditMode =
@@ -56,7 +57,11 @@ type EditMode =
   | 'phone'
   | 'color'
 
-export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
+export function InstitutionAdminScreen({
+  universityId,
+  onChangePhoto,
+  onOpenInstitutionPhoto,
+}: Props) {
   const { T, isDark, brand } = useTheme()
   const navigation = useNavigation<{
     navigate: (name: string) => void
@@ -171,27 +176,23 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
   }
 
   const handleDeletePost = (post: InstitutionPost) => {
-    Alert.alert(
-      'Excluir publicação',
-      `Remover "${post.title}" do feed?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteInstitutionPostById(post.id)
-              setPosts(prev => prev.filter(p => p.id !== post.id))
-              refreshAnalytics()
-            } catch (err) {
-              logger.warn('deletePost:', (err as Error)?.message)
-              Alert.alert('Erro', 'Não foi possível excluir a publicação.')
-            }
-          },
+    Alert.alert('Excluir publicação', `Remover "${post.title}" do feed?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteInstitutionPostById(post.id)
+            setPosts(prev => prev.filter(p => p.id !== post.id))
+            refreshAnalytics()
+          } catch (err) {
+            logger.warn('deletePost:', (err as Error)?.message)
+            Alert.alert('Erro', 'Não foi possível excluir a publicação.')
+          }
         },
-      ]
-    )
+      },
+    ])
   }
 
   useEffect(() => {
@@ -333,7 +334,7 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
           }}
         >
           <TouchableOpacity
-            onPress={onChangePhoto}
+            onPress={onOpenInstitutionPhoto || onChangePhoto}
             activeOpacity={0.85}
             style={{
               width: 92,
@@ -345,18 +346,27 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
               marginBottom: 14,
               borderWidth: 3,
               borderColor: 'rgba(255,255,255,0.55)',
+              overflow: 'hidden',
             }}
           >
-            <Text
-              style={{
-                fontSize: 30,
-                color: '#FFFFFF',
-                fontWeight: '900',
-                letterSpacing: -0.5,
-              }}
-            >
-              {(selUni?.name || '??').slice(0, 2).toUpperCase()}
-            </Text>
+            {selUni?.logoUrl ? (
+              <Image
+                source={{ uri: selUni.logoUrl }}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text
+                style={{
+                  fontSize: 30,
+                  color: '#FFFFFF',
+                  fontWeight: '900',
+                  letterSpacing: -0.5,
+                }}
+              >
+                {(selUni?.name || '??').slice(0, 2).toUpperCase()}
+              </Text>
+            )}
             <View
               style={{
                 position: 'absolute',
@@ -471,246 +481,254 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
 
         <View style={{ padding: 16, gap: 10 }}>
           {editing && (
-          <>
-          <View style={cd({ padding: 16 })}>
-            <Text style={[lbl, { marginBottom: 10 }]}>🎨 Aparência</Text>
-            <Text
-              style={{
-                color: T.sub,
-                fontSize: 12,
-                lineHeight: 18,
-                marginBottom: 12,
-              }}
-            >
-              A cor da sua universidade aparece atrás do nome no topo do
-              perfil e como cor de marca em cada post no feed.
-            </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                gap: 10,
-                marginBottom: 8,
-              }}
-            >
-              {COLOR_OPTIONS.map(c => {
-                const active = c === color
-                return (
-                  <TouchableOpacity
-                    key={c}
-                    onPress={async () => {
-                      if (!selUni || c === color) return
-                      const prev = color
-                      setColor(c)
-                      try {
-                        await saveUniversityUpdates(String(selUni.id), {
-                          color: c,
-                        })
-                        setSelUni({ ...selUni, color: c } as never)
-                      } catch (err) {
-                        setColor(prev)
-                        logger.warn(
-                          'color save failed:',
-                          (err as Error)?.message
-                        )
-                        Alert.alert(
-                          'Erro',
-                          'Não foi possível salvar a cor agora.'
-                        )
-                      }
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Cor ${c}`}
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 19,
-                      backgroundColor: c,
-                      borderWidth: active ? 3 : 1,
-                      borderColor: active ? T.text : T.border,
-                    }}
-                  />
-                )
-              })}
-            </View>
-            <View
-              style={{
-                marginTop: 12,
-                padding: 12,
-                backgroundColor: T.card2,
-                borderColor: T.border,
-                borderWidth: 1,
-                borderRadius: 12,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 10,
-              }}
-            >
-              <Text style={{ fontSize: 18 }}>🖼️</Text>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{ color: T.text, fontSize: 13, fontWeight: '700' }}
-                >
-                  Imagem de fundo
-                </Text>
+            <>
+              <View style={cd({ padding: 16 })}>
+                <Text style={[lbl, { marginBottom: 10 }]}>🎨 Aparência</Text>
                 <Text
                   style={{
-                    color: T.muted,
-                    fontSize: 11,
-                    marginTop: 2,
-                    lineHeight: 16,
+                    color: T.sub,
+                    fontSize: 12,
+                    lineHeight: 18,
+                    marginBottom: 12,
                   }}
                 >
-                  Em breve: enviar uma foto da câmera ou galeria como
-                  background.
+                  A cor da sua universidade aparece atrás do nome no topo do
+                  perfil e como cor de marca em cada post no feed.
                 </Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={cd({ padding: 16 })}>
-            <Text style={[lbl, { marginBottom: 10 }]}>📅 Vestibular</Text>
-            <EditableField
-              label="Nome do Vestibular"
-              value={vestibular}
-              placeholder="Ex: COMVEST 2026"
-              onEdit={() => beginEdit('vestibular', vestibular)}
-              T={T}
-              lbl={lbl}
-            />
-            <EditableField
-              label="Período de Inscrição"
-              value={inscricao}
-              placeholder="Ex: Ago/2025"
-              onEdit={() => beginEdit('inscricao', inscricao)}
-              T={T}
-              lbl={lbl}
-            />
-            <EditableField
-              label="Data da Prova"
-              value={prova}
-              placeholder="Ex: Dez/2025"
-              onEdit={() => beginEdit('prova', prova)}
-              T={T}
-              lbl={lbl}
-            />
-          </View>
-
-          <TouchableOpacity
-            onPress={() => Linking.openURL(site)}
-            disabled={!site}
-            style={{
-              backgroundColor: T.acBg,
-              borderRadius: 14,
-              padding: 13,
-              borderWidth: 1,
-              borderColor: T.accent + '40',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-            }}
-          >
-            <Text style={{ fontSize: 18 }}>🌐</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: T.sub, fontSize: 10 }}>Site oficial</Text>
-              <Text
-                style={{ color: T.accent, fontSize: 13, fontWeight: '700' }}
-              >
-                {site || 'Não definido'}
-              </Text>
-            </View>
-            <Text style={{ color: T.accent }}>›</Text>
-          </TouchableOpacity>
-
-          <View style={cd({ padding: 16 })}>
-            <Text style={[lbl, { marginBottom: 10 }]}>📖 Cursos</Text>
-            {courses.length > 0 ? (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7 }}>
-                {courses.map(c => (
-                  <View
-                    key={c}
-                    style={{
-                      backgroundColor: T.card2,
-                      borderRadius: 10,
-                      paddingHorizontal: 11,
-                      paddingVertical: 5,
-                      borderWidth: 1,
-                      borderColor: T.border,
-                    }}
-                  >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    gap: 10,
+                    marginBottom: 8,
+                  }}
+                >
+                  {COLOR_OPTIONS.map(c => {
+                    const active = c === color
+                    return (
+                      <TouchableOpacity
+                        key={c}
+                        onPress={async () => {
+                          if (!selUni || c === color) return
+                          const prev = color
+                          setColor(c)
+                          try {
+                            await saveUniversityUpdates(String(selUni.id), {
+                              color: c,
+                            })
+                            setSelUni({ ...selUni, color: c } as never)
+                          } catch (err) {
+                            setColor(prev)
+                            logger.warn(
+                              'color save failed:',
+                              (err as Error)?.message
+                            )
+                            Alert.alert(
+                              'Erro',
+                              'Não foi possível salvar a cor agora.'
+                            )
+                          }
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Cor ${c}`}
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 19,
+                          backgroundColor: c,
+                          borderWidth: active ? 3 : 1,
+                          borderColor: active ? T.text : T.border,
+                        }}
+                      />
+                    )
+                  })}
+                </View>
+                <View
+                  style={{
+                    marginTop: 12,
+                    padding: 12,
+                    backgroundColor: T.card2,
+                    borderColor: T.border,
+                    borderWidth: 1,
+                    borderRadius: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
+                  }}
+                >
+                  <Text style={{ fontSize: 18 }}>🖼️</Text>
+                  <View style={{ flex: 1 }}>
                     <Text
-                      style={{ color: T.text, fontSize: 12, fontWeight: '600' }}
+                      style={{ color: T.text, fontSize: 13, fontWeight: '700' }}
                     >
-                      {c}
+                      Imagem de fundo
+                    </Text>
+                    <Text
+                      style={{
+                        color: T.muted,
+                        fontSize: 11,
+                        marginTop: 2,
+                        lineHeight: 16,
+                      }}
+                    >
+                      Em breve: enviar uma foto da câmera ou galeria como
+                      background.
                     </Text>
                   </View>
-                ))}
+                </View>
               </View>
-            ) : (
-              <Text style={{ color: T.muted, marginBottom: 8 }}>
-                Nenhum curso adicionado
-              </Text>
-            )}
-            <TouchableOpacity
-              onPress={handleEditCourses}
-              style={{ marginTop: 8 }}
-            >
-              <Text style={{ color: T.accent, fontSize: 12 }}>
-                + Adicionar/Editar cursos
-              </Text>
-            </TouchableOpacity>
-          </View>
 
-          <View style={cd({ padding: 16 })}>
-            <Text style={[lbl, { marginBottom: 10 }]}>
-              📚 Livros Obrigatórios
-            </Text>
-            {books.length > 0 ? (
-              <View style={{ gap: 4 }}>
-                {books.slice(0, 5).map((book, i) => (
-                  <Text key={i} style={{ color: T.text, fontSize: 12 }}>
-                    • {book}
+              <View style={cd({ padding: 16 })}>
+                <Text style={[lbl, { marginBottom: 10 }]}>📅 Vestibular</Text>
+                <EditableField
+                  label="Nome do Vestibular"
+                  value={vestibular}
+                  placeholder="Ex: COMVEST 2026"
+                  onEdit={() => beginEdit('vestibular', vestibular)}
+                  T={T}
+                  lbl={lbl}
+                />
+                <EditableField
+                  label="Período de Inscrição"
+                  value={inscricao}
+                  placeholder="Ex: Ago/2025"
+                  onEdit={() => beginEdit('inscricao', inscricao)}
+                  T={T}
+                  lbl={lbl}
+                />
+                <EditableField
+                  label="Data da Prova"
+                  value={prova}
+                  placeholder="Ex: Dez/2025"
+                  onEdit={() => beginEdit('prova', prova)}
+                  T={T}
+                  lbl={lbl}
+                />
+              </View>
+
+              <TouchableOpacity
+                onPress={() => Linking.openURL(site)}
+                disabled={!site}
+                style={{
+                  backgroundColor: T.acBg,
+                  borderRadius: 14,
+                  padding: 13,
+                  borderWidth: 1,
+                  borderColor: T.accent + '40',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 10,
+                }}
+              >
+                <Text style={{ fontSize: 18 }}>🌐</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: T.sub, fontSize: 10 }}>
+                    Site oficial
                   </Text>
-                ))}
-                {books.length > 5 && (
-                  <Text style={{ color: T.muted, fontSize: 11 }}>
-                    +{books.length - 5} mais...
+                  <Text
+                    style={{ color: T.accent, fontSize: 13, fontWeight: '700' }}
+                  >
+                    {site || 'Não definido'}
+                  </Text>
+                </View>
+                <Text style={{ color: T.accent }}>›</Text>
+              </TouchableOpacity>
+
+              <View style={cd({ padding: 16 })}>
+                <Text style={[lbl, { marginBottom: 10 }]}>📖 Cursos</Text>
+                {courses.length > 0 ? (
+                  <View
+                    style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7 }}
+                  >
+                    {courses.map(c => (
+                      <View
+                        key={c}
+                        style={{
+                          backgroundColor: T.card2,
+                          borderRadius: 10,
+                          paddingHorizontal: 11,
+                          paddingVertical: 5,
+                          borderWidth: 1,
+                          borderColor: T.border,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: T.text,
+                            fontSize: 12,
+                            fontWeight: '600',
+                          }}
+                        >
+                          {c}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={{ color: T.muted, marginBottom: 8 }}>
+                    Nenhum curso adicionado
                   </Text>
                 )}
+                <TouchableOpacity
+                  onPress={handleEditCourses}
+                  style={{ marginTop: 8 }}
+                >
+                  <Text style={{ color: T.accent, fontSize: 12 }}>
+                    + Adicionar/Editar cursos
+                  </Text>
+                </TouchableOpacity>
               </View>
-            ) : (
-              <Text style={{ color: T.muted, marginBottom: 8 }}>
-                Nenhum livro adicionado
-              </Text>
-            )}
-            <TouchableOpacity
-              onPress={handleEditBooks}
-              style={{ marginTop: 8 }}
-            >
-              <Text style={{ color: T.accent, fontSize: 12 }}>
-                + Adicionar/Editar livros
-              </Text>
-            </TouchableOpacity>
-          </View>
 
-          <View style={cd({ padding: 16 })}>
-            <Text style={[lbl, { marginBottom: 10 }]}>📝 Descrição</Text>
-            <Text style={{ color: T.text, lineHeight: 20 }}>
-              {description || 'Sem descrição'}
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                setEditField('description')
-                setEditValue(description)
-              }}
-              style={{ marginTop: 8 }}
-            >
-              <Text style={{ color: T.accent, fontSize: 12 }}>
-                + Editar descrição
-              </Text>
-            </TouchableOpacity>
-          </View>
-          </>
+              <View style={cd({ padding: 16 })}>
+                <Text style={[lbl, { marginBottom: 10 }]}>
+                  📚 Livros Obrigatórios
+                </Text>
+                {books.length > 0 ? (
+                  <View style={{ gap: 4 }}>
+                    {books.slice(0, 5).map((book, i) => (
+                      <Text key={i} style={{ color: T.text, fontSize: 12 }}>
+                        • {book}
+                      </Text>
+                    ))}
+                    {books.length > 5 && (
+                      <Text style={{ color: T.muted, fontSize: 11 }}>
+                        +{books.length - 5} mais...
+                      </Text>
+                    )}
+                  </View>
+                ) : (
+                  <Text style={{ color: T.muted, marginBottom: 8 }}>
+                    Nenhum livro adicionado
+                  </Text>
+                )}
+                <TouchableOpacity
+                  onPress={handleEditBooks}
+                  style={{ marginTop: 8 }}
+                >
+                  <Text style={{ color: T.accent, fontSize: 12 }}>
+                    + Adicionar/Editar livros
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={cd({ padding: 16 })}>
+                <Text style={[lbl, { marginBottom: 10 }]}>📝 Descrição</Text>
+                <Text style={{ color: T.text, lineHeight: 20 }}>
+                  {description || 'Sem descrição'}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditField('description')
+                    setEditValue(description)
+                  }}
+                  style={{ marginTop: 8 }}
+                >
+                  <Text style={{ color: T.accent, fontSize: 12 }}>
+                    + Editar descrição
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
           )}
 
           {/* Compact analytics summary — three KPIs + a CTA. The full
@@ -821,8 +839,8 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
                   lineHeight: 18,
                 }}
               >
-                Sem stories ativas. Compartilhe um momento da sua universidade
-                — expira em 24h.
+                Sem stories ativas. Compartilhe um momento da sua universidade —
+                expira em 24h.
               </Text>
             ) : (
               <View
@@ -921,9 +939,7 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
             </Text>
 
             {postsLoading && posts.length === 0 ? (
-              <Text
-                style={{ color: T.muted, marginTop: 12, fontSize: 12 }}
-              >
+              <Text style={{ color: T.muted, marginTop: 12, fontSize: 12 }}>
                 Carregando publicações…
               </Text>
             ) : posts.length === 0 ? (
@@ -935,9 +951,9 @@ export function InstitutionAdminScreen({ universityId, onChangePhoto }: Props) {
                   lineHeight: 18,
                 }}
               >
-                Você ainda não publicou nada. Use o botão acima para
-                anunciar inscrições, listas de obras, simulados ou notícias
-                para quem segue sua universidade.
+                Você ainda não publicou nada. Use o botão acima para anunciar
+                inscrições, listas de obras, simulados ou notícias para quem
+                segue sua universidade.
               </Text>
             ) : (
               <View style={{ marginTop: 12, gap: 8 }}>

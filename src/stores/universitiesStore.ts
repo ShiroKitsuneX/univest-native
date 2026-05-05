@@ -36,6 +36,8 @@ export type University = {
   // notifications from a student's follow flow. Missing on legacy unis —
   // the notification helpers no-op when absent.
   ownerUid?: string
+  // Institution logo/image URL uploaded by the institution admin
+  logoUrl?: string
 }
 
 export type Exam = {
